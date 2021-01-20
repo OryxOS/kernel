@@ -1,7 +1,8 @@
-#include "Types.hxx"
+#pragma once
+
+#include <Common/Types.hxx>
 
 using namespace Types;
-
 
 namespace Stivale2 {   
     struct Header {

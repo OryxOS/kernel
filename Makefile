@@ -1,9 +1,12 @@
-SOURCES=$(wildcard *.cxx) $(wildcard **/*.cxx)
-INCLUDES=$(wildcard *.hxx) $(wildcard **/*.hxx)
+SOURCES=$(shell find Source/ -type f -name '*.cxx')
+INCLUDES=$(shell find Source/ -type f -name '*.hxx')
 OBJECTS=$(SOURCES:.cxx=.o)
 DEPS=$(SOURCES:.cxx=.d)
 
+LIBDIR=-ISource/
+
 CXXFLAGS= \
+	$(LIBDIR) \
 	-target x86_64-pc-none-elf \
 	-ffreestanding \
 	-fno-builtin \
@@ -14,6 +17,7 @@ CXXFLAGS= \
     	-Wpedantic \
     	-Wextra \
     	-Werror \
+        -Wold-style-cast \
     	-std=c++20
 LDFLAGS= -T Source/Link.ld
  

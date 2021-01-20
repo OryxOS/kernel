@@ -1,9 +1,5 @@
 #pragma once
 
-/* File:    Types.hxx
- * Purpose: Defines basic Types used in the language
- */
-
 namespace Types {
     // Signed Intergers
     typedef signed char         s8;
@@ -15,8 +11,6 @@ namespace Types {
     typedef unsigned char       u8;
     typedef unsigned short int  u16;
     typedef unsigned long       u32;
-    typedef unsigned long long  u64;
-    
-    // 
+    typedef unsigned long long  u64; 
 }
 
