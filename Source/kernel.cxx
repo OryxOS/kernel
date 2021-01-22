@@ -15,9 +15,16 @@ Stivale2::Header stivaleHeader = {
 };
 
 extern "C" void _start() {
-	VGA::SetBg(VGA::Color::Red);
+	VGA::SetBg(VGA::Color::White);
+	VGA::SetFg(VGA::Color::Black);
 
-    while(1) {
-    		VGA::PutChar('H');
-    }
+	VGA::Clear();
+
+	for (u32 i = 0; i < 30; i++) {
+		VGA::PutStr("\n Hello");
+	}
+
+	VGA::PutStr("\n Hello1");
+
+    while(1) {}
 }

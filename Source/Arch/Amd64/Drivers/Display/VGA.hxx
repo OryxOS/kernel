@@ -24,12 +24,11 @@ namespace VGA {
 		White,
 	};
 
-	void Scroll(int amount);
 	void Clear();
 
 	void SetBg(Color background);
 	void SetFg(Color foreground);
 
 	void PutChar(char c);
-	void PutStr(const char* str, u16 color);
+	void PutStr(const char* str);
 }
