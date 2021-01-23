@@ -1,16 +1,15 @@
 #pragma once
 
 namespace Types {
-    // Signed Intergers
-    typedef signed char         s8;
-    typedef signed short int    s16;
-    typedef signed long         s32;
-    typedef signed long long    s64;
+	// Signed Intergers
+	using s8	= signed char;
+	using s16	= signed short int;
+	using s32	= signed long;
+	using s64	= signed long long;
     
-    // Unsigned Intergers
-    typedef unsigned char       u8;
-    typedef unsigned short int  u16;
-    typedef unsigned long       u32;
-    typedef unsigned long long  u64; 
+	// Unsigned Intergers
+	using u8	= unsigned char;
+	using u16	= unsigned short int;
+	using u32	= unsigned long;
+	using u64	= unsigned long long;
 }
-

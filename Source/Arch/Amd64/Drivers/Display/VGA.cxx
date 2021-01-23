@@ -4,11 +4,6 @@
 
 using namespace Types;
 
-//TODO: add scroll
-
-const u64 Width 	= 80;
-const u64 Height	= 25;
-
 u64 posX = 0;
 u64 posY = 0;
 
@@ -18,26 +13,32 @@ VGA::Color bg = VGA::Color::White;
 u16 *buffer = reinterpret_cast<u16*>(0xb8000);
 
 void VGA::PutChar(char c) {
-	if(posX > Width) {
+	if(posX > 80) {
 		posY++;
 		posX = 0;
 	}
 
-	if (posY > Height) {
-		posY = Height;
+	if (posY >= 25) {
+		posY = 24;
 		posX = 0;
 
-		Mem::Copy(buffer, buffer + Width, 24 * Width);
+		// Scroll
+		Mem::Copy(buffer + 80, buffer, 24 * 80 * 2);
+		for (u16 i = 0; i < 80; i++) {
+			buffer[80 * 24 + i] = static_cast<u16>(' ') | ((fg | (bg << 4)) << 8);
+		}
 	}
 
 	switch (c) {
 		case '\n': {
 			posY++;
 			posX = 0;
+			break;
 		}
 		default: {
-			buffer[posX + (Width * posY)] = static_cast<u16>(c) | ((fg | (bg << 4)) << 8);
+			buffer[posX + 80 * posY] = static_cast<u16>(c) | ((fg | (bg << 4)) << 8);
 			posX++;
+			break;
 		}
 	}
 }
@@ -53,7 +54,7 @@ void VGA::Clear() {
 	posX = 0;
 	posY = 0;
 
-	for (u16 i = 0; i < Width * Height; i++) {
+	for (u16 i = 0; i < 80 * 25; i++) {
 		buffer[i] = static_cast<u16>(' ') | ((fg | (bg << 4)) << 8);
 	}
 }

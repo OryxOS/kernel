@@ -1,7 +1,9 @@
-SOURCES=$(shell find Source/ -type f -name '*.cxx')
-INCLUDES=$(shell find Source/ -type f -name '*.hxx')
-OBJECTS=$(SOURCES:.cxx=.o)
-DEPS=$(SOURCES:.cxx=.d)
+CXXSOURCES=$(shell find Source/ -type f -name '*.cxx')
+CXXINCLUDES=$(shell find Source/ -type f -name '*.hxx')
+ASMSOURCES=$(shell find Source/ -type f -name '*.asm')
+
+OBJECTS=$(CXXSOURCES:.cxx=.o) $(ASMSOURCES:.asm=.asm.o)
+DEPS=$(CXXSOURCES:.cxx=.d)
 
 LIBDIR=-ISource/
 
@@ -26,6 +28,7 @@ FSROOT=../Build/Res/FSRoot
 
 CXX=clang++
 LD=ld.lld
+AS=nasm
 
 #-------------------------------------------------------------------------------
 
@@ -37,6 +40,9 @@ $(TARGET): $(OBJECTS)
 
 %.o: %.cxx
 	$(CXX) $(CXXFLAGS) -c -MD -o $@ $<
+
+%.asm.o: %.asm
+	$(AS) $< -f elf64 -o $@
 
 -include $(DEPS)
 
