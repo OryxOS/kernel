@@ -1,9 +1,9 @@
-#include <Common/Types.hxx>
-#include "Mem.hxx"
+#include <Common/Types.hpp>
+#include "Buffer.hpp"
 
 using namespace Types;
 
-void *Mem::Copy(void *src, void *des, u64 size) {
+void *Buffer::Copy(void *src, void *des, u64 size) {
 	const char *s = static_cast<const char*>(src);
 	char *d = static_cast<char*>(des);
 
@@ -12,7 +12,7 @@ void *Mem::Copy(void *src, void *des, u64 size) {
 	return des;
 }
 
-void *Mem::Set(void *des, u64 val, u64 size) {
+void *Buffer::Set(void *des, u64 val, u64 size) {
 	const char v = static_cast<const char>(val);
 	char *d = static_cast<char*>(des);
 

@@ -1,6 +1,6 @@
-#include <Common/Types.hxx>
-#include <Common/Mem.hxx>
-#include "VGA.hxx"
+#include <Common/Types.hpp>
+#include <Common/Buffer.hpp>
+#include "VGA.hpp"
 
 using namespace Types;
 
@@ -23,7 +23,7 @@ void VGA::PutChar(char c) {
 		posX = 0;
 
 		// Scroll
-		Mem::Copy(buffer + 80, buffer, 24 * 80 * 2);
+		Buffer::Copy(buffer + 80, buffer, 24 * 80 * 2);
 		for (u16 i = 0; i < 80; i++) {
 			buffer[80 * 24 + i] = static_cast<u16>(' ') | ((fg | (bg << 4)) << 8);
 		}

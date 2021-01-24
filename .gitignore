@@ -32,3 +32,14 @@
 *.app
 *.elf
 *.img
+
+# Build system
+Build/Kernel.elf.p
+Build/meson-info
+Build/meson-logs
+Build/meson-private
+Build/.ninja_deps
+Build/.ninja_log
+Build/compile_commands.json
+Build/Kernel.elf
+Build/build.ninja

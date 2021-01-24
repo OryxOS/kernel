@@ -1,6 +1,6 @@
-#include <Common/Types.hxx>
-#include <Libs/Stivale2.hxx>
-#include <Arch/Amd64/Drivers/Display/VGA.hxx>
+#include <Common/Types.hpp>
+#include <Libs/Stivale2.hpp>
+#include <Arch/Amd64/Drivers/Display/VGA.hpp>
 
 using namespace Types;
 
@@ -16,7 +16,7 @@ Stivale2::Header stivaleHeader = {
 
 extern "C" void Main() {
 	VGA::SetBg(VGA::Color::White);
-	VGA::SetFg(VGA::Color::Blue);
+	VGA::SetFg(VGA::Color::DarkGray);
 
 	VGA::Clear();
 

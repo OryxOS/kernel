@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Common/Types.hxx>
+#include <Common/Types.hpp>
 
 using namespace Types;
 
