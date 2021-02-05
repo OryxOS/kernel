@@ -1,10 +1,6 @@
 #pragma once
 
-#include <Common/Types.hpp>
-
-using namespace Types;
-
-namespace VGA {
+namespace Text {
 	enum Color: char {
 		Black,
 		Blue,
@@ -29,6 +25,9 @@ namespace VGA {
 	void SetBg(Color background);
 	void SetFg(Color foreground);
 
-	void PutChar(char c);
+	void PutChr(char c);
 	void PutStr(const char* str);
+
+	void Log(const char* fmt);
+	//void LogLn();
 }

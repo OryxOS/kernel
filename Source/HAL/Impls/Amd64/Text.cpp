@@ -1,18 +1,18 @@
-#include <Common/Types.hpp>
-#include <Common/Buffer.hpp>
-#include "VGA.hpp"
+#include <Libs/Std/Types.hpp>
+#include <HAL/Interface/Buffer.hpp>
+#include <HAL/Interface/Text.hpp>
 
 using namespace Types;
 
 u64 posX = 0;
 u64 posY = 0;
 
-VGA::Color fg = VGA::Color::Black;
-VGA::Color bg = VGA::Color::White;
+Text::Color fg = Text::Color::Black;
+Text::Color bg = Text::Color::White;
 
 u16 *buffer = reinterpret_cast<u16*>(0xb8000);
 
-void VGA::PutChar(char c) {
+void Text::PutChr(char c) {
 	if(posX > 80) {
 		posY++;
 		posX = 0;
@@ -43,14 +43,14 @@ void VGA::PutChar(char c) {
 	}
 }
 
-void VGA::PutStr(const char* str) {
+void Text::PutStr(const char* str) {
 	// Strings are null terminated
 	while (*str != '\0') {
-		PutChar(*str++);
+		PutChr(*str++);
 	}
 }
 
-void VGA::Clear() {
+void Text::Clear() {
 	posX = 0;
 	posY = 0;
 
@@ -59,10 +59,10 @@ void VGA::Clear() {
 	}
 }
 
-void VGA::SetBg(Color background) {
+void Text::SetBg(Color background) {
 	bg = background;
 }
 
-void VGA::SetFg(Color foreground) {
+void Text::SetFg(Color foreground) {
 	fg = foreground;
 }

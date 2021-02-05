@@ -1,14 +1,14 @@
-project('Oryx.Kernel', 'cpp', version: '1.0.0')
+project('Oryx.Kernel', 'cpp', 
+default_options : [ 'warning_level=3', 'werror=true' ],
+version: '1.0.0')
 
 cpp_sources = files(
 	'Source/Kernel.cpp',
 
 	'Source/Init/Init.cpp',
 
-	'Source/Common/Buffer.cpp',
-	'Source/Common/Console.cpp',
-	
-	'Source/Arch/Amd64/Drivers/Display/VGA.cpp'
+	'Source/HAL/Impls/Amd64/Buffer.cpp',
+	'Source/HAL/Impls/Amd64/Text.cpp',
 )
 
 cpp_includes = include_directories('Source')
@@ -25,17 +25,6 @@ cpp_target_flags = [
 	'--target=x86_64-pc-none-elf',
 	'-ffreestanding',
 	'-fno-builtin',
-	'-nostdlib',
-	'-nostdinc',
-	'-nostdinc++',
-]
-
-cpp_warning_flags = [
-	'-Wall',
-	'-Wpedantic',
-	'-Wextra',
-	'-Werror',
-	'-Wold-style-cast',
 ]
 
 ld_script = meson.current_source_dir() + '/Build/Link.ld'
@@ -43,13 +32,11 @@ ld_script = meson.current_source_dir() + '/Build/Link.ld'
 cpp_flags = []
 
 cpp_flags += cpp_target_flags
-cpp_flags += cpp_warning_flags
 cpp_flags += ['-std=c++20']
 
 ld_flags = [
 	'-T',
 	ld_script,
-	'-nostdlib',
 	'-mcmodel=kernel',
 	'-fno-PIC',
 	'-no-pie'

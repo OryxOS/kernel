@@ -1,5 +1,5 @@
-#include <Common/Types.hpp>
-#include "Buffer.hpp"
+#include <Libs/Std/Types.hpp>
+#include <HAL/Interface/Buffer.hpp>
 
 using namespace Types;
 
