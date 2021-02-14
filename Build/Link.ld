@@ -1,9 +1,12 @@
-ENTRY(_start)
+
+
+/* Tell the linker that we want the symbol _start to be our entry point */
+ENTRY(main)
  
 SECTIONS
 {
     . = 0xffffffff80200000;
- 
+
     .stivale2hdr : {
         KEEP(*(.stivale2hdr))
     }
@@ -15,16 +18,6 @@ SECTIONS
     .rodata : {
         *(.rodata*)
     }
-
-    . = ALIGN(0x1000);
-
-    /* Constructor array */
-    .init_array : {
-        PROVIDE_HIDDEN (__init_array_start = .);
-        KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
-        KEEP (*(.init_array .ctors))
-        PROVIDE_HIDDEN (__init_array_end = .);
-    }
  
     .data : {
         *(.data*)
@@ -35,5 +28,3 @@ SECTIONS
         *(.bss*)
     }
 }
-
-
