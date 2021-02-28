@@ -48,6 +48,11 @@ private enum Flags: ushort {
 private __gshared GdtDescriptor[3] gdtEntries;
 private __gshared GdtPointer gdtPointer = GdtPointer(gdtEntries.ptr);
 
+// Selectors
+immutable CODE_SEGMENT = 0x08;       
+immutable DATA_SEGMENT = 0x10;
+
+
 // Function to be called by main
 void initGdt() {
 	// Null Descriptor
@@ -63,5 +68,21 @@ void initGdt() {
 	asm {
         lgdt [gdtPointer];
 
+        // Long jump to set cs and ss.
+        mov RBX, RSP;
+        push DATA_SEGMENT;
+        push RBX;
+        pushfq;
+        push CODE_SEGMENT;
+        lea RAX, L1; // Putting L1 directly dereferences L1 cause D dum dum.
+        push RAX;
+        iretq;
+
+    L1:;
+        mov AX, DATA_SEGMENT;
+        mov DS, AX;
+        mov ES, AX;
+        mov FS, AX;
+        mov GS, AX;
     }
 }
