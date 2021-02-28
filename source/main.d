@@ -2,13 +2,13 @@ import io.console;
 
 extern (C) void main() {
 	clear();
-	logln("Hello ", "World");
-	logln("Hello ", "World");
-	logln("Hello ", "World");
-	logln("Hello ", "World");
-	logln("Hello ", "World");
 
-	ubyte s = 0xFF;
-	logln("Hello ", s);
+	writeln("OryxOS booted!");
+
+	version(X86_64) {
+		import arch.amd64.memory.gdt : initGdt;
+		initGdt();
+	}
+
 	while(1){}
 }
