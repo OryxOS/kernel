@@ -13,3 +13,6 @@
 
 # Code coverage
 *.lst
+
+# Kernel releases
+*kernel
