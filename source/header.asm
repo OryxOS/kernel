@@ -13,7 +13,7 @@ framebufferTag:
 	dq 0
 	dw 0
 	dw 0
-	dw 0	
+	dw 0
 
 section .bss
 

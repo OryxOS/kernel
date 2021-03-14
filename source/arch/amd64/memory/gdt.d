@@ -1,5 +1,10 @@
 module arch.amd64.memory.gdt;
 
+/* OryxOS Amd64 GDT implementation
+ * The GDT isn't very import on the Amd64 architecture and is mostly a set-once structure.
+ * becuase of this, this GDT implementation is very simplistic and unflexible.
+ */
+
 import io.console;
 
 private struct GdtEntry {

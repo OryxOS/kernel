@@ -15,11 +15,11 @@ align(1) struct StivaleInfo {
 		StivaleTag* curTag = this.tags;
 
 		while(1) {
-			if (curTag.ident = ident) {
+			if (curTag.ident == ident) {
 				return cast(void*)(curTag);
 			}
 
-			if (curTag.next = null) {
+			if (curTag.next == null) {
 				return null;
 			}
 
@@ -36,7 +36,7 @@ align(1) struct StivaleTag {
 align(1) struct FrameBufferTag {
 	StivaleTag tag;
 
-	ulong address;
+	void*  address;
 
 	ushort width;
 	ushort height;
