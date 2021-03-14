@@ -64,7 +64,27 @@ void plotScreen(pixel p) {
 	buffer.address[0..(buffer.pitch * buffer.height + buffer.width)] = p;
 }
 
+void plotChar(pixel fore, pixel back, char c, ushort x, ushort y) {
+	ubyte[FontHeight] glyph = charToGlyph(c);
+
+	/* Go through each row of the glyph,
+	 * for each row, >> and & to get the value of each pixel.
+	 * 1 => pixel-foreground. 0 => pixel-background.
+	 * Finally, inverse x.
+	 */
+	for (ushort i = 0; i < 15; i++) {
+		for (ushort j = 0; j < 7; j++) {
+			if ((glyph[i] >> j & 1) == 1) {
+				plotPixel(fore, cast(ushort)(x + 7 - j), cast(ushort)(i + y));
+			} else {
+				plotPixel(back, cast(ushort)(x + 7 - j), cast(ushort)(i + y));
+			}
+		}
+	}
+}
+
 void putChr(const char c) {
+
 }
 
 void putStr(string s) {
