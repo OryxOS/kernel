@@ -1,7 +1,7 @@
-deprecated("Compiler intrinsics. Do not invoke") module support.panic;
+deprecated("Compiler intrinsics. Do not invoke") module runtimepanic;
 
 import io.console;
-import support.string;
+import runtime.string;
 
 // ``assert`` function
 extern (C) void __assert(const char* exp, const char* file, uint line) {

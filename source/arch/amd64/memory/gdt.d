@@ -37,8 +37,8 @@ private struct GdtPointer {
 //////////////////////////////
 
 // Selectors
-immutable CODE_SEGMENT = 0x08;    
-immutable DATA_SEGMENT = 0x10;
+enum CodeSegment = 0x08;    
+enum DataSegment = 0x10;
 
 private __gshared GdtEntry[3] gdtEntries;
 private __gshared GdtPointer  gdtPointer;
@@ -57,16 +57,16 @@ void initGdt() {
 
 		// Long jump to set cs and ss.
 		mov RBX, RSP;
-		push DATA_SEGMENT;
+		push DataSegment;
 		push RBX;
 		pushfq;
-		push CODE_SEGMENT;
+		push CodeSegment;
 		lea RAX, L1; // Putting L1 directly dereferences L1. (According to streak)
 		push RAX;
 		iretq;
 
 	L1:;
-		mov AX, DATA_SEGMENT;
+		mov AX, DataSegment;
 		mov DS, AX;
 		mov ES, AX;
 		mov FS, AX;

@@ -1,6 +1,6 @@
 import io.console;
 import io.framebuffer;
-import support.specs.stivale;
+import specs.stivale;
 
 extern (C) void main(StivaleInfo* stivale) {
 	initFrameBuffer(stivale);

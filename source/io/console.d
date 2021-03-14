@@ -1,10 +1,10 @@
 module io.console;
 
-version(X86_64) import arch.amd64.text; 
+import io.framebuffer;
 
 void clear() {
 	// Has to be done to avoid recursion
-	version(X86_64) arch.amd64.text.clear(); 
+	io.framebuffer.clear(); 
 }
 
 void write(T...)(T args) {

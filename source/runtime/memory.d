@@ -1,4 +1,4 @@
-deprecated("Compiler intrinsics. Do not invoke") module support.memory;
+deprecated("Compiler intrinsics. Do not invoke") module runtime.memory;
 
 version(X86_64) {
 	// `rep movsb` memcpy implementation

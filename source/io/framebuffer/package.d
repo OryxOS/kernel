@@ -8,7 +8,7 @@ module io.framebuffer;
  * In our implementation, the screenPos(0,0) is the top left of the screen.
  */
 
-import support.specs.stivale;
+import specs.stivale;
 
 private alias pixel = uint;
 
@@ -37,7 +37,7 @@ private __gshared FrameBuffer buffer;
 
 void initFrameBuffer(StivaleInfo* stivale) {
 	// Try access the FrameBufferTag passed by stivale
-	FrameBufferTag* fb = cast(FrameBufferTag*)(stivale.getTag(FRAMEBUFFER_ID));
+	FrameBufferTag* fb = cast(FrameBufferTag*)(stivale.getTag(FrameBufferID));
 	
 	// Very unlikely so we don't properly handle these
 	assert(fb != null);
@@ -61,4 +61,13 @@ void plotRect(pixel p, ushort x, ushort y, ushort height, ushort width) {
 
 void plotScreen(pixel p) {
 	buffer.address[0..(buffer.pitch * buffer.height + buffer.width)] = p;
+}
+
+void putChr(const char c) {
+}
+
+void putStr(string s) {
+}
+
+void clear() {
 }

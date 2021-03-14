@@ -1,9 +1,9 @@
-module support.specs.stivale;
+module specs.stivale;
 
 // Library for working with the Stivale2 boot protocol
 
 // Tags
-immutable FRAMEBUFFER_ID = 0x506461d2950408fa;
+enum FrameBufferID = 0x506461d2950408fa;
 
 align(1) struct StivaleInfo {
 	char[64] bootloaderBrand;
