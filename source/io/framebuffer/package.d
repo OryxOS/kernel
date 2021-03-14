@@ -8,6 +8,7 @@ module io.framebuffer;
  * In our implementation, the screenPos(0,0) is the top left of the screen.
  */
 
+import io.framebuffer.font;
 import specs.stivale;
 
 private alias pixel = uint;

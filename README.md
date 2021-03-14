@@ -3,5 +3,5 @@
 ## What is this?
 This repo belongs to the OryxOS microkernel, a new microkernel built with D.
 
-# Contributing
+## Contributing
 Nothing here yet.
