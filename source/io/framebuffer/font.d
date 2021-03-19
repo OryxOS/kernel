@@ -1,7 +1,6 @@
 module io.framebuffer.font;
 
-enum FontHeight = 16; 
-
+// Termios font
 private __gshared ubyte[] font = [
 	0xaa, 0x00, 0x80, 0x00, 0x80, 0x4a, 0xea, 0x5a, 0xc9, 0x00, 0x80, 0x00,
 	0x80, 0x00, 0x80, 0x55, 0xaa, 0x00, 0x80, 0x00, 0x80, 0x39, 0xc2, 0x32,
@@ -349,7 +348,7 @@ private __gshared ubyte[] font = [
 
 // Will always be a ubyte[16]
 ubyte[] charToGlyph(char c) {
-	auto index = FontHeight * c;
-	auto end = FontHeight * c + FontHeight;
+	auto index = 16 * c;
+	auto end = 16 * c + 16;
 	return font[index..end];
 }

@@ -7,14 +7,11 @@ extern (C) void main(StivaleInfo* stivale) {
 
 	plotScreen(0x0D1117);
 
-	plotChar(0xC9D1D9, 0xD1117, 'O', 0, 0);
-	plotChar(0xC9D1D9, 0xD1117, 'r', 8, 0);
-	plotChar(0xC9D1D9, 0xD1117, 'y', 16, 0);
-	plotChar(0xC9D1D9, 0xD1117, 'x', 24, 0);
+	//writeln("Hello World, The answer is ", 42, " When");
 
-	plotChar(0xC9D1D9, 0xD1117, ' ', 32, 0);
-	plotChar(0xC9D1D9, 0xD1117, 'O', 40, 0);
-	plotChar(0xC9D1D9, 0xD1117, 'S', 48, 0);
+	for (int i = 0; i < 250; i++) {
+		write("h");
+	}
 
 	ushort x = 120;
 	ushort y = 5;

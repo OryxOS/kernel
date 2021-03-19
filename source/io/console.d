@@ -1,10 +1,51 @@
 module io.console;
 
+import specs.stivale;
 import io.framebuffer;
 
-void clear() {
-	// Has to be done to avoid recursion
-	io.framebuffer.clear(); 
+enum Color: pixel {
+	Background = 0x0D1117,
+	White      = 0xC9D1D9,
+}
+
+struct Terminal {
+	ushort width;
+	ushort height;
+
+	// Control variables
+	private ushort xpos;
+	private ushort ypos;
+
+	this(const ref FrameBuffer fb) {
+		this.width = fb.width;
+		this.height = fb.height;
+	}
+
+	void putChr(const char c) {
+		plotChr(Color.White, Color.Background, c, this.xpos, this.ypos);
+
+		this.xpos += 8;
+
+		if (this.xpos > width) {
+			this.xpos = 0;
+			this.ypos += 16;
+		}
+	}
+
+	void putStr(string s) {
+		foreach (c; s) {
+			this.putChr(c);
+		}
+	}
+	void clear() {}
+}
+
+private __gshared Terminal terminal;
+
+void initTerminal(StivaleInfo* stivale) {
+	FrameBuffer fb = initFrameBuffer(stivale);
+
+	terminal = Terminal(fb);
 }
 
 void write(T...)(T args) {
@@ -19,21 +60,21 @@ void writeln(T...)(T args) {
 
 // Char
 private void putItem(char item) {
-	putChr(item);
+	terminal.putChr(item);
 }
 
 // Bool
 private void putItem(bool item) {
 	if (item == true) {
-		putStr("True");
+		terminal.putStr("True");
 	} else {
-		putStr("False");
+		terminal.putStr("False");
 	}
 }
 
 // String
 private void putItem(string item) {
-	putStr(item);
+	terminal.putStr(item);
 }
 
 // Ushort
@@ -55,7 +96,7 @@ void putItem(size_t item) {
 void putItem(byte item) {
 	// Sign fix
 	if(item < 0) {
-		putStr("-");
+		terminal.putStr("-");
 		printDecNum(-cast(size_t)(item));
 	} else {
 		printDecNum(item);
@@ -66,7 +107,7 @@ void putItem(byte item) {
 void putItem(short item) {
 	// Sign fix
 	if(item < 0) {
-		putStr("-");
+		terminal.putStr("-");
 		printDecNum(-cast(size_t)(item));
 	} else {
 		printDecNum(item);
@@ -77,7 +118,7 @@ void putItem(short item) {
 void putItem(int item) {
 	// Sign fix
 	if(item < 0) {
-		putStr("-");
+		terminal.putStr("-");
 		printDecNum(-cast(size_t)(item));
 	} else {
 		printDecNum(item);
@@ -89,10 +130,6 @@ void putItem(int item) {
 //        Formatting        //
 //////////////////////////////
 
-enum FormatFlags: uint {
-	Hex    = 1 << 0,
-}
-
 private immutable TABLE_B16 = "0123456789abcdef";
 private immutable TABLE_B10 = "0123456789";
 
@@ -101,10 +138,10 @@ private void printHexNum(size_t item) {
 	char[16] buf;
 
 	if (item == 0) {
-		putStr("0x0");
+		terminal.putStr("0x0");
 	}
 
-	putStr("0x");
+	terminal.putStr("0x");
 	for (int i = 15; item; i--) {
 		buf[i] = TABLE_B16[item % 16];
 		item /= 16;
@@ -113,7 +150,7 @@ private void printHexNum(size_t item) {
 	foreach(c; buf) {
 		// Don't print unused whitespace
 		if (c != char.init) {
-			putChr(c);
+			terminal.putChr(c);
 		}
 	}
 }
@@ -122,7 +159,7 @@ private void printDecNum(size_t item) {
 	char[16] buf;
 
 	if (item == 0) {
-		putStr("0");
+		terminal.putStr("0");
 	}
 
 	for (int i = 15; item; i--) {
@@ -133,7 +170,7 @@ private void printDecNum(size_t item) {
 	foreach(c; buf) {
 		// Don't print unused whitespace
 		if (c != char.init) {
-			putChr(c);
+			terminal.putChr(c);
 		}
 	}
 }

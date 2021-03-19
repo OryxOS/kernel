@@ -11,9 +11,9 @@ module io.framebuffer;
 import io.framebuffer.font;
 import specs.stivale;
 
-private alias pixel = uint;
+alias pixel = uint;
 
-private struct FrameBuffer {
+struct FrameBuffer {
 	pixel* address;
 	
 	// Realisticly, Oryx isn't going to encounter a screen bigger than 4k
@@ -36,7 +36,7 @@ private struct FrameBuffer {
 
 private __gshared FrameBuffer buffer;
 
-void initFrameBuffer(StivaleInfo* stivale) {
+FrameBuffer initFrameBuffer(StivaleInfo* stivale) {
 	// Try access the FrameBufferTag passed by stivale
 	FrameBufferTag* fb = cast(FrameBufferTag*)(stivale.getTag(FrameBufferID));
 	
@@ -46,6 +46,7 @@ void initFrameBuffer(StivaleInfo* stivale) {
 
 	// Tag is good
 	buffer = FrameBuffer(fb);
+	return FrameBuffer(fb);
 }
 
 void plotPixel(pixel p, ushort x, ushort y) {
@@ -64,8 +65,8 @@ void plotScreen(pixel p) {
 	buffer.address[0..(buffer.pitch * buffer.height + buffer.width)] = p;
 }
 
-void plotChar(pixel fore, pixel back, char c, ushort x, ushort y) {
-	ubyte[FontHeight] glyph = charToGlyph(c);
+void plotChr(pixel fore, pixel back, char c, ushort x, ushort y) {
+	ubyte[16] glyph = charToGlyph(c);
 
 	/* Go through each row of the glyph,
 	 * for each row, >> and & to get the value of each pixel.
@@ -81,14 +82,4 @@ void plotChar(pixel fore, pixel back, char c, ushort x, ushort y) {
 			}
 		}
 	}
-}
-
-void putChr(const char c) {
-
-}
-
-void putStr(string s) {
-}
-
-void clear() {
 }
