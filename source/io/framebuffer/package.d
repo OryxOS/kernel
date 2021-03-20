@@ -50,7 +50,7 @@ void initFrameBuffer(StivaleInfo* stivale) {
 	
 	// Very unlikely so we don't properly handle these
 	assert(fb != null);
-	assert(fb.bpp == 4);	
+	assert(fb.bpp == 32);	
 
 	// Tag is good
 	buffer = FrameBuffer(fb);

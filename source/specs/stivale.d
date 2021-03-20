@@ -74,3 +74,7 @@ align(1) struct FrameBufferTag {
 	ubyte bMaskSize;
 	ubyte bMaskShift;
 }
+
+align(1) struct MemoryTag {
+	
+}

@@ -14,7 +14,7 @@ LD   = ld.lld
 #Flags
 DFLAGS := -mtriple=amd64-unknown-elf -relocation-model=static \
 	-code-model=kernel -mattr=-sse,-sse2,-sse3,-ssse3 -disable-red-zone     \
-	-betterC -op -O -release
+	-betterC -op -O
 
 LDFLAGS   := --oformat elf_amd64 --nostdlib
 
