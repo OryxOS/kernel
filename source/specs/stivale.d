@@ -11,6 +11,7 @@ align(1) struct StivaleInfo {
 
 	StivaleTag* tags;
 
+    // ``void*`` is best for casting
 	void* getTag(ulong ident) {
 		StivaleTag* curTag = this.tags;
 

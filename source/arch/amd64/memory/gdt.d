@@ -4,9 +4,7 @@ module arch.amd64.memory.gdt;
  * The GDT isn't very import on the Amd64 architecture and is mostly a set-once structure.
  * becuase of this, this GDT implementation is very simplistic and unflexible.
  */
-
-import io.console;
-
+ 
 private struct GdtEntry {
 	align(1):
 	ushort limit;
@@ -72,7 +70,4 @@ void initGdt() {
 		mov FS, AX;
 		mov GS, AX;
 	}
-
-	// Log the success:
-	writeln("[+] GDT Initliazed");
 }

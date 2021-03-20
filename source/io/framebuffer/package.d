@@ -11,23 +11,31 @@ module io.framebuffer;
 import io.framebuffer.font;
 import specs.stivale;
 
-alias pixel = uint;
+private alias pixel = uint;
 
-struct FrameBuffer {
+// Private and only for internal use, use ``FrameBufferInfo`` instead 
+private struct FrameBuffer {
 	pixel* address;
 	
-	// Realisticly, Oryx isn't going to encounter a screen bigger than 4k
-	ushort width;
-	ushort height;
-	ushort pitch;
+	uint width;
+	uint height;
+	uint pitch;
 
 	this(FrameBufferTag* tag) {
-		this.address = cast(uint*)(tag.address);
+		this.address = cast(pixel*)(tag.address);
 
 		this.width  = tag.width;
 		this.height = tag.height;
 		this.pitch  = tag.pitch / 4;
 	}
+}
+
+/* Useful for parsing to stuff that we don't
+ * want to have direct access to the framebuffer.
+ */
+struct FrameBufferInfo {
+	uint width;
+	uint height;
 }
 
 //////////////////////////////
@@ -36,7 +44,7 @@ struct FrameBuffer {
 
 private __gshared FrameBuffer buffer;
 
-FrameBuffer initFrameBuffer(StivaleInfo* stivale) {
+void initFrameBuffer(StivaleInfo* stivale) {
 	// Try access the FrameBufferTag passed by stivale
 	FrameBufferTag* fb = cast(FrameBufferTag*)(stivale.getTag(FrameBufferID));
 	
@@ -46,15 +54,14 @@ FrameBuffer initFrameBuffer(StivaleInfo* stivale) {
 
 	// Tag is good
 	buffer = FrameBuffer(fb);
-	return FrameBuffer(fb);
 }
 
-void plotPixel(pixel p, ushort x, ushort y) {
+void plotPixel(pixel p, uint x, uint y) {
 	buffer.address[(buffer.pitch * y) + x] = p;
 }
 
-void plotRect(pixel p, ushort x, ushort y, ushort height, ushort width) {
-	for(ushort i = 0; i < height; i++) {
+void plotRect(pixel p, uint x, uint y, uint height, uint width) {
+	for(uint i = 0; i < height; i++) {
 		int where = buffer.pitch * y + buffer.pitch * i + x;
 
 		buffer.address[(where)..(where + width)] = p;
@@ -65,7 +72,7 @@ void plotScreen(pixel p) {
 	buffer.address[0..(buffer.pitch * buffer.height + buffer.width)] = p;
 }
 
-void plotChr(pixel fore, pixel back, char c, ushort x, ushort y) {
+void plotChr(pixel fore, pixel back, char c, uint x, uint y) {
 	ubyte[16] glyph = charToGlyph(c);
 
 	/* Go through each row of the glyph,
@@ -73,13 +80,17 @@ void plotChr(pixel fore, pixel back, char c, ushort x, ushort y) {
 	 * 1 => pixel-foreground. 0 => pixel-background.
 	 * Finally, inverse x.
 	 */
-	for (ushort i = 0; i < 15; i++) {
-		for (ushort j = 0; j < 7; j++) {
+	for (uint i = 0; i < 15; i++) {
+		for (uint j = 0; j < 7; j++) {
 			if ((glyph[i] >> j & 1) == 1) {
-				plotPixel(fore, cast(ushort)(x + 7 - j), cast(ushort)(i + y));
+				plotPixel(fore, x + 7 - j, i + y);
 			} else {
-				plotPixel(back, cast(ushort)(x + 7 - j), cast(ushort)(i + y));
+				plotPixel(back, x + 7 - j, i + y);
 			}
 		}
 	}
+}
+
+FrameBufferInfo getFrameBufferInfo() {
+	return FrameBufferInfo(buffer.width, buffer.height);
 }
