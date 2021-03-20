@@ -11,7 +11,7 @@ module io.framebuffer;
 import io.framebuffer.font;
 import specs.stivale;
 
-private alias pixel = uint;
+alias pixel = uint;
 
 // Private and only for internal use, use ``FrameBufferInfo`` instead 
 private struct FrameBuffer {

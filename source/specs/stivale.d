@@ -1,5 +1,7 @@
 module specs.stivale;
 
+import io.console;
+
 // Library for working with the Stivale2 boot protocol
 
 // Tags
@@ -26,6 +28,26 @@ align(1) struct StivaleInfo {
 
 			curTag = curTag.next;
 		}
+	}
+
+	void displayBootInfo() {
+		writeln("\nBoot Info:");
+		
+		write("    Bootloader brand: ");
+		foreach(c; bootloaderBrand) {
+			if (c != '\0') {
+				putChr(c);
+			}
+		}
+		putChr('\n');
+
+		write("    Bootloader version: ");
+		foreach(c; bootloaderVersion) {
+			if (c != '\0') {
+				putChr(c);
+			}
+		}
+		putChr('\n');
 	}
 }
 
