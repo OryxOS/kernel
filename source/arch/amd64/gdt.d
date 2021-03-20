@@ -1,4 +1,4 @@
-module arch.amd64.memory.gdt;
+module arch.amd64.gdt;
 
 import io.console;
 
