@@ -17,5 +17,5 @@ extern (C) void main(StivaleInfo* stivale) {
 		initGdt();
 	}
 
-	while(1){}
+	asm { hlt; }
 }

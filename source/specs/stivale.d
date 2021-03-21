@@ -1,11 +1,13 @@
 module specs.stivale;
 
 import io.console;
+import common.memory;
 
 // Library for working with the Stivale2 boot protocol
 
 // Tags
 enum FrameBufferID = 0x506461d2950408fa;
+enum MemMapID      = 0x2187f79e8612de07;
 
 align(1) struct StivaleInfo {
 	char[64] bootloaderBrand;
@@ -51,6 +53,7 @@ align(1) struct StivaleInfo {
 	}
 }
 
+// All tags have this at their start
 align(1) struct StivaleTag {
 	ulong ident;
 	StivaleTag* next;
@@ -75,6 +78,8 @@ align(1) struct FrameBufferTag {
 	ubyte bMaskShift;
 }
 
-align(1) struct MemoryTag {
-	
+align(1) struct MemMapTag {
+	StivaleTag tag;
+	ulong      entryCount;
+	Region     entries;
 }

@@ -91,6 +91,11 @@ void plotChr(pixel fore, pixel back, char c, uint x, uint y) {
 	}
 }
 
+void scrollScreen(uint amount) {
+	buffer.address[0..buffer.height * buffer.pitch - (amount * buffer.pitch)] 
+		= buffer.address[(amount * buffer.pitch)..buffer.height * buffer.pitch];
+}
+
 FrameBufferInfo getFrameBufferInfo() {
 	return FrameBufferInfo(buffer.width, buffer.height);
 }

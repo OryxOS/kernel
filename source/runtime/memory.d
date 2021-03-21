@@ -28,7 +28,6 @@ version(X86_64) {
 	}
 }
 
-
 // `_d_array_slice_copy` llvm intrinsic.
 extern(C) void _d_array_slice_copy(void* dst, size_t dstlen, void* src, size_t srclen, size_t elemsz) {
         import ldc.intrinsics : llvm_memcpy;
