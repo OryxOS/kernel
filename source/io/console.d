@@ -224,13 +224,13 @@ private void printHexNum(size_t item) {
 	}
 }
 private void printDecNum(size_t item) {
-	char[16] buf;
+	char[32] buf;
 
 	if (item == 0) {
 		putStr("0", Color.HighLight1);
 	}
 
-	for (int i = 15; item; i--) {
+	for (int i = 31; item; i--) {
 		buf[i] = TABLE_B10[item % 10];
 		item /= 10;
 	}

@@ -5,3 +5,5 @@ module arch.amd64.memory;
  * It contains the global init method and other stuff that
  * both the pmm and vmm need.
  */
+
+enum PageSize = 0x1000;

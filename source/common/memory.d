@@ -4,6 +4,12 @@ import specs.stivale;
 
 // Non arch-specific memory related stuff
 
+/* We create our own Memory map stuff for
+ * 2 reasons, Firstly, independance and secondly
+ * this allows us to design the allocator more to
+ * our liking
+ */
+
 // Do not modify, this matches the stivale spec
 enum RegionType: uint {
 	Usable                = 1,

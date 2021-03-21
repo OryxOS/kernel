@@ -3,8 +3,6 @@ module specs.stivale;
 import io.console;
 import common.memory;
 
-// Library for working with the Stivale2 boot protocol
-
 // Tags
 enum FrameBufferID = 0x506461d2950408fa;
 enum MemMapID      = 0x2187f79e8612de07;
@@ -15,15 +13,17 @@ align(1) struct StivaleInfo {
 
 	StivaleTag* tags;
 
-    // ``void*`` is best for casting
+    // void* is best for casting
 	void* getTag(ulong ident) {
 		StivaleTag* curTag = this.tags;
 
 		while(1) {
+			// Tag is present
 			if (curTag.ident == ident) {
 				return cast(void*)(curTag);
 			}
 
+			// Tag isn't present
 			if (curTag.next == null) {
 				return null;
 			}
@@ -81,5 +81,5 @@ align(1) struct FrameBufferTag {
 align(1) struct MemMapTag {
 	StivaleTag tag;
 	ulong      entryCount;
-	Region     entries;
+	Region     entries;	   // Varlength arrays don't exist in D
 }
