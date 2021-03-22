@@ -8,14 +8,33 @@ module arch.amd64.memory.physical;
 import arch.amd64.memory;
 import specs.stivale;
 import common.memory;
+import core.atomic;
 import io.console;
 
  struct BitMap {
 	ubyte* bits;  // Accounting space
-	ulong size;   // Size of the accounting space
+	ulong  size;  // Size of the accounting space
 
-	void setBlock(int id);
-	bool getBlock(int id);
+	shared void setBlock(ulong id, bool val) {
+		assert(id / 8 <= this.size); // No buffer overflows 
+
+		immutable ulong bytePos = id / 8;   // Byte to access
+		immutable ulong byteOff = id % 8;   // Offset into said byte
+
+		atomicOp!"|="(this.bits[cast(ulong)bytePos], val << byteOff);
+	}
+
+	shared bool getBlock(ulong id) {
+		assert(id / 8 <= this.size); // No buffer overflows 
+
+		immutable ulong bytePos = id / 8;   // Byte to access
+		immutable ulong byteOff = id % 8;   // Offset into said byte
+
+		if ((this.bits[bytePos] >> byteOff & 1) == 1)  {
+			return true;
+		} else 
+			return false; 
+	}
  }
 
  private shared BitMap bitMap;
@@ -31,17 +50,9 @@ import io.console;
 	// Get RegionInfo
 	RegionInfo info = RegionInfo(cast(MemMapTag*)(stivale.getTag(MemMapID)));
 
-	// Calculate total memory amount. This only includes reclaimable, usable and kernel regions
-	ulong memTotal;
-	foreach (i; 0..info.count) {
-		if (info.regions[i].type == RegionType.Usable || 
-			info.regions[i].type == RegionType.BootloaderReclaimable || 
-			info.regions[i].type == RegionType.KernelOrModule ||
-			info.regions[i].type == RegionType.AcpiReclaimable) {
-			memTotal += info.regions[i].length;
-		}
-	}
-	log(LogLevel.Info, 2, "Total Physical memory: ", memTotal / 1024 / 1024, " mb");
+	// Calculate total memory amount, This included MMIO and stuff
+	ulong memTotal = info.regions[info.count - 1].base + info.regions[info.count - 1].length;
+	log(LogLevel.Info, 2, "Total Addressable memory: ", memTotal / 1024 / 1024, " mb");
 
 	// Iterate through the regions, finding one suitable to hold our bitmap
 	foreach (i; 0..info.count){
@@ -59,6 +70,4 @@ import io.console;
 			break;
 		}
 	}
-
-	// Mark used areas
  }
