@@ -4,11 +4,11 @@ version(X86_64) {
 	// `rep movsb` memcpy implementation
 	extern (C) void* memcpy(void* dest, const void* src, size_t n) {
 		asm {
-			mov RCX, n;     // Count
-			mov RSI, src;   // Source
-			mov RDI, dest;  // Destination
-			rep;
-			movsb;
+			mov RCX, n      ; // Count
+			mov RSI, src    ; // Source
+			mov RDI, dest   ; // Destination
+			rep             ;
+			movsb           ;
 		}
 
 		return dest;
@@ -17,11 +17,11 @@ version(X86_64) {
 	// `rep stosb` memset implementation
 	extern (C) void* memset(void* s, int c, ulong n) {
 		asm {
-			mov RCX, n;		// Count
-			mov RAX, c;		// Source value
-			mov RDI, s;		// Destination
-			rep;
-			stosb;
+			mov RCX, n      ; // Count
+			mov RAX, c      ; // Value
+			mov RDI, s      ; // Destination
+			rep             ;
+			stosb           ;
 		}
 
 		return s;
