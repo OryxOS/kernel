@@ -3,11 +3,6 @@ module io.console;
 import io.framebuffer;
 import core.atomic;
 
-/* OryxOS Console implementation
- * This is a very simple console design. It works
- * by directly putting stuff on the screen
- */
-
 enum Color: pixel {
 	Background = 0x0D1117,
 	Normal     = 0xC9D1D9,
@@ -54,15 +49,23 @@ void putChr(const char c, Color col = Color.Normal) {
 
 	// Handle newlines
 	switch(c) {
-		case '\n':
-			atomicOp!"+="(console.posY, 16);
-			console.posX = 0;
-			break;
+	case '\n':
+		atomicOp!"+="(console.posY, 16);
+		console.posX = 0;
+		break;
+
+	case '\t':
+		if (console.posX % 32 == 0) {
+			atomicOp!"+="(console.posX, 32);			
+		} else {
+			atomicOp!"+="(console.posX, console.posX % 32);
+		}
+		break;
 
 	default:
-			plotChr(col, Color.Background, c, console.posX, console.posY);
-			atomicOp!"+="(console.posX, 8);
-			break;
+		plotChr(col, Color.Background, c, console.posX, console.posY);
+		atomicOp!"+="(console.posX, 8);
+		break;
 	}
 }
 
@@ -72,145 +75,123 @@ void putStr(const string s, Color col = Color.Normal) {
 	}
 }
 
+
 //////////////////////////////
 //    Variadic Printing     //
 //////////////////////////////
 
+void log(T...)(uint indent, const string fmt, T args) {
+	// Indentation
+	foreach(_; 0..indent) {
+		putChr('\t');
+	}
 
-void write(T...)(T args) {
-	foreach (i; args) {
-		putItem(i);
+	putChr('[');
+	putChr('+', Color.HighLight2);
+	putStr("] ");
+
+	writeln(fmt, args);
+}
+
+void writeln(T...)(string fmt, T args) {
+	write(fmt, args);
+	putChr('\n');
+}
+
+void write(T...)(const string fmt, T args) {
+	uint strPos;
+
+	foreach (arg; args) {
+		// look for format specifier
+		for (uint i = strPos; i < fmt.length; i++) {
+			if (fmt[i] == '%') {
+				switch (fmt[i + 1]) {
+				case 's':              // String
+					putItem(arg, true);
+					break;
+
+				case 'l':              // Bool
+					putItem(arg, true);			
+					break;
+
+				case 'd':              // Decimal
+					putItem(arg, true);
+					break;
+
+				case 'h':              // Hexadecimal
+					putItem(arg, false);
+					break;
+
+				default:
+					assert(0, "Format specifier expected");
+				}
+				strPos = i + 2;       // % + Format specifier
+				break;
+			} else {
+				putChr(fmt[i]);
+			}
+		}
+	}
+
+	// Print remainder of string after last format specifier
+	for (int i = strPos; i < fmt.length; i++) {
+		putChr(fmt[i]);
 	}
 }
-void writeln(T...)(T args) {
-	write(args, '\n');
+
+/* The following is boilerplate, but is unfortunately the 
+ * best option using BetterC, which doesn't have typeinfo
+ */
+
+// Yes, the bool here is neccessary because of how templates work
+void putItem(string item, bool dec) {
+	putStr(item);
 }
 
-// Char
-private void putItem(char item) {
+void putItem(char item, bool dec) {
 	putChr(item);
 }
 
-// Bool
-private void putItem(bool item) {
+void putItem(bool item, bool dec) {
 	if (item == true) {
 		putStr("true", Color.HighLight1);
-
 	} else {
 		putStr("false", Color.HighLight1);
 	}
 }
 
-// String
-private void putItem(string item) {
-	putStr(item);
+void putItem(ulong item, bool dec) {
+	dec ? printDecNum(item) : printHexNum(item);
 }
 
-// Ushort
-void putItem(ushort item) {
-	printDecNum(cast(size_t)(item));
+void putItem(uint item, bool dec) {
+	dec ? printDecNum(cast(ulong)(item)) : printHexNum(cast(ulong)(item));
 }
 
-// Uint
-void putItem(uint item) {
-	printDecNum(cast(size_t)(item));
+void putItem(ushort item, bool dec) {
+	dec ? printDecNum(cast(ulong)(item)) : printHexNum(cast(ulong)(item));
 }
 
-// Size_t
-void putItem(size_t item) { 
-	printDecNum(item);
-}
-
-// Byte
-void putItem(byte item) {
-	// Sign fix
-	if(item < 0) {
-		putStr("-", Color.HighLight1);
-		printDecNum(-cast(size_t)(item));
-	} else {
-		printDecNum(item);
-	}
-}
-
-// Short
-void putItem(short item) {
-	// Sign fix
-	if(item < 0) {
-		putStr("-");
-		printDecNum(-cast(size_t)(item));
-	} else {
-		printDecNum(item);
-	}
-}
-
-// Int
-void putItem(int item) {
-	// Sign fix
-	if(item < 0) {
-		putStr("-");
-		printDecNum(-cast(size_t)(item));
-	} else {
-		printDecNum(item);
-	}
-}
-
-//////////////////////////////
-//          Logging         //
-//////////////////////////////
-
-enum LogLevel {
-	Info,
-	Warning,
-	Error,
-}
-
-private enum IndentCount = 4; // Size of a tab
-
-void log(T...)(LogLevel level, uint indent, T args) {
-	// Indent to the right level
-	foreach (i; 0..indent * IndentCount) {
-		putChr(' ');
-	}
-
-	putChr('[');
-
-	// + - ! Levels
-	switch (level) {
-	case LogLevel.Info:
-		putChr('+', Color.HighLight2);
-		break;
-	case LogLevel.Warning:
-        putChr('-', Color.HighLight3);
-        break;
-	case LogLevel.Error:
-        putChr('!', Color.HighLight1);
-        break;
-	default:
-		assert(0); // Not possible	
-	}
-
-	putStr("] ");
-
-	// Print message
-	write(args, '\n');
+void putItem(ubyte item, bool dec) {
+	dec ? printDecNum(cast(ulong)(item)) : printHexNum(cast(ulong)(item));
 }
 
 //////////////////////////////
 //        Formatting        //
 //////////////////////////////
 
-private immutable TABLE_B16 = "0123456789abcdef";
+private immutable TABLE_B16 = "0123456789ABCDEF";
 private immutable TABLE_B10 = "0123456789";
 
 // Integer to Hexadecimal conversion
-private void printHexNum(size_t item) {
+private void printHexNum(ulong item) {
 	char[16] buf;
 
 	if (item == 0) {
 		putStr("0x0", Color.HighLight1);
 	}
 
-	putStr("0x", Color.HighLight2);
+	putStr("0x", Color.HighLight1);
 	for (int i = 15; item; i--) {
 		buf[i] = TABLE_B16[item % 16];
 		item /= 16;
@@ -223,7 +204,7 @@ private void printHexNum(size_t item) {
 		}
 	}
 }
-private void printDecNum(size_t item) {
+private void printDecNum(ulong item) {
 	char[32] buf;
 
 	if (item == 0) {

@@ -1,12 +1,12 @@
 module arch.amd64.gdt;
 
-import io.console;
-
 /* OryxOS Amd64 GDT implementation
  * The GDT isn't very import on the Amd64 architecture and is mostly a set-once structure.
  * becuase of this, this GDT implementation is very simplistic and unflexible.
  */
- 
+
+import io.console;
+
 private struct GdtEntry {
 	align(1):
 	ushort limit;
@@ -73,5 +73,5 @@ void initGdt() {
 		mov GS, AX;
 	}
 
-	log(LogLevel.Info, 1, "Gdt initialized with ", gdtEntries.length, " descriptors");
+	log(1, "Gdt initialized with %d descriptors", gdtEntries.length);
 }

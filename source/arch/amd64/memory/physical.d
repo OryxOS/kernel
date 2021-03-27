@@ -11,31 +11,21 @@ import common.memory;
 import core.atomic;
 import io.console;
 
- struct BitMap {
+struct BlockInfo {
+	ulong address;  // Address where the block starts
+	bool  reserved; // Has the block been reserved 
+}
+
+struct BitMap {
 	ubyte* bits;  // Accounting space
 	ulong  size;  // Size of the accounting space
 
-	shared void setBlock(ulong id, bool val) {
-		assert(id / 8 <= this.size); // No buffer overflows 
+	// Set a block as either reserved or avialable
+	shared void setBlock(ulong id, bool val);
 
-		immutable ulong bytePos = id / 8;   // Byte to access
-		immutable ulong byteOff = id % 8;   // Offset into said byte
-
-		atomicOp!"|="(this.bits[cast(ulong)bytePos], val << byteOff);
-	}
-
-	shared bool getBlock(ulong id) {
-		assert(id / 8 <= this.size); // No buffer overflows 
-
-		immutable ulong bytePos = id / 8;   // Byte to access
-		immutable ulong byteOff = id % 8;   // Offset into said byte
-
-		if ((this.bits[bytePos] >> byteOff & 1) == 1)  {
-			return true;
-		} else 
-			return false; 
-	}
- }
+	// Returns a BlockInfo struct
+	shared BlockInfo getBlock(ulong id);
+}
 
  private shared BitMap bitMap;
 
@@ -45,14 +35,19 @@ import io.console;
  * areas not maked as Usable in the Memory Map as reserved
  */
  void initPmm(StivaleInfo* stivale) {
-	writeln("    Intializing Pmm:");
+	writeln("\tIntializing Pmm:");
 
 	// Get RegionInfo
 	RegionInfo info = RegionInfo(cast(MemMapTag*)(stivale.getTag(MemMapID)));
 
+	foreach(i; 0..info.count) {
+		immutable auto curRegion = info.regions[i];
+		log(2, "Region :: Base: %h\tLength: %h", curRegion.base, curRegion.length);
+	}
+
 	// Calculate total memory amount, This included MMIO and stuff
 	ulong memTotal = info.regions[info.count - 1].base + info.regions[info.count - 1].length;
-	log(LogLevel.Info, 2, "Total Addressable memory: ", memTotal / 1024 / 1024, " mb");
+	log(2, "Total addressable memory: %d mb", memTotal / 1024 / 1024);
 
 	// Iterate through the regions, finding one suitable to hold our bitmap
 	foreach (i; 0..info.count){
@@ -61,12 +56,11 @@ import io.console;
 		// Check Type and Size
 		if (curRegion.type == RegionType.Usable && curRegion.length >= memTotal / PageSize / 8) {
 			// Logging
-			immutable ulong rem = curRegion.length - memTotal / PageSize / 8;
-			log(LogLevel.Info, 2, "Found free region for Bitmap: Size: ", curRegion.length, " Remainder: ", rem);
+			log(2, "Found free region for Bitmap :: Base: %h\tLength: %h\tUsed: %h", curRegion.base, curRegion.length, memTotal / PageSize / 8);
 
 			// Set our global BitMap
 			bitMap = shared BitMap(cast(shared ubyte*)(curRegion.base), memTotal / PageSize / 8);
-			log(LogLevel.Info, 2, "BitMap set and ready for use");
+			log(2, "BitMap set and ready for use");
 			break;
 		}
 	}
