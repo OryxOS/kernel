@@ -6,8 +6,13 @@ extern (C) void main(StivaleInfo* stivale) {
 	initFrameBuffer(stivale);
 	initConsole();
 
+	/*for (ulong i = 0; i < 256; i++) {
+		writeln("%d", i);
+	}*/
+
 	writeln("OryxOS Booted");
 	stivale.displayBootInfo();
+
 
 	version (X86_64) {
 		import arch.amd64.gdt             : initGdt;
@@ -16,7 +21,7 @@ extern (C) void main(StivaleInfo* stivale) {
 
 		initGdt();
 		initPmm(stivale);
-	}
+	} 
 
 	asm { hlt; }
 }

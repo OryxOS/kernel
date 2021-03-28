@@ -14,28 +14,33 @@ import core.atomic;
 import io.console;
 
 private struct BitMap {
-	byte* map;          // The actual bitmap
-	ulong size;         // Size (bits) of the bitmap
+	ubyte* map;          // The actual bitmap
+	ulong size;          // Size (bits) of the bitmap
 
 	shared bool testBit(ulong bit) {
 		assert(bit <= this.size);
-		return this.map[bit * 8] >> (bit % 8) & 1;
+
+		if ((this.map[bit / 8] & (1 << (bit % 8))) == 1) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
 	shared void setBit(ulong bit) {
 		assert(bit <= this.size);
-		atomicOp!"|="(this.map[bit * 8], 1 << (bit % 8));
+		atomicOp!"|="(this.map[bit / 8], 1 << (bit % 8));
 	}
 
 	shared void unsetBit(ulong bit) {
 		assert(bit <= this.size);
-		atomicOp!"|="(this.map[bit * 8], 0 << (bit % 8));
+		atomicOp!"&="(this.map[bit / 8], ~(1 << (bit % 8)));
 	}
 }
 
 shared BitMap bitMap;
 
- void initPmm(StivaleInfo* stivale) {
+void initPmm(StivaleInfo* stivale) {
 	writeln("\tIntializing Pmm:");
 
 	// Get RegionInfo
@@ -46,7 +51,7 @@ shared BitMap bitMap;
 	// 1. Calculate size needed for bitmap
 	ulong highestByte;
 	for (ulong i = 0; i < info.count; i++) {
-		auto curRegion = info.regions[i];
+		auto immutable curRegion = info.regions[i];
 
 		// We only work with Usable, Kernel and Bootloader regions
 		if (curRegion.type != RegionType.Usable
@@ -55,11 +60,11 @@ shared BitMap bitMap;
 			continue;
 
 		// Actual calculation
-		ulong top = curRegion.base + curRegion.length;
+		immutable ulong top = curRegion.base + curRegion.length;
 		if (top > highestByte)
 			highestByte = top;
 
-		mapSize = divRoundUp(highestByte, PageSize) / 8; // `/ 8` for bits
+		mapSize = divRoundUp(highestByte, PageSize) * 8; // `* 8` for bits
 	}
 
 	// 2. Find region large enough to fit bitmap
@@ -70,17 +75,28 @@ shared BitMap bitMap;
 		if (curRegion.type != RegionType.Usable || curRegion.length < mapSize * 8)
 			continue;
 		
-		bitMap = shared BitMap(cast(shared byte*)(curRegion.base + PhysOffset), mapSize);
+		bitMap = shared BitMap(cast(shared ubyte*)(curRegion.base + PhysOffset), mapSize);
 
-		// Reserve entire bitmap
-		bitMap.map[0..bitMap.size * 8] = 0xf;
+		// Reserve entire bitmap - Safer than setting entire bitmap as free
+		bitMap.map[0..bitMap.size * 8] = 0xFF;
 
 		// Update region info
 		curRegion.base   += bitMap.size;
 		curRegion.length -= bitMap.size;
 
-		log(2, "Bitmap created :: Blocks accounted: %d Size: %h", bitMap.size, bitMap.size * 8);
-
-		break; // Only need 1
+		break; // Only need 1 region
 	}
+
+	// 3. Correctly populate the Bitmap with usable regions
+	for (ulong i = 0; i < info.count; i++) {
+		auto immutable curRegion = info.regions[i];
+
+		if(curRegion.type != RegionType.Usable)
+			continue;
+
+		for (ulong j = 0; j < curRegion.length; j += PageSize)
+			bitMap.unsetBit((curRegion.base + j) / PageSize);
+	}
+
+	log(2, "Bitmap created and set :: Blocks accounted: %d Size: %h", bitMap.size, bitMap.size * 8);
  }

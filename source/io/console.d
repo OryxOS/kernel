@@ -1,6 +1,7 @@
 module io.console;
 
 import io.framebuffer;
+import runtime.math;
 import core.atomic;
 
 enum Color: pixel {
@@ -20,8 +21,8 @@ private struct Console {
 	uint maxY;
 
 	this(FrameBufferInfo fb) {
-		this.maxX = fb.width;
-		this.maxY = fb.height;
+		this.maxX = fb.width - fb.width % 8;
+		this.maxY = fb.height - fb.width % 16;
 	}
 }
 
@@ -35,13 +36,13 @@ void initConsole() {
 
 void putChr(const char c, Color col = Color.Normal) {
 	// End of line
-	if(console.posX > console.maxX) {
+	if(console.posX >= console.maxX) {
 		atomicOp!"+="(console.posY, 16);
 		console.posX = 0;
 	}
 
 	// Scroll
-	if(console.posY > console.maxY) {
+	if(console.posY >= console.maxY) {
 		scrollScreen(16);
 		plotRect(Color.Background, 0, console.maxY - 16, console.maxX, 16);
 		console.posY = console.maxY - 16;
@@ -107,6 +108,10 @@ void write(T...)(const string fmt, T args) {
 			if (fmt[i] == '%') {
 				switch (fmt[i + 1]) {
 				case 's':              // String
+					putItem(arg, true);
+					break;
+
+				case 'c':
 					putItem(arg, true);
 					break;
 
