@@ -1,6 +1,7 @@
-import specs.stivale;
+import lib.stivale;
+import lib.std.stdio;
+
 import io.framebuffer;
-import io.console;
 
 extern (C) void main(StivaleInfo* stivale) {
 	initFrameBuffer(stivale);
@@ -10,14 +11,14 @@ extern (C) void main(StivaleInfo* stivale) {
 		writeln("%d", i);
 	}*/
 
-	writeln("OryxOS Booted");
+	writefln("OryxOS Booted");
 	stivale.displayBootInfo();
 
 
 	version (X86_64) {
 		import arch.amd64.gdt             : initGdt;
 		import arch.amd64.memory.physical : initPmm;
-		writeln("\nAmd64 Init:");
+		writefln("\nAmd64 Init:");
 
 		initGdt();
 		initPmm(stivale);

@@ -1,6 +1,7 @@
-module specs.stivale;
+module lib.stivale;
 
-import io.console;
+import lib.std.stdio;
+
 import common.memory;
 
 // Tags
@@ -42,7 +43,7 @@ align(1) struct StivaleInfo {
 		putChr('\n');
 		log(0, "Boot Info:");
 		
-		write("\tBootloader brand: ");
+		writef("\tBootloader brand: ");
 		foreach(c; bootloaderBrand) {
 			if (c != '\0') {
 				putChr(c);
@@ -50,7 +51,7 @@ align(1) struct StivaleInfo {
 		}
 		putChr('\n');
 
-		write("\tBootloader version: ");
+		writef("\tBootloader version: ");
 		foreach(c; bootloaderVersion) {
 			if (c != '\0') {
 				putChr(c);

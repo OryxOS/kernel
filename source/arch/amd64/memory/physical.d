@@ -6,12 +6,13 @@ module arch.amd64.memory.physical;
  * in 1 bitmap. This is done as it is the simplest approach
  */
 
+import lib.std.stdio;
+import lib.std.math;
+import lib.stivale;
+
 import arch.amd64.memory;
-import specs.stivale;
 import common.memory;
-import runtime.math;
 import core.atomic;
-import io.console;
 
 private struct BitMap {
 	ubyte* map;          // The actual bitmap
@@ -41,7 +42,7 @@ private struct BitMap {
 shared BitMap bitMap;
 
 void initPmm(StivaleInfo* stivale) {
-	writeln("\tIntializing Pmm:");
+	writefln("\tIntializing Pmm:");
 
 	// Get RegionInfo
 	RegionInfo info = RegionInfo(cast(MemMapTag*)(stivale.getTag(MemMapID)));

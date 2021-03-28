@@ -1,7 +1,6 @@
-module io.console;
+module lib.std.stdio;
 
 import io.framebuffer;
-import runtime.math;
 import core.atomic;
 
 enum Color: pixel {
@@ -91,15 +90,15 @@ void log(T...)(uint indent, const string fmt, T args) {
 	putChr('+', Color.HighLight2);
 	putStr("] ");
 
-	writeln(fmt, args);
+	writefln(fmt, args);
 }
 
-void writeln(T...)(string fmt, T args) {
-	write(fmt, args);
+void writefln(T...)(const string fmt, T args) {
+	writef(fmt, args);
 	putChr('\n');
 }
 
-void write(T...)(const string fmt, T args) {
+void writef(T...)(const string fmt, T args) {
 	uint strPos;
 
 	foreach (arg; args) {

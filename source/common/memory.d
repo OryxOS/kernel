@@ -1,6 +1,6 @@
 module common.memory;
 
-import specs.stivale;
+import lib.stivale;
 
 // Non arch-specific memory related stuff
 

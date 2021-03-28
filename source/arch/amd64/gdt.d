@@ -5,7 +5,7 @@ module arch.amd64.gdt;
  * becuase of this, this GDT implementation is very simplistic and unflexible.
  */
 
-import io.console;
+import lib.std.stdio;
 
 private struct GdtEntry {
 	align(1):

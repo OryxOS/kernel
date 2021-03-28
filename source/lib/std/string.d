@@ -1,4 +1,4 @@
-module runtime.string;
+module lib.std.string;
 
 private size_t stringLength(const char* str) {
 	size_t len;

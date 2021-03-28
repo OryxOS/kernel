@@ -9,7 +9,7 @@ module io.framebuffer;
  */
 
 import io.framebuffer.font;
-import specs.stivale;
+import lib.stivale;
 
 alias pixel = uint;
 
