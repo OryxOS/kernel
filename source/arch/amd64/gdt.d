@@ -16,7 +16,7 @@ private struct GdtEntry {
 	ubyte  highFlags;
 	ubyte  highbase;
 
-	this(ubyte lowFlags, ubyte highFlags) {
+	shared this(ubyte lowFlags, ubyte highFlags) {
 		this.limit     = 0;
 		this.lowBase   = 0;
 		this.midBase   = 0;
@@ -40,16 +40,16 @@ private struct GdtPointer {
 enum CodeSegment = 0x08;    
 enum DataSegment = 0x10;
 
-private __gshared GdtEntry[3] gdtEntries;
-private __gshared GdtPointer  gdtPointer;
+private shared GdtEntry[3] gdtEntries;
+private shared GdtPointer  gdtPointer;
 
 void initGdt() {
-	gdtEntries[0] = GdtEntry(0b00000000, 0b00000000); // Null
-	gdtEntries[1] = GdtEntry(0b10011010, 0b00100000); // Kernel Code
-	gdtEntries[2] = GdtEntry(0b10010010, 0b00000000); // Kernel Data
+	gdtEntries[0] = shared GdtEntry(0b00000000, 0b00000000); // Null
+	gdtEntries[1] = shared GdtEntry(0b10011010, 0b00100000); // Kernel Code
+	gdtEntries[2] = shared GdtEntry(0b10010010, 0b00000000); // Kernel Data
 
 	// Set pointer
-	gdtPointer = GdtPointer(gdtEntries.sizeof - 1, cast(void*)&gdtEntries);
+	gdtPointer = shared GdtPointer(gdtEntries.sizeof - 1, cast(shared void*)&gdtEntries);
 
 	// Load the GDT
 	asm {

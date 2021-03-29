@@ -6,13 +6,14 @@ module arch.amd64.memory.physical;
  * in 1 bitmap. This is done as it is the simplest approach
  */
 
-import lib.std.stdio;
-import lib.std.math;
 import lib.stivale;
+import lib.std.math;
+import lib.std.stdio;
+import lib.std.result;
 
-import arch.amd64.memory;
-import common.memory;
 import core.atomic;
+import common.memory;
+import arch.amd64.memory;
 
 private struct BitMap {
 	ubyte* map;          // The actual bitmap
@@ -38,6 +39,10 @@ private struct BitMap {
 		atomicOp!"&="(this.map[bit / 8], ~(1 << (bit % 8)));
 	}
 }
+
+//////////////////////////////
+//         Instance         //
+//////////////////////////////
 
 shared BitMap bitMap;
 
