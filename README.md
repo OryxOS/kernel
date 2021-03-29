@@ -1,7 +1,7 @@
 # The OryxOS Micro-Kernel
 
 ## What is this?
-This repo belongs to the OryxOS microkernel, a new microkernel built with D.
+This repo belongs to the OryxOS microkernel, a new microkernel built with Dlang.
 
 ## Contributing
 OryxOS is always welcoming contributing, just make sure to read ``CONTRIBUTING.md`` first.
