@@ -7,5 +7,10 @@ import lib.std.stdio;
 extern (C) void __assert(const char* exp, const char* file, uint line) {
 	writefln("Assert: %s", fromCString(exp));
 	writefln("Where:  %s:%d", fromCString(file), line);
-	while(1) {} // Hang the kernel
+	
+	// Hang the kernel
+	asm {
+		cli;
+		hlt;
+	}
 }

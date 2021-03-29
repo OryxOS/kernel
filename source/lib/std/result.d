@@ -23,8 +23,13 @@ struct Result(T, E) {
 	   isOkay = false;
 	}
 
-	T unwrap(string message = "Unwrap failed: result bad") {
+	T unwrapResult(string message = "Unwrap failed: no result") {
 		assert(isOkay, message);
 		return result;
+	}
+
+	E unwrapError(string message = "Unwrap failed: no error") {
+		assert(!isOkay, message);
+		return error;
 	}
 }
