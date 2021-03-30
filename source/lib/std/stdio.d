@@ -42,9 +42,9 @@ void putChr(const char c, Color col = Color.Normal) {
 
 	// Scroll
 	if(console.posY >= console.maxY) {
-		scrollScreen(16);
-		plotRect(Color.Background, 0, console.maxY - 16, console.maxX, 16);
-		console.posY = console.maxY - 16;
+		scrollScreen(16, getFrameBufferInfo().height % 16);                  // Move new data up
+		plotRect(Color.Background, 0, console.maxY - 16, console.maxX, 16);  // Clear line
+		console.posY = console.maxY - 16;                                    // Reset cursor
 	}
 
 	// Handle newlines

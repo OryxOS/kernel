@@ -60,7 +60,7 @@ void plotPixel(pixel p, uint x, uint y) {
 	buffer.address[(buffer.pitch * y) + x] = p;
 }
 
-void plotRect(pixel p, uint x, uint y, uint height, uint width) {
+void plotRect(pixel p, uint x, uint y, uint width, uint height) {
 	for(uint i = 0; i < height; i++) {
 		int where = buffer.pitch * y + buffer.pitch * i + x;
 
@@ -91,9 +91,9 @@ void plotChr(pixel fore, pixel back, char c, uint x, uint y) {
 	}
 }
 
-void scrollScreen(uint amount) {
-	buffer.address[0..buffer.height * buffer.pitch - (amount * buffer.pitch)] 
-		= buffer.address[(amount * buffer.pitch)..buffer.height * buffer.pitch];
+void scrollScreen(uint amount, uint offsetFromBottom = 0) {
+	buffer.address[0..buffer.height * buffer.pitch - ((amount + offsetFromBottom) * buffer.pitch)] 
+		= buffer.address[(amount * buffer.pitch)..buffer.height * buffer.pitch - offsetFromBottom * buffer.pitch];
 }
 
 FrameBufferInfo getFrameBufferInfo() {
