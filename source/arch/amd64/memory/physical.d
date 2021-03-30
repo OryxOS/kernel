@@ -16,22 +16,24 @@ import common.memory;
 import arch.amd64.memory;
 
 private struct BitMap {
-	ubyte* map;          // The actual bitmap
-	ulong size;          // Size (bits) of the bitmap
+	ubyte* map;   // The actual bitmap
+	ulong size;   // Size (bits) of the bitmap
+	
+	ulong nextFree;  // Next free block
+
+	shared this(shared ubyte* map, shared ulong size) {
+		this.map = map;
+		this.size = size;
+	}
 
 	shared bool testBit(ulong bit) {
 		assert(bit <= this.size);
-
-		if ((this.map[bit / 8] & (1 << (bit % 8))) == 1) {
-			return true;
-		} else {
-			return false;
-		}
+		return !!(map[bit / 8] & (1 << (bit % 8)));
 	}
 	
 	shared void setBit(ulong bit) {
 		assert(bit <= this.size);
-		atomicOp!"|="(this.map[bit / 8], 1 << (bit % 8));
+		atomicOp!"|="(this.map[bit / 8], (1 << (bit % 8)));
 	}
 
 	shared void unsetBit(ulong bit) {
@@ -84,7 +86,7 @@ void initPmm(StivaleInfo* stivale) {
 		bitMap = shared BitMap(cast(shared ubyte*)(curRegion.base + PhysOffset), mapSize);
 
 		// Reserve entire bitmap - Safer than setting entire bitmap as free
-		bitMap.map[0..bitMap.size * 8] = 0xFF;
+		bitMap.map[0..bitMap.size / 8] = 0xFF;
 
 		// Update region info
 		curRegion.base   += bitMap.size;
@@ -100,9 +102,90 @@ void initPmm(StivaleInfo* stivale) {
 		if(curRegion.type != RegionType.Usable)
 			continue;
 
-		for (ulong j = 0; j < curRegion.length; j += PageSize)
+		for (ulong j = 0; j < curRegion.length; j += PageSize) 
 			bitMap.unsetBit((curRegion.base + j) / PageSize);
 	}
 
-	log(2, "Bitmap created and set :: Blocks accounted: %d Size: %h", bitMap.size, bitMap.size * 8);
+	// 4. Set `nextFree` to the next available block
+	for (ulong i = 0; i < bitMap.size; i++) {
+		if (!bitMap.testBit(i)) {
+			bitMap.nextFree = i;
+			break;
+		}
+	} 
+
+	// Display some bits
+	writefln("\nBitmaap:");
+	foreach(i; 0..0x100 + 0x100) {
+		if (bitMap.testBit(i)) {
+			writef("%d", 1);
+		} else {
+			writef("0");
+		}
+	}
+	writefln("");
+
+	//log(2, "Bitmap created and set :: Blocks accounted: %d Size: %h", bitMap.size, bitMap.size * 8);
  }
+
+ // Error handling
+enum PmmError{
+	OutOfMemory,
+	NoRegionLargeEnough,
+	
+	BlockAlreadyFreed,
+}
+alias PmmResult = Result!(void*, PmmError);
+
+PmmResult newBlock(ulong count) {
+	ulong regionStart = bitMap.nextFree;
+
+	writefln("regionStart: %d", regionStart);
+	
+	while (1) {
+		bool  newRegionNeeded;
+
+		for (ulong i = regionStart; i < regionStart + count; i++) {
+			if (!bitMap.testBit(i))
+				continue;
+
+			// Necessary to find a new region
+			regionStart = i;
+			newRegionNeeded = true;
+			break;
+		}
+
+		if (newRegionNeeded) {
+			for (; regionStart < bitMap.size; regionStart++) {
+				if (!bitMap.testBit(regionStart))
+					break;
+
+				if (regionStart == bitMap.size) {
+					return PmmResult(PmmError.OutOfMemory);
+				}
+			}
+			// End of memory
+			return PmmResult(PmmError.NoRegionLargeEnough);
+		} else {
+			// Success
+
+			// Mark region as reserved
+			foreach (i; regionStart..regionStart + count) {
+				bitMap.setBit(i);
+			}
+
+			// Set `nextFree` to the next free region
+			if (bitMap.testBit(regionStart + count + 1)) {
+				for (ulong i = regionStart + count + 1; i < bitMap.size; i++) {
+					if (!bitMap.testBit(regionStart))
+						bitMap.nextFree = i;
+						break;
+				}
+			} else {
+				bitMap.nextFree = regionStart + count + 1;
+			}
+
+			return PmmResult(cast(void*)(regionStart * PageSize + PhysOffset));
+		}
+	}
+}

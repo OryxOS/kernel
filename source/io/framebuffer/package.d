@@ -30,7 +30,7 @@ private struct FrameBuffer {
 	}
 }
 
-/* Useful for parsing to stuff that we don't
+/* Useful for passing to stuff that we don't
  * want to have direct access to the framebuffer.
  */
 struct FrameBufferInfo {

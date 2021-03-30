@@ -21,7 +21,7 @@ private struct Console {
 
 	this(FrameBufferInfo fb) {
 		this.maxX = fb.width - fb.width % 8;
-		this.maxY = fb.height - fb.width % 16;
+		this.maxY = fb.height - fb.height % 16;
 	}
 }
 
