@@ -1,7 +1,7 @@
-# The OryxOS Micro-Kernel
+# The OryxOS Kernel
 
-## What is this?
-This repo belongs to the OryxOS microkernel, a new microkernel built with Dlang.
+## What is OryxOS?
+OryxOS is a non-unix, non-posix Operating System written Dlang. It features a microkernel with the aim of reaching a balance between speed and safety. More inform
 
 ## Contributing
 OryxOS is always welcoming contributing, just make sure to read ``CONTRIBUTING.md`` first.
