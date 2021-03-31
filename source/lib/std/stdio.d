@@ -93,6 +93,31 @@ void log(T...)(uint indent, const string fmt, T args) {
 	writefln(fmt, args);
 }
 
+void panic(string file = __FILE__, size_t line = __LINE__, T...)(uint indent, const string fmt, T args) {
+	// Indentation
+	foreach(_; 0..indent) {
+		putChr('\t');
+	}
+
+	putChr('[');
+	putChr('!', Color.HighLight2);
+	putStr("] ");
+
+	writef("[%s:%d] ", file, line);
+
+	writefln(fmt, args);
+
+	// Hang the kernel
+	version(X86_64) {
+		asm {
+			cli;
+			hlt;
+		}
+	} else {
+		while(1) {}
+	}
+}
+
 void writefln(T...)(const string fmt, T args) {
 	writef(fmt, args);
 	putChr('\n');

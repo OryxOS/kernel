@@ -9,12 +9,12 @@ enum FrameBufferID = 0x506461d2950408fa;
 enum MemMapID      = 0x2187f79e8612de07;
 
 // All tags have this at their start
-align(1) struct StivaleTag {
+align (1) struct StivaleTag {
 	ulong ident;
 	StivaleTag* next;
 }
 
-align(1) struct StivaleInfo {
+align (1) struct StivaleInfo {
 	char[64] bootloaderBrand;
 	char[64] bootloaderVersion;
 
@@ -62,7 +62,7 @@ align(1) struct StivaleInfo {
 }
 
 
-align(1) struct FrameBufferTag {
+align (1) struct FrameBufferTag {
 	StivaleTag tag;
 
 	void*  address;
@@ -82,7 +82,7 @@ align(1) struct FrameBufferTag {
 }
 
 
-align(1) struct MemMapTag {
+align (1) struct MemMapTag {
 	StivaleTag tag;
 	ulong      entryCount;
 	Region     entries;	   // Varlength arrays don't exist in D

@@ -6,7 +6,7 @@ import lib.stivale;
 import arch.amd64.memory.physical;
 import arch.amd64.gdt;
 
-void initSys(StivaleInfo* stivale) {
+void initArch(StivaleInfo* stivale) {
 	writefln("\nAmd64 Init:");
 
 	initGdt();

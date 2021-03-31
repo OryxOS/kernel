@@ -1,7 +1,7 @@
 module arch.amd64.memory.physical;
 
-/* OryxOS Bitmap Physical Allocator
- * This is oryxOS's bitmap allocator, it allocates physical memory
+/* OryxOS Amd64 Physical Memory Manager
+ * This is oryxOS's physical memory manager, it allocates and frees physical memory
  * in 4kb blocks. This bitmap mappes all of the physical memory available
  * in 1 bitmap, this is done as it is the simplest approach.
  */
@@ -46,7 +46,7 @@ private struct BitMap {
 //         Instance         //
 //////////////////////////////
 
-shared BitMap bitMap;
+private shared BitMap bitMap;
 
 void initPmm(StivaleInfo* stivale) {
 	writefln("\tIntializing Pmm:");
