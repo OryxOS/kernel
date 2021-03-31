@@ -3,7 +3,7 @@ module arch.amd64.memory.physical;
 /* OryxOS Bitmap Physical Allocator
  * This is oryxOS's bitmap allocator, it allocates physical memory
  * in 4kb blocks. This bitmap mappes all of the physical memory available
- * in 1 bitmap. This is done as it is the simplest approach
+ * in 1 bitmap, this is done as it is the simplest approach.
  */
 
 import lib.stivale;
@@ -112,40 +112,31 @@ void initPmm(StivaleInfo* stivale) {
 			bitMap.nextFree = i;
 			break;
 		}
-	} 
-
-	// Display some bits
-	writefln("\nBitmaap:");
-	foreach(i; 0..0x100 + 0x100) {
-		if (bitMap.testBit(i)) {
-			writef("%d", 1);
-		} else {
-			writef("0");
-		}
 	}
-	writefln("");
 
-	//log(2, "Bitmap created and set :: Blocks accounted: %d Size: %h", bitMap.size, bitMap.size * 8);
+	log(2, "Bitmap created and set :: Blocks accounted: %d Size: %h", bitMap.size, bitMap.size * 8);
  }
 
  // Error handling
 enum PmmError{
-	OutOfMemory,
-	NoRegionLargeEnough,
-	
+	NotEnoughMemory,
+
+	AddressNotAligned,	
 	BlockAlreadyFreed,
 }
 alias PmmResult = Result!(void*, PmmError);
 
-PmmResult newBlock(ulong count) {
+// Returns a new, zeroed out block of memory
+PmmResult newBlock(ulong count) {													
 	ulong regionStart = bitMap.nextFree;
-
-	writefln("regionStart: %d", regionStart);
-	
+									
 	while (1) {
-		bool  newRegionNeeded;
+		bool  newRegionNeeded;												
 
 		for (ulong i = regionStart; i < regionStart + count; i++) {
+			if (i >= bitMap.size) 
+				return PmmResult(PmmError.NotEnoughMemory);
+
 			if (!bitMap.testBit(i))
 				continue;
 
@@ -154,21 +145,18 @@ PmmResult newBlock(ulong count) {
 			newRegionNeeded = true;
 			break;
 		}
-
+		
+		// Was allocation a success
 		if (newRegionNeeded) {
 			for (; regionStart < bitMap.size; regionStart++) {
 				if (!bitMap.testBit(regionStart))
 					break;
 
 				if (regionStart == bitMap.size) {
-					return PmmResult(PmmError.OutOfMemory);
+					return PmmResult(PmmError.NotEnoughMemory);
 				}
 			}
-			// End of memory
-			return PmmResult(PmmError.NoRegionLargeEnough);
 		} else {
-			// Success
-
 			// Mark region as reserved
 			foreach (i; regionStart..regionStart + count) {
 				bitMap.setBit(i);
@@ -182,10 +170,33 @@ PmmResult newBlock(ulong count) {
 						break;
 				}
 			} else {
-				bitMap.nextFree = regionStart + count + 1;
+				bitMap.nextFree = regionStart + count;
 			}
 
 			return PmmResult(cast(void*)(regionStart * PageSize + PhysOffset));
 		}
 	}
+}
+
+PmmResult delBlock(void* blockStart, ulong count) {
+	if (cast(ulong)(blockStart) % PageSize != 0)
+		return PmmResult(PmmError.AddressNotAligned);
+
+	// Determine the start
+	ulong start = (cast(ulong)(blockStart) - PhysOffset) / PageSize;
+
+	// Check if blocks have already been freed
+	for (ulong i = start; i < start + count; i++)
+		if (!bitMap.testBit(i))
+			return PmmResult(PmmError.BlockAlreadyFreed);
+
+	// Free the blocks
+	for (ulong i = start; i < start + count; i++)
+		bitMap.unsetBit(i);
+
+	// Update `nextFree`
+	if (bitMap.nextFree > start)
+		bitMap.nextFree = start;
+
+	return PmmResult(blockStart);
 }
