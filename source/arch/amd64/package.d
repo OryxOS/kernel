@@ -4,6 +4,7 @@ import lib.std.stdio;
 import lib.stivale;
 
 import arch.amd64.memory.physical;
+import arch.amd64.memory.virtual;
 import arch.amd64.gdt;
 
 void initArch(StivaleInfo* stivale) {
@@ -11,4 +12,5 @@ void initArch(StivaleInfo* stivale) {
 
 	initGdt();
 	initPmm(stivale);
+	initVmm();
 }
