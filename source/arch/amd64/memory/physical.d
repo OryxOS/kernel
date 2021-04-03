@@ -21,24 +21,24 @@ private struct BitMap {
 	
 	ulong nextFree;  // Next free block
 
-	shared this(shared ubyte* map, shared ulong size) {
+	this(ubyte* map, ulong size) {
 		this.map = map;
 		this.size = size;
 	}
 
-	shared bool testBit(ulong bit) {
+	bool testBit(ulong bit) {
 		assert(bit <= this.size);
 		return !!(map[bit / 8] & (1 << (bit % 8)));
 	}
 	
-	shared void setBit(ulong bit) {
+	void setBit(ulong bit) {
 		assert(bit <= this.size);
-		atomicOp!"|="(this.map[bit / 8], (1 << (bit % 8)));
+		this.map[bit / 8] |= (1 << (bit % 8));
 	}
 
-	shared void unsetBit(ulong bit) {
+	void unsetBit(ulong bit) {
 		assert(bit <= this.size);
-		atomicOp!"&="(this.map[bit / 8], ~(1 << (bit % 8)));
+		this.map[bit / 8] &= ~(1 << (bit % 8));
 	}
 }
 
@@ -46,7 +46,7 @@ private struct BitMap {
 //         Instance         //
 //////////////////////////////
 
-private shared BitMap bitMap;
+private __gshared BitMap bitMap;
 
 void initPmm(StivaleInfo* stivale) {
 	writefln("\tIntializing Pmm:");
@@ -83,7 +83,7 @@ void initPmm(StivaleInfo* stivale) {
 		if (curRegion.type != RegionType.Usable || curRegion.length < mapSize * 8)
 			continue;
 		
-		bitMap = shared BitMap(cast(shared ubyte*)(curRegion.base + PhysOffset), mapSize);
+		bitMap = BitMap(cast(ubyte*)(curRegion.base + PhysOffset), mapSize);
 
 		// Reserve entire bitmap - Safer than setting entire bitmap as free
 		bitMap.map[0..bitMap.size / 8] = 0xFF;
@@ -123,10 +123,16 @@ enum PmmError{
 
 	AddressNotAligned,	
 	BlockAlreadyFreed,
+	BlockOutOfRange,
 }
-alias PmmResult = Result!(void*, PmmError);
+alias PmmResult = Result!(PhysAddress, PmmError);
 
-// Returns a new, zeroed out block of memory
+/// Returns `count` blocks of zeroed out memory
+/// Params:
+/// 	count = number of blocks to allocate
+/// Returns: 
+/// 	Physical Address to the start of the blocks
+/// 	or an error
 PmmResult newBlock(ulong count) {													
 	ulong regionStart = bitMap.nextFree;
 									
@@ -146,7 +152,7 @@ PmmResult newBlock(ulong count) {
 			break;
 		}
 		
-		// Was allocation a success
+		// Check the result - is a new region needed
 		if (newRegionNeeded) {
 			for (; regionStart < bitMap.size; regionStart++) {
 				if (!bitMap.testBit(regionStart))
@@ -173,14 +179,26 @@ PmmResult newBlock(ulong count) {
 				bitMap.nextFree = regionStart + count;
 			}
 
-			return PmmResult(cast(void*)(regionStart * PageSize + PhysOffset));
+			return PmmResult(cast(PhysAddress)(regionStart * PageSize));
 		}
 	}
 }
 
-PmmResult delBlock(void* blockStart, ulong count) {
+/// Frees `count` blocks of memory
+/// Params:
+/// 	blockStart = Physical address of the blocks
+/// 	count = number of blocks to free
+/// Returns: 
+/// 	Physical Address to the start of the blocks
+/// 	or an error
+PmmResult delBlock(PhysAddress blockStart, ulong count) {
+	// Check alignment
 	if (cast(ulong)(blockStart) % PageSize != 0)
 		return PmmResult(PmmError.AddressNotAligned);
+
+	// Check block range
+	if (cast(ulong)(blockStart) / PageSize + count > bitMap.size)
+		return PmmResult(PmmError.BlockOutOfRange);
 
 	// Determine the start
 	ulong start = (cast(ulong)(blockStart) - PhysOffset) / PageSize;

@@ -1,7 +1,6 @@
 module lib.std.stdio;
 
 import io.framebuffer;
-import core.atomic;
 
 enum Color: pixel {
 	Background = 0x0D1117,
@@ -25,7 +24,7 @@ private struct Console {
 	}
 }
 
-private shared Console console;
+private __gshared Console console;
 
 void initConsole() {
 	console = Console(getFrameBufferInfo());
@@ -36,7 +35,7 @@ void initConsole() {
 void putChr(const char c, Color col = Color.Normal) {
 	// End of line
 	if(console.posX >= console.maxX) {
-		atomicOp!"+="(console.posY, 16);
+		console.posY += 16;
 		console.posX = 0;
 	}
 
@@ -50,21 +49,21 @@ void putChr(const char c, Color col = Color.Normal) {
 	// Handle newlines
 	switch(c) {
 	case '\n':
-		atomicOp!"+="(console.posY, 16);
+		console.posY += 16;
 		console.posX = 0;
 		break;
 
 	case '\t':
 		if (console.posX % 32 == 0) {
-			atomicOp!"+="(console.posX, 32);			
+			console.posX += 32;			
 		} else {
-			atomicOp!"+="(console.posX, console.posX % 32);
+			console.posX += console.posX % 32;
 		}
 		break;
 
 	default:
 		plotChr(col, Color.Background, c, console.posX, console.posY);
-		atomicOp!"+="(console.posX, 8);
+		console.posX += 8;
 		break;
 	}
 }
@@ -93,11 +92,7 @@ void log(T...)(uint indent, const string fmt, T args) {
 	writefln(fmt, args);
 }
 
-void panic(string file = __FILE__, size_t line = __LINE__, T...)(uint indent, const string fmt, T args) {
-	// Indentation
-	foreach(_; 0..indent) {
-		putChr('\t');
-	}
+void panic(string file = __FILE__, size_t line = __LINE__, T...)(const string fmt, T args) {
 
 	putChr('[');
 	putChr('!', Color.HighLight2);

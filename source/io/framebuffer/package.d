@@ -21,8 +21,8 @@ private struct FrameBuffer {
 	uint height;
 	uint pitch;
 
-	shared this(shared FrameBufferTag* tag) {
-		this.address = cast(shared pixel*)(tag.address);
+	this (FrameBufferTag* tag) {
+		this.address = cast(pixel*)(tag.address);
 
 		this.width  = tag.width;
 		this.height = tag.height;
@@ -42,18 +42,18 @@ struct FrameBufferInfo {
 //         Instance         //
 //////////////////////////////
 
-private shared FrameBuffer buffer;
+private __gshared FrameBuffer buffer;
 
 void initFrameBuffer(StivaleInfo* stivale) {
 	// Try access the FrameBufferTag passed by stivale
-	shared FrameBufferTag* fb = cast(shared FrameBufferTag*)(stivale.getTag(FrameBufferID));
+ FrameBufferTag* fb = cast(FrameBufferTag*)(stivale.getTag(FrameBufferID));
 	
 	// Very unlikely so we don't properly handle these
 	assert(fb != null);
 	assert(fb.bpp == 32);	
 
 	// Tag is good
-	buffer = shared FrameBuffer(fb);
+	buffer = FrameBuffer(fb);
 }
 
 void plotPixel(pixel p, uint x, uint y) {
