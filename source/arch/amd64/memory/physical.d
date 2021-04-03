@@ -17,26 +17,26 @@ import arch.amd64.memory;
 
 private struct BitMap {
 	ubyte* map;   // The actual bitmap
-	ulong size;   // Size (bits) of the bitmap
+	size_t size;   // Size (bits) of the bitmap
 	
-	ulong nextFree;  // Next free block
+	size_t nextFree;  // Next free block
 
-	this(ubyte* map, ulong size) {
+	this(ubyte* map, size_t size) {
 		this.map = map;
 		this.size = size;
 	}
 
-	bool testBit(ulong bit) {
+	bool testBit(size_t bit) {
 		assert(bit <= this.size);
 		return !!(map[bit / 8] & (1 << (bit % 8)));
 	}
 	
-	void setBit(ulong bit) {
+	void setBit(size_t bit) {
 		assert(bit <= this.size);
 		this.map[bit / 8] |= (1 << (bit % 8));
 	}
 
-	void unsetBit(ulong bit) {
+	void unsetBit(size_t bit) {
 		assert(bit <= this.size);
 		this.map[bit / 8] &= ~(1 << (bit % 8));
 	}
@@ -54,11 +54,11 @@ void initPmm(StivaleInfo* stivale) {
 	// Get RegionInfo
 	RegionInfo info = RegionInfo(cast(MemMapTag*)(stivale.getTag(MemMapID)));
 
-	ulong mapSize;	// Bitmap size in bits
+	size_t mapSize;	// Bitmap size in bits
 
 	// 1. Calculate size needed for bitmap
-	ulong highestByte;
-	for (ulong i = 0; i < info.count; i++) {
+	size_t highestByte;
+	for (size_t i = 0; i < info.count; i++) {
 		auto immutable curRegion = info.regions[i];
 
 		// We only work with Usable, Kernel and Bootloader regions
@@ -68,7 +68,7 @@ void initPmm(StivaleInfo* stivale) {
 			continue;
 
 		// Actual calculation
-		immutable ulong top = curRegion.base + curRegion.length;
+		immutable size_t top = curRegion.base + curRegion.length;
 		if (top > highestByte)
 			highestByte = top;
 
@@ -76,7 +76,7 @@ void initPmm(StivaleInfo* stivale) {
 	}
 
 	// 2. Find region large enough to fit bitmap
-	for (ulong i = 0; i < info.count; i++) {
+	for (size_t i = 0; i < info.count; i++) {
 		auto curRegion = info.regions[i];
 
 		// Get a Usable region big enough to fit the bitmap
@@ -92,29 +92,31 @@ void initPmm(StivaleInfo* stivale) {
 		curRegion.base   += bitMap.size;
 		curRegion.length -= bitMap.size;
 
+		log(2, "Bitmap created :: Blocks accounted: %d Size: %h", bitMap.size, bitMap.size * 8);
+
 		break; // Only need 1 region
 	}
 
 	// 3. Correctly populate the Bitmap with usable regions
-	for (ulong i = 0; i < info.count; i++) {
+	for (size_t i = 0; i < info.count; i++) {
 		auto immutable curRegion = info.regions[i];
 
 		if(curRegion.type != RegionType.Usable)
 			continue;
 
-		for (ulong j = 0; j < curRegion.length; j += PageSize) 
+		for (size_t j = 0; j < curRegion.length; j += PageSize) 
 			bitMap.unsetBit((curRegion.base + j) / PageSize);
 	}
 
 	// 4. Set `nextFree` to the next available block
-	for (ulong i = 0; i < bitMap.size; i++) {
+	for (size_t i = 0; i < bitMap.size; i++) {
 		if (!bitMap.testBit(i)) {
 			bitMap.nextFree = i;
 			break;
 		}
 	}
 
-	log(2, "Bitmap created and set :: Blocks accounted: %d Size: %h", bitMap.size, bitMap.size * 8);
+	log(2, "Bitmap fully populated and ready for use");
  }
 
  // Error handling
@@ -133,13 +135,13 @@ alias PmmResult = Result!(PhysAddress, PmmError);
 /// Returns: 
 /// 	Physical Address to the start of the blocks
 /// 	or an error
-PmmResult newBlock(ulong count) {													
-	ulong regionStart = bitMap.nextFree;
+PmmResult newBlock(size_t count) {													
+	size_t regionStart = bitMap.nextFree;
 									
 	while (1) {
 		bool  newRegionNeeded;												
 
-		for (ulong i = regionStart; i < regionStart + count; i++) {
+		for (size_t i = regionStart; i < regionStart + count; i++) {
 			if (i >= bitMap.size) 
 				return PmmResult(PmmError.NotEnoughMemory);
 
@@ -170,7 +172,7 @@ PmmResult newBlock(ulong count) {
 
 			// Set `nextFree` to the next free region
 			if (bitMap.testBit(regionStart + count + 1)) {
-				for (ulong i = regionStart + count + 1; i < bitMap.size; i++) {
+				for (size_t i = regionStart + count + 1; i < bitMap.size; i++) {
 					if (!bitMap.testBit(regionStart))
 						bitMap.nextFree = i;
 						break;
@@ -187,29 +189,29 @@ PmmResult newBlock(ulong count) {
 /// Frees `count` blocks of memory
 /// Params:
 /// 	blockStart = Physical address of the blocks
-/// 	count = number of blocks to free
+/// 	count      = Number of blocks to free
 /// Returns: 
 /// 	Physical Address to the start of the blocks
 /// 	or an error
-PmmResult delBlock(PhysAddress blockStart, ulong count) {
+PmmResult delBlock(PhysAddress blockStart, size_t count) {
 	// Check alignment
-	if (cast(ulong)(blockStart) % PageSize != 0)
+	if (cast(size_t)(blockStart) % PageSize != 0)
 		return PmmResult(PmmError.AddressNotAligned);
 
 	// Check block range
-	if (cast(ulong)(blockStart) / PageSize + count > bitMap.size)
+	if (cast(size_t)(blockStart) / PageSize + count > bitMap.size)
 		return PmmResult(PmmError.BlockOutOfRange);
 
 	// Determine the start
-	ulong start = (cast(ulong)(blockStart) - PhysOffset) / PageSize;
+	size_t start = (cast(size_t)(blockStart)) / PageSize;
 
 	// Check if blocks have already been freed
-	for (ulong i = start; i < start + count; i++)
+	for (size_t i = start; i < start + count; i++)
 		if (!bitMap.testBit(i))
 			return PmmResult(PmmError.BlockAlreadyFreed);
 
 	// Free the blocks
-	for (ulong i = start; i < start + count; i++)
+	for (size_t i = start; i < start + count; i++)
 		bitMap.unsetBit(i);
 
 	// Update `nextFree`

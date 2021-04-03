@@ -93,7 +93,7 @@ void log(T...)(uint indent, const string fmt, T args) {
 }
 
 void panic(string file = __FILE__, size_t line = __LINE__, T...)(const string fmt, T args) {
-
+	putChr('\n');
 	putChr('[');
 	putChr('!', Color.HighLight2);
 	putStr("] ");
@@ -213,6 +213,7 @@ private void printHexNum(ulong item) {
 
 	if (item == 0) {
 		putStr("0x0", Color.HighLight1);
+		return;
 	}
 
 	putStr("0x", Color.HighLight1);
@@ -233,6 +234,7 @@ private void printDecNum(ulong item) {
 
 	if (item == 0) {
 		putStr("0", Color.HighLight1);
+		return;
 	}
 
 	for (int i = 31; item; i--) {

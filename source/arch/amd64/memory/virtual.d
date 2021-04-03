@@ -22,7 +22,7 @@ import arch.amd64.memory.physical;
  * however this will change in the future
  */
 
-private enum Flags: ulong {         // Table:       Description:
+private enum Flags {         // Table:       Description:
 	Present         = 1UL << 0,     // All          Marks the entry as present in memory
 	Writeable       = 1UL << 1,     // All          Marks the entry as writeable
 	UserAccessable  = 1UL << 2,     // All          Marks the entry as accessible from ring-3 code
@@ -51,15 +51,11 @@ private enum Flags: ulong {         // Table:       Description:
 	 */
 }
 
-private align (8) struct Entry {
-	ulong entry;
+private alias Entry = ulong;
 
-	// Constructs an Entry from a 4kb-aligned address and flags
-	this(PhysAddress address, Flags flags) {
-		assert (cast(ulong)(address) % PageSize == 0);
-
-		this.entry = (cast(ulong)(address) << 8) | flags;
-	}
+private enum VmmResult {
+	Good,
+	NotEnoughSpaceForTables,
 }
 
 struct AddressSpace {
@@ -68,55 +64,75 @@ struct AddressSpace {
 	this(PhysAddress pml4Block) {
 		assert (cast(ulong)(pml4Block) % PageSize == 0);
 
-		this.pml4 = cast(Entry*)(pml4Block);
-	}
-
-	void mapPageToBlock(VirtAddress virtual, PhysAddress physical, Flags flags) {
-		assert(cast(ulong)(physical) % PageSize == 0);
-		assert(cast(ulong)(virtual)  % PageSize == 0);
-
-		// Entries in each level table
-		immutable ulong pml4Entry = (cast(ulong)(virtual) & 0x1ffUL << 39) >> 39;
-		immutable ulong pml3Entry = (cast(ulong)(virtual) & 0x1ffUL << 3L) >> 30;
-		immutable ulong pml2Entry = (cast(ulong)(virtual) & 0x1ffUL << 21) >> 21;
-		immutable ulong pml1Entry = (cast(ulong)(virtual) & 0x1ffUL << 12) >> 12;
-
-		// Create or find entries 
-		//Entry* pml3 = cast(Entry*)(this.findOrCreateEntry(this.pml4, pml4Entry));
-		//Entry* pml2 = cast(Entry*)(this.findOrCreateEntry(pml3, pml3Entry));
-		//Entry* pml1 = cast(Entry*)(this.findOrCreateEntry(pml2, pml2Entry));
-
-		//pml1[pml1Entry] = Entry(physical, flags);
+		this.pml4 = cast(Entry*)(pml4Block + PhysOffset);
 	}
 
 	void setActive() {
-		immutable ulong root = cast(ulong)(this.pml4);
+		Entry* root = this.pml4 - PhysOffset;
 		asm { 
 			mov RAX, root;
 			mov CR3, RAX; 
 		}
 	}
 
-	private Entry* findOrCreateEntry(Entry* curTable, ulong entry) {
-		auto table = cast(Entry*)(cast(ulong)(curTable) + PhysOffset);
-		
-		// Check there is an entry, else, allocate one
-		if ((table[entry].entry & Flags.Present) == 1) {
-			return cast(Entry*)(curTable[entry].entry & ~(0xfff));
+	VmmResult mapPage(VirtAddress virtual, PhysAddress physical, Flags flags) {
+		assert(cast(size_t)(physical) % PageSize == 0);
+		assert(cast(size_t)(virtual)  % PageSize == 0);
+
+		// Find or create the required pml table
+		Entry* pml1Entry = getPml1Entry(virtual, flags, true);
+
+		writefln("Entry: %h", cast(ulong)(pml1Entry));
+
+		// Not enough memory to create tables
+		if (pml1Entry == null)
+			return VmmResult.NotEnoughSpaceForTables;
+
+		*pml1Entry = cast(ulong)(physical) | flags;
+
+		return VmmResult.Good;
+	}
+
+	private Entry* getPml1Entry(VirtAddress virtual, Flags flags, bool create) {
+		// Calculate the Indices into each pml table
+		immutable ulong pml4Entry = (cast(ulong)(virtual) & 0x1FFUL << 39) >> 39;
+		immutable ulong pml3Entry = (cast(ulong)(virtual) & 0x1FFUL << 30) >> 30;
+		immutable ulong pml2Entry = (cast(ulong)(virtual) & 0x1FFUL << 21) >> 21;
+		immutable ulong pml1Entry = (cast(ulong)(virtual) & 0x1FFUL << 12) >> 12;
+
+		Entry* pml3 = getNextLevel(this.pml4, pml4Entry, flags, create);
+		Entry* pml2 = getNextLevel(pml3, pml3Entry, flags, create);
+		Entry* pml1 = getNextLevel(pml2, pml2Entry, flags, create);
+
+		// Check we didn't run out of memory
+		if (pml3 == null || pml2 == null || pml1 == null)
+			return null;
+
+		// Return the good result
+		return cast(Entry*)(&pml1[pml1Entry]);
+	}
+	
+	// Finds or creates a table below the current one
+	private Entry* getNextLevel(Entry* curTable, size_t entry, Flags flags, bool create) {
+		// Check if the entry is marked as present
+		if (curTable[entry] & 0x1) {
+			return cast(Entry*)((curTable[entry] & ~(0xfff)) + PhysOffset);
 		} else {
+			if (!create)
+				return null;
+			
+			// Allocate space for new table
 			PmmResult result = newBlock(1);
 
-			if (result.isOkay) {
-				table[entry] = Entry(result.unwrapResult(), Flags.Present
-																| Flags.UserAccessable
-																| Flags.Writeable);
-				return cast(Entry*)(result.unwrapResult);	
-			} else {
-				panic("Couldn't not allocate space for memory. Error: %d", result.unwrapError());
-				assert(0); // Make ldc calm down
-			}		
+			if (!result.isOkay)
+				return null;
+
+			// Set physical and return virtual
+			curTable[entry] = cast(ulong)(result.unwrapResult) | flags;
+			return cast(Entry*)(result.unwrapResult + PhysOffset);
 		}
 	}
+
 }
 
 //////////////////////////////
@@ -134,21 +150,29 @@ void initVmm(StivaleInfo* stivale) {
 	// Alloc enough space for pml4 table
 	PmmResult pml4Block = newBlock(1);
 
-	if (pml4Block.isOkay) {
-		kernelSpace = AddressSpace(cast(void*)(pml4Block.unwrapResult));
-	} else {
+	if (!pml4Block.isOkay) 
 		panic("Cannot allocate space for Pml4, init cannot continue");
-	}
 	
-	for (ulong i = 0; i < 0x100000000; i += PageSize)
-		kernelSpace.mapPageToBlock(cast(VirtAddress)(i + PhysOffset), cast(PhysAddress)(i), Flags.Present | Flags.Writeable);
+	kernelSpace = AddressSpace(pml4Block.unwrapResult);
+	log(2, "Pml4 block created: PhysAddress: %h", cast(ulong)(pml4Block.unwrapResult));
 
-	for (ulong i= 0; i < 0x80000000; i += PageSize)
-		kernelSpace.mapPageToBlock(cast(VirtAddress)(i + KernelBase), cast(PhysAddress)(i), Flags.Present | Flags.Writeable);
+	// Map 2 GBs of the kernel
+	for (size_t i = 0; i < 0x80000000; i += PageSize) {
+		VmmResult result = kernelSpace.mapPage(cast(VirtAddress)(i + KernelBase), cast(PhysAddress)(i), Flags.Present 
+		                                                                                              | Flags.Writeable);
+		if (result != VmmResult.Good)
+			panic("Not enough memory for Pml tables. Init cannot continue");
+	}
 
-	for (ulong i = 0; i < info.count; i++)
-		for (ulong j = 0; j < info.regions[i].length; j += PageSize)
-			kernelSpace.mapPageToBlock(cast(VirtAddress)(j + KernelBase), cast(PhysAddress)(j), Flags.Present | Flags.Writeable);
+	//panic("next:");
 
+	// Map 4 GBs of memory
+	for (size_t i = 0; i < 0x100000000; i += PageSize) {
+		VmmResult result = kernelSpace.mapPage(cast(VirtAddress)(i + PhysOffset), cast(PhysAddress)(i), Flags.Present 
+		                                                                                              | Flags.Writeable);
+		if (result != VmmResult.Good)
+			panic("Not enough memory for Pml tables. Init cannot continue");
+	}
 	//kernelSpace.setActive();
+
 }
