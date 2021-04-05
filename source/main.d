@@ -15,7 +15,7 @@ extern (C) void main(StivaleInfo* stivale) {
 
 	initArch(stivale);
 
-	writefln("%c", cast(char)(240));
+	panic("Somthing bad has happened: %h", 0xFFFF);
 
 	asm { hlt; }
 }

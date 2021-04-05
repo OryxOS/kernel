@@ -126,7 +126,7 @@ void panic(string file = __FILE__, size_t line = __LINE__, T...)(const string fm
 		this crash and try a stable image");
 
 	// Context
-	putStr("\t\t// For developers\n", Color.SubText);
+	putStr("\n\n\n\t\t// For developers\n", Color.SubText);
 	writefln("\t\tContext:
 		File: %s
 		Line: %d", file, line);

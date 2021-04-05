@@ -8,13 +8,13 @@ module arch.amd64.gdt;
 import lib.std.stdio;
 
 private struct GdtEntry {
-	align(1):
+	align (1):
 	ushort limit;
 	ushort lowBase;
 	ubyte  midBase;
 	ubyte  lowFlags;
 	ubyte  highFlags;
-	ubyte  highbase;
+	ubyte  highBase;
 
 	this(ubyte lowFlags, ubyte highFlags) {
 		this.limit     = 0;
@@ -22,12 +22,12 @@ private struct GdtEntry {
 		this.midBase   = 0;
 		this.lowFlags  = lowFlags;
 		this.highFlags = highFlags;
-		this.highbase  = 0;
+		this.highBase  = 0;
 	}
 }
 
 private struct GdtPointer {
-	align(1):
+	align (1):
 	ushort size;
 	void* address;
 }
@@ -37,8 +37,8 @@ private struct GdtPointer {
 //////////////////////////////
 
 // Selectors
-enum CodeSegment = 0x08;    
-enum DataSegment = 0x10;
+enum KernelCodeSegment = 0x08;    
+enum KernelDataSegment = 0x10;
 
 private __gshared GdtEntry[3] gdtEntries;
 private __gshared GdtPointer  gdtPointer;
@@ -57,16 +57,16 @@ void initGdt() {
 
 		// Long jump to set cs and ss.
 		mov RBX, RSP;
-		push DataSegment;
+		push KernelDataSegment;
 		push RBX;
 		pushfq;
-		push CodeSegment;
+		push KernelCodeSegment;
 		lea RAX, L1; // Putting L1 directly dereferences L1. (According to streak)
 		push RAX;
 		iretq;
 
 	L1:;
-		mov AX, DataSegment;
+		mov AX, KernelDataSegment;
 		mov DS, AX;
 		mov ES, AX;
 		mov FS, AX;
