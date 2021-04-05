@@ -12,7 +12,7 @@ void initArch(StivaleInfo* stivale) {
 
 	initGdt();
 	initPmm(stivale);
-	initVmm(stivale);
+	initVmm();
 
 	writefln("Amd64 Init completed");
 }

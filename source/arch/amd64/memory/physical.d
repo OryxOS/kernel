@@ -11,14 +11,12 @@ import lib.std.math;
 import lib.std.stdio;
 import lib.std.result;
 
-import core.atomic;
 import common.memory;
 import arch.amd64.memory;
 
 private struct BitMap {
-	ubyte* map;   // The actual bitmap
-	size_t size;   // Size (bits) of the bitmap
-	
+	ubyte* map;       // The actual bitmap
+	size_t size;      // Size (bits) of the bitmap
 	size_t nextFree;  // Next free block
 
 	this(ubyte* map, size_t size) {
@@ -51,39 +49,38 @@ private __gshared BitMap bitMap;
 void initPmm(StivaleInfo* stivale) {
 	writefln("\tIntializing Pmm:");
 
-	// Get RegionInfo
-	RegionInfo info = RegionInfo(cast(MemMapTag*)(stivale.getTag(MemMapID)));
-
-	size_t mapSize;	// Bitmap size in bits
+	auto info = RegionInfo(cast(MemMapTag*)(stivale.getTag(MemMapID)));
 
 	// 1. Calculate size needed for bitmap
 	size_t highestByte;
 	for (size_t i = 0; i < info.count; i++) {
 		auto immutable curRegion = info.regions[i];
 
-		// We only work with Usable, Kernel and Bootloader regions
 		if (curRegion.type != RegionType.Usable
 			&& curRegion.type != RegionType.KernelOrModule
 			&& curRegion.type != RegionType.BootloaderReclaimable)
 			continue;
 
-		// Actual calculation
+		/* Regions cannot simply have their length added
+		 * as memory will always have holes, so this
+		 * method is used
+		 */
 		immutable size_t top = curRegion.base + curRegion.length;
 		if (top > highestByte)
 			highestByte = top;
 
-		mapSize = divRoundUp(highestByte, PageSize) * 8;
+		bitMap.size = divRoundUp(highestByte, PageSize) * 8;
 	}
 
 	// 2. Find region large enough to fit bitmap
 	for (size_t i = 0; i < info.count; i++) {
-		auto curRegion = info.regions[i];
+		immutable auto curRegion = info.regions[i];
 
 		// Get a Usable region big enough to fit the bitmap
-		if (curRegion.type != RegionType.Usable || curRegion.length < mapSize * 8)
+		if (curRegion.type != RegionType.Usable || curRegion.length < bitMap.size * 8)
 			continue;
 		
-		bitMap = BitMap(cast(ubyte*)(curRegion.base + PhysOffset), mapSize);
+		bitMap.map = cast(ubyte*)(curRegion.base + PhysOffset);
 
 		// Reserve entire bitmap - Safer than setting entire bitmap as free
 		bitMap.map[0..bitMap.size / 8] = 0xFF;
@@ -199,27 +196,21 @@ PmmResult newBlock(size_t count, bool zero = false) {
 /// 	Physical Address to the start of the blocks
 /// 	or an error
 PmmResult delBlock(PhysAddress blockStart, size_t count) {
-	// Check alignment
+	// Safety checks
 	if (cast(size_t)(blockStart) % PageSize != 0)
 		return PmmResult(PmmError.AddressNotAligned);
-
-	// Check block range
 	if (cast(size_t)(blockStart) / PageSize + count > bitMap.size)
 		return PmmResult(PmmError.BlockOutOfRange);
 
-	// Determine the start
 	size_t start = (cast(size_t)(blockStart)) / PageSize;
 
-	// Check if blocks have already been freed
 	for (size_t i = start; i < start + count; i++)
 		if (!bitMap.testBit(i))
 			return PmmResult(PmmError.BlockAlreadyFreed);
 
-	// Free the blocks
 	for (size_t i = start; i < start + count; i++)
 		bitMap.unsetBit(i);
 
-	// Update `nextFree`
 	if (bitMap.nextFree > start)
 		bitMap.nextFree = start;
 
