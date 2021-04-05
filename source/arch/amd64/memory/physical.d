@@ -72,7 +72,7 @@ void initPmm(StivaleInfo* stivale) {
 		if (top > highestByte)
 			highestByte = top;
 
-		mapSize = divRoundUp(highestByte, PageSize) * 8; // `* 8` for bits
+		mapSize = divRoundUp(highestByte, PageSize) * 8;
 	}
 
 	// 2. Find region large enough to fit bitmap
@@ -89,9 +89,9 @@ void initPmm(StivaleInfo* stivale) {
 		bitMap.map[0..bitMap.size / 8] = 0xFF;
 
 		// Update region info
-		curRegion.base   += bitMap.size;
-		curRegion.length -= bitMap.size;
-
+		info.regions[i].base   += bitMap.size;
+		info.regions[i].length -= bitMap.size;
+		
 		log(2, "Bitmap created :: Blocks accounted: %d Size: %h", bitMap.size, bitMap.size * 8);
 
 		break; // Only need 1 region
@@ -135,9 +135,8 @@ alias PmmResult = Result!(PhysAddress, PmmError);
 /// Returns: 
 /// 	Physical Address to the start of the blocks
 /// 	or an error
-PmmResult newBlock(size_t count) {													
+PmmResult newBlock(size_t count, bool zero = false) {													
 	size_t regionStart = bitMap.nextFree;
-									
 	while (1) {
 		bool  newRegionNeeded;												
 
@@ -179,6 +178,12 @@ PmmResult newBlock(size_t count) {
 				}
 			} else {
 				bitMap.nextFree = regionStart + count;
+			}
+
+			// Zero if asked to
+			if (zero) {
+				ubyte* region = cast(ubyte*)(regionStart * PageSize + PhysOffset);
+				region[0..(count * PageSize)] = 0;
 			}
 
 			return PmmResult(cast(PhysAddress)(regionStart * PageSize));

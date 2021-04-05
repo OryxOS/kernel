@@ -8,8 +8,8 @@ module arch.amd64.memory;
 
 enum PageSize = 0x1000;                  // Standard x86 page size (4kb)
 
-enum PhysOffset = 0xffff800000000000;    // Oryx is a higherhalf kernel (PML4:256)
-enum KernelBase = 0xffffffff80000000;    // Set by Stivale spec
+enum PhysOffset = 0xFFFF800000000000;    // Oryx is a higherhalf kernel (PML4:256)
+enum KernelBase = 0xFFFFFFFF80000000;    // Set by Stivale spec
 
 // Useful for clearing up return types
 alias VirtAddress = void*;

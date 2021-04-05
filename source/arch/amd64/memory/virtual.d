@@ -68,10 +68,12 @@ struct AddressSpace {
 	}
 
 	void setActive() {
-		Entry* root = this.pml4 - PhysOffset;
-		asm { 
+		ulong root = cast(ulong)(this.pml4) - PhysOffset;
+		asm {
 			mov RAX, root;
-			mov CR3, RAX; 
+			mov CR3, RAX;
+
+			hlt; 
 		}
 	}
 
@@ -81,8 +83,6 @@ struct AddressSpace {
 
 		// Find or create the required pml table
 		Entry* pml1Entry = getPml1Entry(virtual, flags, true);
-
-		writefln("Entry: %h", cast(ulong)(pml1Entry));
 
 		// Not enough memory to create tables
 		if (pml1Entry == null)
@@ -122,7 +122,7 @@ struct AddressSpace {
 				return null;
 			
 			// Allocate space for new table
-			PmmResult result = newBlock(1);
+			PmmResult result = newBlock(1, true);
 
 			if (!result.isOkay)
 				return null;
@@ -148,7 +148,7 @@ void initVmm(StivaleInfo* stivale) {
 	RegionInfo info = RegionInfo(cast(MemMapTag*)(stivale.getTag(MemMapID)));
 
 	// Alloc enough space for pml4 table
-	PmmResult pml4Block = newBlock(1);
+	PmmResult pml4Block = newBlock(1, true);
 
 	if (!pml4Block.isOkay) 
 		panic("Cannot allocate space for Pml4, init cannot continue");
@@ -164,8 +164,6 @@ void initVmm(StivaleInfo* stivale) {
 			panic("Not enough memory for Pml tables. Init cannot continue");
 	}
 
-	//panic("next:");
-
 	// Map 4 GBs of memory
 	for (size_t i = 0; i < 0x100000000; i += PageSize) {
 		VmmResult result = kernelSpace.mapPage(cast(VirtAddress)(i + PhysOffset), cast(PhysAddress)(i), Flags.Present 
@@ -173,6 +171,7 @@ void initVmm(StivaleInfo* stivale) {
 		if (result != VmmResult.Good)
 			panic("Not enough memory for Pml tables. Init cannot continue");
 	}
-	//kernelSpace.setActive();
+	kernelSpace.setActive();
 
+	log(2, "New Pml tables loaded");
 }
