@@ -1,7 +1,7 @@
 module lib.std.stdio;
 
 import io.framebuffer;
-
+import io.framebuffer.fancy;
 
 enum Color: pixel {
 	Background = 0x0D1117,
@@ -84,7 +84,10 @@ void putStr(const string s, Color col = Color.Normal) {
 void log(T...)(uint indent, const string fmt, T args) {
 	// Indentation
 	foreach(_; 0..indent) {
-		putChr('\t');	panic("A big error happened");
+		putChr('\t');
+	}
+
+	putChr('[');
 	putChr('+', Color.HighLight2);
 	putStr("] ");
 

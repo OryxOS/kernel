@@ -15,5 +15,7 @@ extern (C) void main(StivaleInfo* stivale) {
 
 	initArch(stivale);
 
+	writefln("%c", cast(char)(240));
+
 	asm { hlt; }
 }
