@@ -2,12 +2,14 @@ module lib.std.stdio;
 
 import io.framebuffer;
 
+
 enum Color: pixel {
 	Background = 0x0D1117,
 	Normal     = 0xC9D1D9,
 	HighLight1 = 0xFF7B72,
 	HighLight2 = 0x79C0FF,
 	HighLight3 = 0xFFA775,
+	SubText    = 0x68747C,
 }
 
 // Control Structure
@@ -82,10 +84,7 @@ void putStr(const string s, Color col = Color.Normal) {
 void log(T...)(uint indent, const string fmt, T args) {
 	// Indentation
 	foreach(_; 0..indent) {
-		putChr('\t');
-	}
-
-	putChr('[');
+		putChr('\t');	panic("A big error happened");
 	putChr('+', Color.HighLight2);
 	putStr("] ");
 
@@ -93,13 +92,42 @@ void log(T...)(uint indent, const string fmt, T args) {
 }
 
 void panic(string file = __FILE__, size_t line = __LINE__, T...)(const string fmt, T args) {
-	putChr('\n');
-	putChr('[');
-	putChr('!', Color.HighLight2);
-	putStr("] ");
+	plotScreen(Color.Background);
 
-	writef("[%s:%d] ", file, line);
+	// !!!
+	auto start = getFrameBufferInfo().width / 2 - 72;
+	plotExclamation(Color.HighLight1, start, 8);
+	plotExclamation(Color.HighLight1, start + 56, 8);
+	plotExclamation(Color.HighLight1, start + 112, 8);
 
+	// "A fatal error has occured"
+	console.posX = console.maxX / 2 - (cast(uint)("A fatal error has occured".length / 2) * 8);
+	console.posY = 112;
+	putStr("A fatal error has occured", Color.HighLight1);
+
+	// --------------------------------------
+	console.posX = 0;
+	console.posY = 128;
+	foreach(_; 0..console.maxX / 8) {
+		putChr('-', Color.HighLight3);
+	}
+
+	// Reset for printing
+	console.posX = 0;
+	console.posY = 176;
+
+	// Info message
+	writefln("\t\tA fatal error has occured and the system must be restarted
+		This error hass likely occured due to poor hardware support.
+		If you are using a nightly image of OryxOS, please report
+		this crash and try a stable image");
+
+	// Context
+	putStr("\t\t// For developers\n", Color.SubText);
+	writefln("\t\tContext:
+		File: %s
+		Line: %d", file, line);
+	putStr("\n\t\t");
 	writefln(fmt, args);
 
 	// Hang the kernel
