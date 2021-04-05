@@ -72,8 +72,6 @@ struct AddressSpace {
 		asm {
 			mov RAX, root;
 			mov CR3, RAX;
-
-			hlt; 
 		}
 	}
 
@@ -166,11 +164,17 @@ void initVmm(StivaleInfo* stivale) {
 
 	// Map 4 GBs of memory
 	for (size_t i = 0; i < 0x100000000; i += PageSize) {
-		VmmResult result = kernelSpace.mapPage(cast(VirtAddress)(i + PhysOffset), cast(PhysAddress)(i), Flags.Present 
+		VmmResult offset = kernelSpace.mapPage(cast(VirtAddress)(i + PhysOffset), cast(PhysAddress)(i), Flags.Present 
 		                                                                                              | Flags.Writeable);
-		if (result != VmmResult.Good)
+		VmmResult flat   = kernelSpace.mapPage(cast(VirtAddress)(i), cast(PhysAddress)(i), Flags.Present 
+		                                                                                              | Flags.Writeable);
+		if (offset != VmmResult.Good)
+			panic("Not enough memory for Pml tables. Init cannot continue");
+
+		if (flat   != VmmResult.Good)
 			panic("Not enough memory for Pml tables. Init cannot continue");
 	}
+
 	kernelSpace.setActive();
 
 	log(2, "New Pml tables loaded");
