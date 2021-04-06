@@ -38,6 +38,8 @@ private enum Flags {         // Table:       Description:
 
 	PatNormal       = 1UL << 7,     // Pml1         *
 
+	None            = 0,
+
 	/* * = Forms part of PAT ((PAT << 2) | (CD << 1) | WT) - This is
 	 *     an index to one of 8 entries into the PAT-MSR, which decides the caching mode
 	 * 
@@ -55,6 +57,8 @@ private alias Entry = ulong;
 private enum VmmResult {
 	Good,
 	NotEnoughSpaceForTables,
+
+	PageAlreadyUnmapped
 }
 
 struct AddressSpace {
@@ -71,6 +75,24 @@ struct AddressSpace {
 			mov RAX, root;
 			mov CR3, RAX;
 		}
+	}
+
+	/// Unmaps a Virtual address from a physical one
+	/// Params:
+	/// 	virtual = page-aligned virtual address
+	/// Returns: VmmResult varient
+	VmmResult unmapPage(VirtAddress virtual) {
+		assert(cast(size_t)(virtual)  % PageSize == 0);
+
+		// Find the Pml1Entry
+		Entry* pml1Entry = getPml1Entry(virtual, Flags.None, false);
+
+		if (pml1Entry == null)
+			return VmmResult.PageAlreadyUnmapped;
+
+		*pml1Entry = 0;
+
+		return VmmResult.Good;
 	}
 
 	/// Maps a Virtual address to a physical one
@@ -136,7 +158,7 @@ struct AddressSpace {
 //         Instance         //
 //////////////////////////////
 
-private __gshared AddressSpace kernelSpace;
+__gshared AddressSpace kernelSpace;
 
 void initVmm() {
 	writefln("\tIntializing Vmm:");

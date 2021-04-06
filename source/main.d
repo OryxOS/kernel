@@ -10,7 +10,7 @@ extern (C) void main(StivaleInfo* stivale) {
 	initFrameBuffer(stivale);
 	initConsole();
 
-	writefln("OryxOS Booted");
+	writefln("OryxOS Booted!");
 	stivale.displayBootInfo();
 
 	initArch(stivale);

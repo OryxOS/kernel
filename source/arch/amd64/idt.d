@@ -49,6 +49,7 @@ private struct IdtPointer {
 	void* address;
 }
 
+// Useful information for debugging
 private struct InterruptFrame {
 	ulong r15;
 	ulong r14;
@@ -86,7 +87,8 @@ private __gshared IdtPointer    idtPointer;
 void initIdt() {
 	idtPointer = IdtPointer(idtEntries.sizeof - 1, idtEntries.ptr);
 
-	//idtEntries[0] = IdtEntry(&divZeroHandler, 0, Gate.Interrupt);
+	// Set all exception handlers
+	idtEntries[0] = IdtEntry(&divZeroHandler, 0, Gate.Interrupt);
 	idtEntries[1]  = IdtEntry(&debugHandler,         0, Gate.Interrupt);
 	idtEntries[2]  = IdtEntry(&nmiHandler,           0, Gate.Interrupt);
 	idtEntries[3]  = IdtEntry(&breakpointHandler,    0, Gate.Interrupt);
@@ -107,9 +109,9 @@ void initIdt() {
 	idtEntries[20] = IdtEntry(&virtFaultHandler,     0, Gate.Interrupt);
 	idtEntries[30] = IdtEntry(&secFaultHandler,      0, Gate.Interrupt);
 	
-	asm {
-		lidt [idtPointer];
-	}
+	asm { lidt [idtPointer]; }
+
+	log(1, "IDT initialized with %d descriptors", idtEntries.length);
 }
 
 // Assembly stubs
