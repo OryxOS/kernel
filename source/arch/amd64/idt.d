@@ -86,11 +86,27 @@ private __gshared IdtPointer    idtPointer;
 void initIdt() {
 	idtPointer = IdtPointer(idtEntries.sizeof - 1, idtEntries.ptr);
 
-	idtEntries[0] = IdtEntry(&divZeroHandler, 0, Gate.Interrupt);
-	idtEntries[1] = IdtEntry(&debugHandler, 0, Gate.Interrupt);
-	idtEntries[2] = IdtEntry(&dnmiHandler, 0, Gate.Interrupt);
-
-
+	//idtEntries[0] = IdtEntry(&divZeroHandler, 0, Gate.Interrupt);
+	idtEntries[1]  = IdtEntry(&debugHandler,         0, Gate.Interrupt);
+	idtEntries[2]  = IdtEntry(&nmiHandler,           0, Gate.Interrupt);
+	idtEntries[3]  = IdtEntry(&breakpointHandler,    0, Gate.Interrupt);
+	idtEntries[4]  = IdtEntry(&overflowHandler,      0, Gate.Interrupt);
+	idtEntries[5]  = IdtEntry(&boundRangeHandler,    0, Gate.Interrupt);
+	idtEntries[6]  = IdtEntry(&invOpcodeHandler,     0, Gate.Interrupt);
+	idtEntries[7]  = IdtEntry(&noDeviceHandler,      0, Gate.Interrupt);
+	idtEntries[8]  = IdtEntry(&doubleFaultHandler,   0, Gate.Interrupt);
+	idtEntries[10] = IdtEntry(&invTssHandler,        0, Gate.Interrupt);
+	idtEntries[11] = IdtEntry(&segNotPresentHandler, 0, Gate.Interrupt);
+	idtEntries[12] = IdtEntry(&ssFaultHandler,       0, Gate.Interrupt);
+	idtEntries[13] = IdtEntry(&gpfHandler,           0, Gate.Interrupt);
+	idtEntries[14] = IdtEntry(&pageFaultHandler,     0, Gate.Interrupt);
+	idtEntries[16] = IdtEntry(&fpuFaultHandler,      0, Gate.Interrupt);
+	idtEntries[17] = IdtEntry(&alignCheckHandler,    0, Gate.Interrupt);
+	idtEntries[18] = IdtEntry(&machineCheckHandler,  0, Gate.Interrupt);
+	idtEntries[19] = IdtEntry(&simdFaultHandler,     0, Gate.Interrupt);
+	idtEntries[20] = IdtEntry(&virtFaultHandler,     0, Gate.Interrupt);
+	idtEntries[30] = IdtEntry(&secFaultHandler,      0, Gate.Interrupt);
+	
 	asm {
 		lidt [idtPointer];
 	}
@@ -102,6 +118,22 @@ private extern extern (C) void debugHandler();
 private extern extern (C) void nmiHandler();
 private extern extern (C) void breakpointHandler();
 private extern extern (C) void overflowHandler();
+private extern extern (C) void boundRangeHandler();
+private extern extern (C) void invOpcodeHandler();
+private extern extern (C) void noDeviceHandler();
+private extern extern (C) void doubleFaultHandler();
+private extern extern (C) void invTssHandler();
+
+private extern extern (C) void segNotPresentHandler();
+private extern extern (C) void ssFaultHandler();
+private extern extern (C) void gpfHandler();
+private extern extern (C) void pageFaultHandler();
+private extern extern (C) void fpuFaultHandler();
+private extern extern (C) void alignCheckHandler();
+private extern extern (C) void machineCheckHandler();
+private extern extern (C) void simdFaultHandler();
+private extern extern (C) void virtFaultHandler();
+private extern extern (C) void secFaultHandler();
 
 // Names
 private __gshared string[] exceptions = [
@@ -109,11 +141,38 @@ private __gshared string[] exceptions = [
 	"Debug",
 	"Non-maskable interrupt",
 	"Breakpoint",
-	"Overflow"
+	"Overflow",
+	"Out of bounds",
+	"Invalid Opcode",
+	"Device not dound",
+	"Double fault",
+	"Invalid",
+	"Invalid Tss",
+	"Segment not present",
+	"Stack segment dault",
+	"General protection",
+	"Pageing",
+	"Invalid",
+	"Floating point",
+	"Alignment check",
+	"Machine check",
+	"Simd",
+	"Virtualization",
+	"Invalid",
+	"Invalid",
+	"Invalid",
+	"Invalid",
+	"Invalid",
+	"Invalid",
+	"Invalid",
+	"Invalid",
+	"Invalid",
+	"Invalid",
+	"Security"
 ];
 
 // Universal exception handler
 extern (C) void exceptionHandler(InterruptFrame* frame) {
-	panic("%s exception ocured
-		Rax: %h\tRbx: %h\tRcx: %h\tRdx: %h", exceptions[frame.ident], frame.rax, frame.rbx, frame.rcx, frame.rdx);
+	panic("%s exception occured - error code: %d
+		Rax: %h\tRbx: %h\tRcx: %h\tRdx: %h", exceptions[frame.ident], frame.error, frame.rax, frame.rbx, frame.rcx, frame.rdx);
 }

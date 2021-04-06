@@ -15,11 +15,5 @@ extern (C) void main(StivaleInfo* stivale) {
 
 	initArch(stivale);
 
-	asm {
-		mov RAX, 2;
-		mov RBX, 0;
-		div RBX   ;
-	}
-
 	asm { hlt; }
 }

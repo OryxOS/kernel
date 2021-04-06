@@ -102,3 +102,63 @@ breakpointHandler:
 global overflowHandler
 overflowHandler:
 	handler 4
+
+global boundRangeHandler
+boundRangeHandler:
+	handler 5
+
+global invOpcodeHandler
+invOpcodeHandler:
+	handler 6
+
+global noDeviceHandler
+noDeviceHandler:
+	handler 7
+
+global doubleFaultHandler
+doubleFaultHandler
+	handlerWithErrorCode 8
+
+global invTssHandler
+invTssHandler:
+	handlerWithErrorCode 10
+
+global segNotPresentHandler
+segNotPresentHandler:
+	handlerWithErrorCode 11
+
+global ssFaultHandler
+ssFaultHandler:
+	handlerWithErrorCode 12
+
+global gpfHandler
+gpfHandler:
+	handlerWithErrorCode 13
+
+global pageFaultHandler
+pageFaultHandler:
+	handlerWithErrorCode 14
+
+global fpuFaultHandler
+fpuFaultHandler:
+	handler 16
+
+global alignCheckHandler
+alignCheckHandler:
+	handlerWithErrorCode 17
+
+global machineCheckHandler
+machineCheckHandler:
+	handlerWithErrorCode 18
+
+global simdFaultHandler
+simdFaultHandler:
+	handler 19
+
+global virtFaultHandler
+virtFaultHandler:
+	handler 20
+
+global secFaultHandler
+secFaultHandler:
+	handler 30
