@@ -15,7 +15,11 @@ extern (C) void main(StivaleInfo* stivale) {
 
 	initArch(stivale);
 
-	panic("Somthing bad has happened: %h", 0xFFFF);
+	asm {
+		mov RAX, 2;
+		mov RBX, 0;
+		div RBX   ;
+	}
 
 	asm { hlt; }
 }
