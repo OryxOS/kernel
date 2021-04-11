@@ -2,7 +2,7 @@ module lib.stivale;
 
 import lib.std.stdio;
 
-import common.memory;
+import common.memory.map;
 
 // Tags
 enum FrameBufferID = 0x506461d2950408fa;

@@ -1,4 +1,4 @@
-module arch.amd64.memory.physical;
+module commom.memory.physical;
 
 /* OryxOS Amd64 Physical Memory Manager
  * This is oryxOS's physical memory manager, it allocates and frees physical memory
@@ -10,44 +10,17 @@ import lib.stivale;
 import lib.std.math;
 import lib.std.stdio;
 import lib.std.result;
+import lib.std.bitmap;
 
 import common.memory;
-import arch.amd64.memory;
+import common.memory.map;
 
-private struct BitMap {
-	ubyte* map;       // The actual bitmap
-	size_t size;      // Size (bits) of the bitmap
-	size_t nextFree;  // Next free block
-
-	this(ubyte* map, size_t size) {
-		this.map = map;
-		this.size = size;
-	}
-
-	bool testBit(size_t bit) {
-		assert(bit <= this.size);
-		return !!(map[bit / 8] & (1 << (bit % 8)));
-	}
-	
-	void setBit(size_t bit) {
-		assert(bit <= this.size);
-		this.map[bit / 8] |= (1 << (bit % 8));
-	}
-
-	void unsetBit(size_t bit) {
-		assert(bit <= this.size);
-		this.map[bit / 8] &= ~(1 << (bit % 8));
-	}
-}
-
-//////////////////////////////
-//         Instance         //
-//////////////////////////////
+version (X86_64) enum BlockSize = 0x1000;
 
 private __gshared BitMap bitMap;
 
 void initPmm(StivaleInfo* stivale) {
-	writefln("\tIntializing Pmm:");
+	writefln("\nIntializing Pmm:");
 
 	auto info = RegionInfo(cast(MemMapTag*)(stivale.getTag(MemMapID)));
 
@@ -69,7 +42,7 @@ void initPmm(StivaleInfo* stivale) {
 		if (top > highestByte)
 			highestByte = top;
 
-		bitMap.size = divRoundUp(highestByte, PageSize) * 8;
+		bitMap.size = divRoundUp(highestByte, BlockSize) * 8;
 	}
 
 	// 2. Find region large enough to fit bitmap
@@ -89,7 +62,7 @@ void initPmm(StivaleInfo* stivale) {
 		info.regions[i].base   += bitMap.size;
 		info.regions[i].length -= bitMap.size;
 		
-		log(2, "Bitmap created :: Blocks accounted: %d Size: %h", bitMap.size, bitMap.size * 8);
+		log(1, "Bitmap created :: Blocks accounted: %d Size: %h", bitMap.size, bitMap.size * 8);
 
 		break; // Only need 1 region
 	}
@@ -101,11 +74,11 @@ void initPmm(StivaleInfo* stivale) {
 		if(curRegion.type != RegionType.Usable)
 			continue;
 
-		for (size_t j = 0; j < curRegion.length; j += PageSize) 
-			bitMap.unsetBit((curRegion.base + j) / PageSize);
+		for (size_t j = 0; j < curRegion.length; j += BlockSize) 
+			bitMap.unsetBit((curRegion.base + j) / BlockSize);
 	}
 
-	// 4. Set `nextFree` to the next available block
+	// 4. Set `bitMap.nextFree` to the next available block
 	for (size_t i = 0; i < bitMap.size; i++) {
 		if (!bitMap.testBit(i)) {
 			bitMap.nextFree = i;
@@ -113,7 +86,7 @@ void initPmm(StivaleInfo* stivale) {
 		}
 	}
 
-	log(2, "Bitmap fully populated and ready for use");
+	log(1, "Bitmap fully populated and ready for use");
  }
 
  // Error handling
@@ -132,7 +105,7 @@ alias PmmResult = Result!(PhysAddress, PmmError);
 /// Returns: 
 /// 	Physical Address to the start of the blocks
 /// 	or an error
-PmmResult newBlock(size_t count, bool zero = false) {													
+PmmResult newBlock(size_t count, bool zero = true) {													
 	size_t regionStart = bitMap.nextFree;
 	while (1) {
 		bool  newRegionNeeded;												
@@ -166,24 +139,24 @@ PmmResult newBlock(size_t count, bool zero = false) {
 				bitMap.setBit(i);
 			}
 
-			// Set `nextFree` to the next free region
-			if (bitMap.testBit(regionStart + count + 1)) {
-				for (size_t i = regionStart + count + 1; i < bitMap.size; i++) {
-					if (!bitMap.testBit(regionStart))
-						bitMap.nextFree = i;
-						break;
-				}
-			} else {
-				bitMap.nextFree = regionStart + count;
-			}
-
 			// Zero if asked to
 			if (zero) {
-				ubyte* region = cast(ubyte*)(regionStart * PageSize + PhysOffset);
-				region[0..(count * PageSize)] = 0;
+				ubyte* region = cast(ubyte*)(regionStart * BlockSize + PhysOffset);
+				region[0..(count * BlockSize)] = 0;
 			}
 
-			return PmmResult(cast(PhysAddress)(regionStart * PageSize));
+			// Set `bitMap.nextFree` to the next free region
+			size_t i;
+			for (i = regionStart + count; i < bitMap.size; i++) {
+				if (!bitMap.testBit(i)) {
+					bitMap.nextFree = i;
+					return PmmResult(cast(PhysAddress)(regionStart * BlockSize));
+				}
+			}
+			if (i == bitMap.size) {
+				bitMap.full = true;
+				return PmmResult(cast(PhysAddress)(regionStart * BlockSize));
+			}
 		}
 	}
 }
@@ -197,12 +170,12 @@ PmmResult newBlock(size_t count, bool zero = false) {
 /// 	or an error
 PmmResult delBlock(PhysAddress blockStart, size_t count) {
 	// Safety checks
-	if (cast(size_t)(blockStart) % PageSize != 0)
+	if (cast(size_t)(blockStart) % BlockSize != 0)
 		return PmmResult(PmmError.AddressNotAligned);
-	if (cast(size_t)(blockStart) / PageSize + count > bitMap.size)
+	if (cast(size_t)(blockStart) / BlockSize + count > bitMap.size)
 		return PmmResult(PmmError.BlockOutOfRange);
 
-	size_t start = (cast(size_t)(blockStart)) / PageSize;
+	size_t start = (cast(size_t)(blockStart)) / BlockSize;
 
 	for (size_t i = start; i < start + count; i++)
 		if (!bitMap.testBit(i))

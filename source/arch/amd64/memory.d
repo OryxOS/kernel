@@ -1,11 +1,10 @@
-module arch.amd64.memory.virtual;
+module arch.amd64.memory;
 
 import lib.std.stdio;
 import lib.std.result;
 
 import common.memory;
-import arch.amd64.memory;
-import arch.amd64.memory.physical;
+import common.memory.physical;
 
 /* OryxOS Amd64 Virtual Memory Manager
  *
@@ -20,6 +19,8 @@ import arch.amd64.memory.physical;
  * physical memory for each Table. Currently this Vmm only supports 4 level paging,
  * however this will change in the future once 5 level paging is more widely supported
  */
+
+enum PageSize = 0x1000;                  // Standard x86 page size (4kb)
 
 private enum Flags {         // Table:       Description:
 	Present         = 1UL << 0,     // All          Marks the entry as present in memory
@@ -144,7 +145,7 @@ struct AddressSpace {
 			return null;
 			
 		// Allocate space for new table
-		PmmResult result = newBlock(1, true);
+		PmmResult result = newBlock(1);
 		if (!result.isOkay)
 			return null;
 
@@ -163,7 +164,7 @@ __gshared AddressSpace kernelSpace;
 void initVmm() {
 	writefln("\tIntializing Vmm:");
 
-	kernelSpace = AddressSpace(newBlock(1, true)
+	kernelSpace = AddressSpace(newBlock(1)
 	                          .unwrapResult("Cannot allocate space for Pml4, init cannot continue"));
 	log(2, "Pml4 block allocated");
 

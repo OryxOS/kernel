@@ -111,7 +111,7 @@ void initIdt() {
 	
 	asm { lidt [idtPointer]; }
 
-	log(1, "IDT initialized with %d descriptors", idtEntries.length);
+	log(1, "Idt initialized with %d descriptors", idtEntries.length);
 }
 
 // Assembly stubs

@@ -7,6 +7,8 @@ module lib.std.result;
  * universal error handling solution
  */
 
+ import lib.std.stdio;
+
 struct Result(T, E) {
 	private T    result;  // Result presuming success
 	private E    error;   // Error presuming failure
@@ -14,22 +16,26 @@ struct Result(T, E) {
 	bool isOkay;          // Was the funtion successful (is result valid)
 
 	this (T good) {
-		this.result = good;
+		result = good;
 		isOkay = true;
 	}
 
 	this (E fail) {
-	   this.error = fail;
+	   error = fail;
 	   isOkay = false;
 	}
 
 	T unwrapResult(string message = "Unwrap failed: no result") {
-		assert(isOkay, message);
+		if (!isOkay)
+			panic("%s", message);
+
 		return result;
 	}
 
 	E unwrapError(string message = "Unwrap failed: no error") {
-		assert(!isOkay, message);
+		if (isOkay)
+			panic("%s", message);
+
 		return error;
 	}
 }

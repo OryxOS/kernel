@@ -1,4 +1,4 @@
-module common.memory;
+module common.memory.map;
 
 import lib.stivale;
 
