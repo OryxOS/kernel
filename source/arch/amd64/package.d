@@ -6,6 +6,8 @@ import lib.stivale;
 import arch.amd64.memory;
 import arch.amd64.gdt;
 import arch.amd64.idt;
+import arch.amd64.pic;
+import arch.amd64.cpu;
 
 void initArch(StivaleInfo* stivale) {
 	writefln("\nAmd64 Init:");
@@ -13,6 +15,4 @@ void initArch(StivaleInfo* stivale) {
 	initGdt();
 	initIdt();
 	initVmm();
-
-	writefln("Amd64 Init completed");
 }

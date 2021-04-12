@@ -10,6 +10,7 @@ module arch.amd64.idt;
 import lib.std.stdio;
 
 import arch.amd64.gdt;
+import arch.amd64.pic;
 
 private alias Handler = extern (C) void function();
 
@@ -88,7 +89,7 @@ void initIdt() {
 	idtPointer = IdtPointer(idtEntries.sizeof - 1, idtEntries.ptr);
 
 	// Set all exception handlers
-	idtEntries[0] = IdtEntry(&divZeroHandler, 0, Gate.Interrupt);
+	idtEntries[0]  = IdtEntry(&divZeroHandler,       0, Gate.Interrupt);
 	idtEntries[1]  = IdtEntry(&debugHandler,         0, Gate.Interrupt);
 	idtEntries[2]  = IdtEntry(&nmiHandler,           0, Gate.Interrupt);
 	idtEntries[3]  = IdtEntry(&breakpointHandler,    0, Gate.Interrupt);
@@ -110,8 +111,12 @@ void initIdt() {
 	idtEntries[30] = IdtEntry(&secFaultHandler,      0, Gate.Interrupt);
 	
 	asm { lidt [idtPointer]; }
-
 	log(1, "Idt initialized with %d descriptors", idtEntries.length);
+
+	initPic();
+	asm { sti; }
+
+	log(1, "Pic Initliazed in Chain mode");
 }
 
 // Assembly stubs
@@ -125,7 +130,6 @@ private extern extern (C) void invOpcodeHandler();
 private extern extern (C) void noDeviceHandler();
 private extern extern (C) void doubleFaultHandler();
 private extern extern (C) void invTssHandler();
-
 private extern extern (C) void segNotPresentHandler();
 private extern extern (C) void ssFaultHandler();
 private extern extern (C) void gpfHandler();

@@ -1,7 +1,6 @@
 module lib.std.bitmap;
 
-/* OryxOS heap allocator
- */
+// Module for working with bitmaps, used in both our heap and physical allocator
 
 /// Standard bitmap structure
 align struct BitMap {

@@ -3,7 +3,7 @@ module commom.memory.physical;
 /* OryxOS Amd64 Physical Memory Manager
  * This is oryxOS's physical memory manager, it allocates and frees physical memory
  * in 4kb blocks. This bitmap mappes all of the physical memory available
- * in 1 bitmap, this is done as it is the simplest approach.
+ * in one bitmap, this is done as it is the simplest approach.
  */
 
 import lib.stivale;

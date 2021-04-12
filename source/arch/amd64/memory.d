@@ -162,11 +162,9 @@ struct AddressSpace {
 __gshared AddressSpace kernelSpace;
 
 void initVmm() {
-	writefln("\tIntializing Vmm:");
-
 	kernelSpace = AddressSpace(newBlock(1)
 	                          .unwrapResult("Cannot allocate space for Pml4, init cannot continue"));
-	log(2, "Pml4 block allocated");
+	log(1, "Pml4 block allocated");
 
 	/* Regions:
 	 * 1. Physical: 0000000000000000-0000000100000000 Virtual: 0000000000000000-0000000100000000 - pw
@@ -196,5 +194,5 @@ void initVmm() {
 
 	kernelSpace.setActive();
 
-	log(2, "New Pml tables loaded");
+	log(1, "New Pml tables loaded");
 }

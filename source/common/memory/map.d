@@ -2,11 +2,11 @@ module common.memory.map;
 
 import lib.stivale;
 
-// Non arch-specific memory related stuff
+// Module for managing memory maps
 
 /* We create our own Memory map stuff for
- * 2 reasons, Firstly, independance and secondly
- * this allows us to design the allocator more to
+ * Two reasons, Firstly, independance and secondly
+ * this allows us to design our allocator more to
  * our liking
  */
 
