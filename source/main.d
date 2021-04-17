@@ -2,6 +2,7 @@ import lib.stivale;
 import lib.std.stdio;
 import lib.std.result;
 
+import shell;
 import io.framebuffer;
 import common.memory.physical;
 
@@ -17,5 +18,5 @@ extern (C) void main(StivaleInfo* stivale) {
 	initPmm(stivale);
 	initArch(stivale);
 
-	asm { hlt; }
+	shellMain();
 }

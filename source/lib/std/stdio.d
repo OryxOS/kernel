@@ -28,6 +28,12 @@ private struct Console {
 
 private __gshared Console console;
 
+void clearConsole() {
+	console.posX = 0;
+	console.posY = 0;
+	plotScreen(Color.Background);
+}
+
 void initConsole() {
 	console = Console(getFrameBufferInfo());
 

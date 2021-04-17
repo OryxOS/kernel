@@ -10,7 +10,7 @@ module arch.amd64.idt;
 import lib.std.stdio;
 
 import arch.amd64.gdt;
-import arch.amd64.pic;
+import arch.amd64.drivers.legacy.keyboard;
 
 private alias Handler = extern (C) void function();
 
@@ -109,14 +109,12 @@ void initIdt() {
 	idtEntries[19] = IdtEntry(&simdFaultHandler,     0, Gate.Interrupt);
 	idtEntries[20] = IdtEntry(&virtFaultHandler,     0, Gate.Interrupt);
 	idtEntries[30] = IdtEntry(&secFaultHandler,      0, Gate.Interrupt);
+
+	// Legacy devices
+	idtEntries[33] = IdtEntry(&keyboardHandler,      0, Gate.Interrupt);
 	
 	asm { lidt [idtPointer]; }
 	log(1, "Idt initialized with %d descriptors", idtEntries.length);
-
-	initPic();
-	asm { sti; }
-
-	log(1, "Pic Initliazed in Chain mode");
 }
 
 // Assembly stubs
@@ -180,5 +178,6 @@ private __gshared string[] exceptions = [
 // Universal exception handler
 extern (C) void exceptionHandler(InterruptFrame* frame) {
 	panic("%s exception occured - error code: %d
-		Rax: %h\tRbx: %h\tRcx: %h\tRdx: %h", exceptions[frame.ident], frame.error, frame.rax, frame.rbx, frame.rcx, frame.rdx);
+		Rax: %h\tRbx: %h\tRcx: %h\tRdx: %h
+		Rip: %h", exceptions[frame.ident], frame.error, frame.rax, frame.rbx, frame.rcx, frame.rdx, frame.rip);
 }
