@@ -14,6 +14,8 @@ enum Color: pixel {
 
 // Control Structure
 private struct Console {
+	bool showCursor;
+
 	uint posX; 
 	uint posY;
 
@@ -28,17 +30,30 @@ private struct Console {
 
 private __gshared Console console;
 
+void initConsole() {
+	console = Console(getFrameBufferInfo());
+
+	plotScreen(Color.Background);
+}
+
+void moveCursor(uint x, uint y) {
+	assert(x <= console.maxX);
+	assert(y <= console.maxY);
+
+	console.posX = x;
+	console.posY = y;
+}
+
+void showCursor(bool show) {
+	
+}
+
 void clearConsole() {
 	console.posX = 0;
 	console.posY = 0;
 	plotScreen(Color.Background);
 }
 
-void initConsole() {
-	console = Console(getFrameBufferInfo());
-
-	plotScreen(Color.Background);
-}
 
 void putChr(const char c, Color col = Color.Normal) {
 	// End of line
