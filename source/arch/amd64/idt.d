@@ -9,8 +9,8 @@ module arch.amd64.idt;
 
 import lib.std.stdio;
 
-import arch.amd64.gdt;
-import arch.amd64.drivers.legacy.keyboard;
+import arch.amd64.gdt                     : KernelCodeSegment;
+import arch.amd64.drivers.legacy.keyboard : keyboardHandler;
 
 private alias Handler = extern (C) void function();
 

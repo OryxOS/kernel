@@ -1,6 +1,6 @@
 module io.framebuffer.fancy;
 
-import io.framebuffer;
+import io.framebuffer : plotRect;
 
 // A bunch of fancy demos that our graphics library can do
 

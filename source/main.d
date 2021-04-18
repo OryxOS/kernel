@@ -1,10 +1,9 @@
 import lib.stivale;
 import lib.std.stdio;
-import lib.std.result;
 
-import shell;
-import io.framebuffer;
-import common.memory.physical;
+import shell                   : shellMain;
+import io.framebuffer          : initFrameBuffer;
+import common.memory.physical  : initPmm;
 
 version (X86_64) import arch.amd64;
 

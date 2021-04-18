@@ -3,17 +3,16 @@ module arch.amd64;
 import lib.std.stdio;
 import lib.stivale;
 
-import arch.amd64.memory;
-import arch.amd64.gdt;
-import arch.amd64.idt;
-import arch.amd64.pic;
-import arch.amd64.cpu;
+import arch.amd64.memory : initVmm;
+import arch.amd64.gdt    : initGdt;
+import arch.amd64.idt    : initIdt;
+import arch.amd64.pic    : initPic; 
 
 void initArch(StivaleInfo* stivale) {
 	writefln("\nAmd64 Init:");
 
 	initGdt();
 	initIdt();
-	initVmm();
 	initPic();
+	initVmm();
 }

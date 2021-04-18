@@ -1,7 +1,8 @@
 module shell;
 
 /* OryxOS Kernel Shell
- * This is just a simple shell in ring 0 that is nice for demoing the kernel
+ * This is just a simple shell in ring 0 that is
+ * nice for tsting parts of the kernel
  */
 
 import lib.std.stdio;
@@ -10,7 +11,7 @@ import lib.std.string;
 import io.framebuffer;
 import common.memory.physical;
 
-import arch.amd64.drivers.legacy.keyboard; //TODO: Keyboard HAL
+version (X86_64) import arch.amd64.drivers.legacy.keyboard : getKeyEvent;
 
 // Command buffer - null terminated
 private __gshared char[64] cmdBuffer = '\0';
@@ -26,6 +27,7 @@ void shellMain() {
 
 	showCursor(true);
 
+	// Event loop
 	while(1) {
 		asm { hlt; }
 		immutable auto event = getKeyEvent();
@@ -45,10 +47,10 @@ void shellMain() {
 			break;
 
 		case '\b':
-		if (bufferPos != 0) {
-			putChr('\b');
-			cmdBuffer[bufferPos--] = '\0';
-		}
+			if (bufferPos != 0) {
+				putChr('\b');
+				cmdBuffer[bufferPos--] = '\0';
+			}
 			break;
 
 		default:
@@ -92,9 +94,7 @@ private void handleCommand(string command) {
 
 	case "test-int":
 		showCursor(false);
-		asm {
-			int 3;
-		}
+		version (X86_64) asm { int 3; }
 		break;
 	
 	case "test-pmm":

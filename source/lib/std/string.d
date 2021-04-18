@@ -7,6 +7,7 @@ private size_t stringLength(const char* str) {
 	return len;
 }
 
+/// Converts a C style string to a D style string
 string fromCString(const char* str) {
 	return str != "\0" ? cast(string)str[0..stringLength(str)] : "";
 }
