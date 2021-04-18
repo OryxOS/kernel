@@ -38,7 +38,7 @@ private enum leftCtrlRelease   = 0x9D;
 char getKeyEvent() {
 	// Save and clear buffer
 	immutable char ret = curEvent;
-	curEvent = char.init;
+	curEvent = '\0';
 
 	return ret;
 }

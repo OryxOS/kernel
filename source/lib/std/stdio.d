@@ -45,7 +45,7 @@ void moveCursor(uint x, uint y) {
 }
 
 void showCursor(bool show) {
-	
+	console.showCursor = show;
 }
 
 void clearConsole() {
@@ -72,11 +72,19 @@ void putChr(const char c, Color col = Color.Normal) {
 	// Handle newlines
 	switch(c) {
 	case '\n':
+		// Remove cursor from last line
+		if (console.showCursor)
+			plotRect(Color.Background, console.posX + 1, console.posY + 1, 6, 14);
+
 		console.posY += 16;
 		console.posX = 0;
 		break;
 
 	case '\t':
+		// Remove cursor 
+		if (console.showCursor)
+			plotRect(Color.Background, console.posX + 1, console.posY + 1, 6, 14);
+
 		if (console.posX % 32 == 0) {
 			console.posX += 32;			
 		} else {
@@ -84,11 +92,28 @@ void putChr(const char c, Color col = Color.Normal) {
 		}
 		break;
 
+	case '\b':
+		// Remove cursor 
+		if (console.showCursor)
+			plotRect(Color.Background, console.posX + 1, console.posY + 1, 6, 14);
+
+		// Remove character
+		if (console.posX != 0) {
+			plotRect(Color.Background, console.posX - 8, console.posY, 8, 16);
+			console.posX -= 8;
+		}
+
+		break;
+
 	default:
 		plotChr(col, Color.Background, c, console.posX, console.posY);
 		console.posX += 8;
 		break;
 	}
+
+	// Update cursor 
+	if (console.showCursor)
+		plotRect(Color.HighLight1, console.posX + 1, console.posY + 1, 6, 14);
 }
 
 void putStr(const string s, Color col = Color.Normal) {
