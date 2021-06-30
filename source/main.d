@@ -17,5 +17,7 @@ extern (C) void main(StivaleInfo* stivale) {
 	initPmm(stivale);
 	initArch(stivale);
 
-	shellMain();
+	//shellMain();
+
+	while (1) {}
 }

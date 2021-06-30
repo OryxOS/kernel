@@ -7,6 +7,7 @@ import common.memory.map;
 // Tags
 enum FrameBufferID = 0x506461d2950408fa;
 enum MemMapID      = 0x2187f79e8612de07;
+enum XsdtPointerID = 0x9e1786930a375e78;	
 
 // All tags have this at their start
 align (1) struct StivaleTag {
@@ -85,4 +86,9 @@ align (1) struct MemMapTag {
 	StivaleTag tag;
 	ulong      entryCount;
 	Region     entries;	   // Varlength arrays don't exist in D
+}
+
+align (1) struct XsdtPointerTag {
+	StivaleTag tag;
+	void*       pointer;
 }
