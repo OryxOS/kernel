@@ -3,12 +3,14 @@ module arch.amd64;
 import lib.std.stdio;
 import lib.stivale;
 
-import arch.amd64.memory : initVmm;
-import arch.amd64.gdt    : initGdt;
-import arch.amd64.idt    : initIdt;
-import arch.amd64.pic    : initPic;
+import arch.amd64.memory    : initVmm;
+import arch.amd64.gdt       : initGdt;
+import arch.amd64.idt       : initIdt;
+import arch.amd64.pic       : initPic;
 
-import arch.acpi;        // : initAcpi, getTable; 
+import common.memory.alloc  : initAlloc;
+
+import arch.acpi            : initAcpi; 
 
 void initArch(StivaleInfo* stivale) {
 	writefln("\nAmd64 Init:");
@@ -18,9 +20,8 @@ void initArch(StivaleInfo* stivale) {
 	initIdt();
 	initPic();
 	initVmm();
+	
+	initAlloc();
 
 	initAcpi(stivale);
-
-	char[4] madtSig = ['A', 'P', 'I', 'C'];
-	//SdtHeader* hdr = cast(SdtHeader*)(getTable(madtSig));
 }

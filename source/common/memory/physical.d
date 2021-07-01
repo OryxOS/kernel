@@ -89,7 +89,7 @@ void initPmm(StivaleInfo* stivale) {
 	log(1, "Bitmap fully populated and ready for use");
  }
 
- // Error handling
+// Error handling
 enum PmmError{
 	NotEnoughMemory,
 
@@ -105,7 +105,7 @@ alias PmmResult = Result!(PhysAddress, PmmError);
 /// Returns: 
 /// 	Physical Address to the start of the blocks
 /// 	or an error
-PmmResult newBlock(size_t count, bool zero = true) {													
+PmmResult newBlock(size_t count = 1, bool zero = true) {													
 	size_t regionStart = bitMap.nextFree;
 	while (1) {
 		bool  newRegionNeeded;												

@@ -50,7 +50,7 @@ private align (1) struct Xsdt {
 //         Instance         //
 //////////////////////////////
 
-private Xsdt* xsdt;
+private __gshared Xsdt* xsdt;
 
 void initAcpi(StivaleInfo* stivale) {
 	// Locate XSDT Pointer
@@ -66,8 +66,6 @@ void initAcpi(StivaleInfo* stivale) {
 	if (xsdt.header.signature != XsdtSignature)
 		panic("Invalid Xsdt signature");
 
-	writefln("tables: %h", cast(ulong)(xsdt.tables));
-
 	// Print data
 	log(1, "Acpi Xsdt found :: Acpi revision: %d", ptr.revision);
 }
@@ -79,7 +77,7 @@ void* getTable(char[4] sig) {
 	immutable auto entryCount = (xsdt.header.length - xsdt.header.sizeof) / 8;
 
 	for (size_t i = 0; i < entryCount; i++) {
-		SdtHeader* hdr = cast(SdtHeader*)(xsdt.tables + 1 * 8);
+		SdtHeader* hdr = cast(SdtHeader*)(&xsdt.tables + 1 * 8);
 
 		if (hdr.signature == sig)
 			return cast(void*)(hdr);
