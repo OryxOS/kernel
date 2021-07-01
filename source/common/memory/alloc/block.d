@@ -39,7 +39,7 @@ private __gshared Node*[BlockSizes.length] lists;
 void initBlockAlloc() {
 	// Allocate initial space for each list and link each node
 	for (size_t i = 0; i < BlockSizes.length; i++) {
-		auto region  = newBlock().unwrapResult;
+		auto region  = newBlock(1, false).unwrapResult;
 		auto entries = PageSize / (Node.sizeof + BlockSizes[i]);
 		
 		lists[i] = cast(Node*)(region);
@@ -86,7 +86,7 @@ void* newBlockAlloc(size_t size, bool zero = true) {
 			curNode = curNode.next;
 		} else {
 			// Add a new page to the list
-			auto result = newBlock();
+			auto result = newBlock(1, false);
 
 			if (!result.isOkay)
 				return null;

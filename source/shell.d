@@ -9,6 +9,7 @@ import lib.std.stdio;
 import lib.std.string;
 
 import io.framebuffer;
+import common.memory.alloc;
 import common.memory.physical;
 
 version (X86_64) import arch.amd64.drivers.legacy.keyboard : getKeyEvent;
@@ -71,7 +72,8 @@ private void handleCommand(string command) {
 		test-scroll  - scroll through 100 lines
 		test-panic   - display the panic screen (Fatal)
 		test-int     - calls interrupt 3 (Fatal)
-		test-pmm     - allocate a 4kb block of memory");
+		test-pmm     - allocate a 4kb block of memory
+		test-alloc   - test the kernel allocator");
 		break;
 
 	case "clear":
@@ -103,6 +105,14 @@ private void handleCommand(string command) {
 			writefln("Block allocated: %h", cast(ulong)(test.unwrapResult()));
 		} else {
 			writefln("Allocation failed: %d", test.unwrapError());
+		}
+		break;
+
+	case "test-alloc":
+		writefln("Allocating 16384 allocations of 16 bytes");
+
+		foreach(_; 0..16384) {
+			newObj!(ubyte[16])();
 		}
 		break;
 
