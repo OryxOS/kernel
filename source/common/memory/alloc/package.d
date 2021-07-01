@@ -1,17 +1,32 @@
 module common.memory.alloc;
 
+import lib.std.stdio;
+import lib.std.result;
+
 import common.memory.alloc.block;
 
-struct Dumbass {
-	int a;
-	int b;
-	int c;
+void initAlloc() {
+	writefln("\nAllocator Init:");
+	initBlockAlloc();
+	log(1, "Fixed Block Allocator initialized");
 }
 
-void initAlloc() {
-	initBlockAlloc();
+/// Attemps to allocate a block of a given size
+/// Params:
+/// 	T = Type to allocate
+/// Returns:
+/// 	null = Not enough memory remaining for allocation
+/// 	       or alloc size too great
+T* newObj(T)() {
+	return cast(T*)(newBlockAlloc(T.sizeof));
+}
 
-	foreach(i; 0..4096000) {
-		newBlockAlloc(512);
-	}
+/// Attempts to free an allocation
+/// Params:
+/// 	obj = pointer to the object to delete
+/// Returns:
+/// 	true  = deletion was successful
+/// 	false = address in not in heap
+bool delObj(T)(T* obj) {
+	return delBlockAlloc(cast(void*)(obj), T.sizeof);
 }

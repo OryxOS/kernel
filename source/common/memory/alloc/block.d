@@ -23,7 +23,7 @@ private struct Node {
 
 // Determines which list a block allocation should fit in
 private size_t getBlockIndex(size_t allocSize) {
-	for (size_t i = 0; i < BlockSizes.length; i++) 
+	for (size_t i = 0; i < BlockSizes.length - 1; i++) 
 		if (BlockSizes[i] >= allocSize)
 			return i;
 	
@@ -45,7 +45,6 @@ void initBlockAlloc() {
 		lists[i] = cast(Node*)(region);
 
 		auto curNode = lists[i];
-
 		for (size_t j = 1; j < entries - 1; j++) {
 			curNode.free = true;
 			curNode.next = cast(Node*)(region + (Node.sizeof + BlockSizes[i]) * j);
@@ -53,11 +52,20 @@ void initBlockAlloc() {
 		}
 
 		curNode.next = null; // Last node points to nothing
-	}
-	
+	}	
 }
 
+/// Attemps to allocate a block of a given size
+/// Params:
+/// 	size = size of the allocation
+/// 	zero = should the allocation be zeroed out
+/// Returns:
+/// 	null = Not enough memory remaining for allocation
+/// 	       or alloc size too great
 void* newBlockAlloc(size_t size, bool zero = true) {
+	if (size > BlockSizes[BlockSizes.length - 1])
+		return null;
+
 	size_t index = getBlockIndex(size);	
 	auto curNode = lists[index];
 
@@ -78,7 +86,12 @@ void* newBlockAlloc(size_t size, bool zero = true) {
 			curNode = curNode.next;
 		} else {
 			// Add a new page to the list
-			auto region  = newBlock().unwrapResult;
+			auto result = newBlock();
+
+			if (!result.isOkay)
+				return null;
+
+			auto region  = result.unwrapResult();
 			auto entries = PageSize / (Node.sizeof + BlockSizes[index]);
 
 			curNode.next = cast(Node*)(region);
@@ -98,6 +111,13 @@ void* newBlockAlloc(size_t size, bool zero = true) {
 	}
 }
 
+/// Attempts to free an allocation
+/// Params:
+/// 	where = address of the allocation
+/// 	size  = size of the allocation
+/// Returns:
+/// 	true  = deletion was successful
+/// 	false = address in not in heap
 bool delBlockAlloc(void* where, size_t size) {
 	size_t index = getBlockIndex(size);
 	auto curNode = lists[index];

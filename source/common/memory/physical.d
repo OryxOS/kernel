@@ -20,7 +20,7 @@ version (X86_64) enum BlockSize = 0x1000;
 private __gshared BitMap bitMap;
 
 void initPmm(StivaleInfo* stivale) {
-	writefln("\nIntializing Pmm:");
+	writefln("\nPmm Init:");
 
 	auto info = RegionInfo(cast(MemMapTag*)(stivale.getTag(MemMapID)));
 

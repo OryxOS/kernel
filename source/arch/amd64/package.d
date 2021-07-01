@@ -8,8 +8,6 @@ import arch.amd64.gdt       : initGdt;
 import arch.amd64.idt       : initIdt;
 import arch.amd64.pic       : initPic;
 
-import common.memory.alloc  : initAlloc;
-
 import arch.acpi            : initAcpi; 
 
 void initArch(StivaleInfo* stivale) {
@@ -20,8 +18,6 @@ void initArch(StivaleInfo* stivale) {
 	initIdt();
 	initPic();
 	initVmm();
-	
-	initAlloc();
 
 	initAcpi(stivale);
 }
