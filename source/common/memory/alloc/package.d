@@ -3,23 +3,31 @@ module common.memory.alloc;
 import lib.std.stdio;
 import lib.std.result;
 
-import common.memory.alloc.block;
+import common.memory.alloc.bitslab;
+import arch.amd64.memory;
 
 void initAlloc() {
 	writefln("\nAllocator Init:");
-	initBlockAlloc();
-	log(1, "Fixed Block Allocator initialized");
+
+	initBitSlabAlloc();
 }
 
-/// Attemps to allocate a block of a given size
+/// Allocates memory for a supplied obj
 /// Params:
-/// 	T = Type to allocate
+/// 	T     = Type to allocate
+///     count = Number of Ts to allocate contigous space for
 /// Returns:
 /// 	null = Not enough memory remaining for allocation
-/// 	       or alloc size too great
-T* newObj(T)() {
-	return cast(T*)(newBlockAlloc(T.sizeof));
+T* newObj(T)(size_t count) {
+	if (T.sizeof * count <= PageSize)
+		return cast(T*)(newBitSlabAlloc(T.sizeof * count));
+	else 
+		panic("TODO: allocations greater than 4096 bytes");
+
+	assert(0);
 }
+
+/*
 
 /// Attempts to free an allocation
 /// Params:
@@ -30,3 +38,5 @@ T* newObj(T)() {
 bool delObj(T)(T* obj) {
 	return delBlockAlloc(cast(void*)(obj), T.sizeof);
 }
+
+*/

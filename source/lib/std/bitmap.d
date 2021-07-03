@@ -3,7 +3,7 @@ module lib.std.bitmap;
 // Module for working with bitmaps, used in both our heap and physical allocator
 
 /// Standard bitmap structure
-align struct BitMap {
+struct BitMap {
 	ubyte* map;       // The actual bitmap
 	size_t size;      // Size (bits) of the bitmap
 	size_t nextFree;  // Next available bit
