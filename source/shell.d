@@ -109,10 +109,13 @@ private void handleCommand(string command) {
 		break;
 
 	case "test-alloc":
-		foreach(_; 0..1000_000) 
-			newObj!(ubyte)(16);
+		foreach(_; 0..1000000) {
+			ubyte*[1000] allocs;
+			allocs[0..1000] = newObj!(ubyte)(16);
 
-		writefln("Allocated 1 000 000 16 byte blocks");
+			foreach (alloc; allocs)
+				delObj!(ubyte)(alloc);
+		}
 		break;
 
 	default:

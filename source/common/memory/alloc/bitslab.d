@@ -1,16 +1,10 @@
 module common.memory.alloc.bitslab;
 
-/* OryxOS <TO BE NAMED> Allocator
- * The <TO BE NAMED> allocator consists of 2 linked lists
- * 
- * List 1: A linked list of pages. Each page is an array
- *         of structs. There structs contain a pointer 
- *         to a bitmap and some metadata
- *
- * List 2: A linked list of pages. Each is fulled with
- *         bitmaps, each of a different size and
- *         granularity. Each bitmap must account for 1
- *         page
+/* OryxOS BitSlab (Bitmap + Slab) Allocator
+ * The BitSlab allocator consists of a linked list of 
+ * ControlPages. These control pages are fulled with
+ * Slots - each slot container a pointer to a bitmap 
+ * and other metadata
  */
 
 import lib.std.stdio;
@@ -29,7 +23,7 @@ private size_t getBlockIndex(size_t allocSize) {
 		if (BlockSizes[i] >= allocSize)
 			return i;
 	
-	assert(0); 	// Unreachable
+	assert(0); 	// Unreachable - size is checked by newObj()
 }
 
 private struct Slot {
@@ -38,13 +32,14 @@ private struct Slot {
 	size_t  gran;   // Size of each allocation
 }
 
+// Must be exactly one page in size
 private struct ControlPage {
 	ControlPage* next;
 	Slot[(PageSize - size_t.sizeof) / Slot.sizeof] slots;
 }
 
 private struct BitMapPage {
-	ubyte* top; // Highest bitmap in page
+	ubyte* top; // Latest bitmap created
 }
 
 //////////////////////////////
@@ -62,13 +57,13 @@ void initBitSlabAlloc() {
 	controlPages.next  = null;
 }
 
-void* newBitSlabAlloc(size_t size) {
+void* newBitSlabAlloc(size_t size, bool zero) {
 	size_t index = getBlockIndex(size);
 
 	// Find or create a slot
 	auto curControlPage = controlPages;
 	while (true) {
-		for (size_t i = 0; i< controlPages.slots.length; i++) {
+		for (size_t i = 0; i < curControlPage.slots.length; i++) {
 			auto slot = &curControlPage.slots[i];
 
 			// Slot with correct granularity and space found
@@ -76,19 +71,23 @@ void* newBitSlabAlloc(size_t size) {
 				auto bit = slot.bitMap.nextFree;
 				slot.bitMap.setBit(bit);
 
+				ubyte* alloc = cast(ubyte*)(slot.page + slot.gran * bit);
+
+				if (zero) 
+					alloc[0..BlockSizes[index]] = 0;
+
 				// Update nextFree and return
 				size_t j;
 				for (j = 0; j < slot.bitMap.size; j++) {
 					if (!slot.bitMap.testBit(j)) {
 						slot.bitMap.nextFree = j;
-
-						return slot.page + slot.gran * bit;
+						return cast(void*)(alloc);
 					}
 				}
 				// No more free space in bitmap
 				if (j == slot.bitMap.size) {
 					slot.bitMap.full = true;
-					return slot.page + slot.gran * bit;
+					return cast(void*)(alloc);
 				}
 			}
 
@@ -129,37 +128,46 @@ void* newBitSlabAlloc(size_t size) {
 				return slot.page;
 			}
 		}
-
-		// Find or allocate a new control page
+		
 		if (curControlPage.next != null) {
 			curControlPage = curControlPage.next;
-		} else {
-			auto result = newBlock(1, false);
-			if (result.isOkay)
-				curControlPage.next = cast(ControlPage*)(result.unwrapResult());
-			else
-				return null;
-
-			curControlPage = curControlPage.next;
+			continue;
 		}
+
+		// Allocate a new control page
+		auto result = newBlock(1, false);
+		if (result.isOkay)
+			curControlPage.next = cast(ControlPage*)(result.unwrapResult());
+		else
+			return null;
+		curControlPage = curControlPage.next;
 	}
 }
 
-bool delBitSlabAlloc(void* where, size_t count) {
+bool delBitSlabAlloc(void* where) {
 	auto curControlPage = controlPages;
+
 	while (true) {
 		for (size_t i = 0; i< controlPages.slots.length; i++) {
 			auto slot = &curControlPage.slots[i];
 
-			// Allocation under slot's control
-			if (where > slot.page && where < slot.page + 4096) {
-				
-			}	
+			// Object is in this slot
+			if (where >= slot.page && where < slot.page + PageSize) {
+				auto bit = (cast(size_t)(where) % PageSize) / slot.gran;
+
+				slot.bitMap.unsetBit(bit);
+				slot.bitMap.nextFree = bit;
+
+				if (slot.bitMap.full)
+					slot.bitMap.full = false;
+
+				return true;
+			}
 		}
 		
-		if (curControlPage.next != null) 
-			curControlPage = curControlPage.next;
-		else
+		if (curControlPage.next == null) 
 			return false;
+
+		curControlPage = curControlPage.next;
 	}
 }

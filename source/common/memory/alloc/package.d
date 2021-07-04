@@ -18,16 +18,14 @@ void initAlloc() {
 ///     count = Number of Ts to allocate contigous space for
 /// Returns:
 /// 	null = Not enough memory remaining for allocation
-T* newObj(T)(size_t count) {
+T* newObj(T)(size_t count = 1) {
 	if (T.sizeof * count <= PageSize)
-		return cast(T*)(newBitSlabAlloc(T.sizeof * count));
+		return cast(T*)(newBitSlabAlloc((T.sizeof * count), true));
 	else 
 		panic("TODO: allocations greater than 4096 bytes");
 
 	assert(0);
 }
-
-/*
 
 /// Attempts to free an allocation
 /// Params:
@@ -36,7 +34,5 @@ T* newObj(T)(size_t count) {
 /// 	true  = deletion was successful
 /// 	false = address in not in heap
 bool delObj(T)(T* obj) {
-	return delBlockAlloc(cast(void*)(obj), T.sizeof);
+	return delBitSlabAlloc(cast(void*)(obj));
 }
-
-*/
