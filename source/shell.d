@@ -117,7 +117,7 @@ private void handleCommand(string command) {
 				delObj!(ubyte)(alloc);
 		}
 		break;
-
+		
 	default:
 		writefln("Error, command \"%s\" is not valid", command);
 		return;

@@ -62,13 +62,6 @@ void putChr(const char c, Color col = Color.Normal) {
 		console.posX = 0;
 	}
 
-	// Scroll
-	if(console.posY >= console.maxY) {
-		scrollScreen(16, getFrameBufferInfo().height % 16);                  // Move new data up
-		plotRect(Color.Background, 0, console.maxY - 16, console.maxX, 16);  // Clear line
-		console.posY = console.maxY - 16;                                    // Reset cursor
-	}
-
 	// Handle newlines
 	switch(c) {
 	case '\n':
@@ -109,6 +102,13 @@ void putChr(const char c, Color col = Color.Normal) {
 		plotChr(col, Color.Background, c, console.posX, console.posY);
 		console.posX += 8;
 		break;
+	}
+
+	// Scroll
+	if(console.posY == console.maxY) {
+		scrollScreen(16, getFrameBufferInfo().height % 16);                  // Move new data up
+		plotRect(Color.Background, 0, console.maxY - 16, console.maxX, 16);  // Clear line
+		console.posY = console.maxY - 16;                                    // Reset cursor
 	}
 
 	// Update cursor 
