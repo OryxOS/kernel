@@ -27,7 +27,7 @@ void initPmm(StivaleInfo* stivale) {
 	// 1. Calculate size needed for bitmap
 	size_t highestByte;
 	for (size_t i = 0; i < info.count; i++) {
-		auto immutable curRegion = info.regions[i];
+		immutable auto curRegion = info.regions[i];
 
 		if (curRegion.type != RegionType.Usable
 			&& curRegion.type != RegionType.KernelOrModule

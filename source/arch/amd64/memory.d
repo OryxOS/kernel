@@ -1,9 +1,12 @@
 module arch.amd64.memory;
 
+import lib.stivale;
+import lib.std.math;
 import lib.std.stdio;
 import lib.std.result;
 
 import common.memory;
+import common.memory.map;
 import common.memory.physical;
 
 /* OryxOS Amd64 Virtual Memory Manager
@@ -159,10 +162,12 @@ struct AddressSpace {
 //         Instance         //
 //////////////////////////////
 
-__gshared AddressSpace kernelSpace;
+private __gshared AddressSpace kernelSpace;
 
-void initVmm() {
-	kernelSpace = AddressSpace(newBlock(1)
+void initVmm(StivaleInfo* stivale) {
+	auto info = RegionInfo(cast(MemMapTag*)(stivale.getTag(MemMapID)));
+
+	kernelSpace = AddressSpace(newBlock()
 	                          .unwrapResult("Cannot allocate space for Pml4, init cannot continue"));
 	log(1, "Pml4 block allocated");
 
@@ -192,7 +197,28 @@ void initVmm() {
 			panic("Not enough memory for Pml tables. Init cannot continue");
 	}
 
-	kernelSpace.setActive();
+	// Region 4
+    for (size_t i = 0; i < info.count; i++) {
+        immutable auto base = alignDown(info.regions[i].base, PageSize);
+		immutable auto top  = alignUp(info.regions[i].base + info.regions[i].length, PageSize);
 
+		for (size_t j = base; j < top; j += PageSize) {
+			// Ignore first 4gb, they are already mapped
+			if (j < 0x100000000)
+				continue;
+
+			VmmResult map1 = kernelSpace.mapPage(cast(VirtAddress)(j + PhysOffset),
+		                                         cast(PhysAddress)(j), Flags.Present | Flags.Writeable);
+
+			VmmResult map2 = kernelSpace.mapPage(cast(VirtAddress)(j),
+		                                         cast(PhysAddress)(j), Flags.Present | Flags.Writeable);
+
+			if (map1 != VmmResult.Good || map2 != VmmResult.Good)
+				panic("Not enough memory for Pml tables. Init cannot continue");
+
+		}
+    }
+
+	kernelSpace.setActive();
 	log(1, "New Pml tables loaded");
 }

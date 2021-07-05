@@ -17,7 +17,7 @@ void initArch(StivaleInfo* stivale) {
 	initGdt();
 	initIdt();
 	initPic();
-	initVmm();
+	initVmm(stivale);
 
-	initAcpi(stivale);
+	//initAcpi(stivale);
 }
