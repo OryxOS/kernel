@@ -20,7 +20,7 @@ extern (C) void main(StivaleInfo* stivale) {
 	initAlloc();
 	initArch(stivale);
 
-	writefln("\nInit Complete - press enter to enter shell");
+	writefln("\nInit Complete - press ENTER to enter shell");
 	while (true) {
 		if (getKeyEvent() == '\n')
 			shellMain();

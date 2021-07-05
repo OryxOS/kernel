@@ -69,7 +69,7 @@ void plotRect(pixel p, uint x, uint y, uint width, uint height) {
 }
 
 void plotScreen(pixel p) {
-	buffer.address[0..(buffer.pitch * buffer.height + buffer.width)] = p;
+	buffer.address[0..(buffer.pitch * buffer.height)] = p;
 }
 
 void plotChr(pixel fore, pixel back, char c, uint x, uint y) {
@@ -82,11 +82,10 @@ void plotChr(pixel fore, pixel back, char c, uint x, uint y) {
 	 */
 	for (uint i = 0; i < 15; i++) {
 		for (uint j = 0; j < 7; j++) {
-			if ((glyph[i] >> j & 1) == 1) {
+			if ((glyph[i] >> j & 1) == 1)
 				plotPixel(fore, x + 7 - j, i + y);
-			} else {
+			else
 				plotPixel(back, x + 7 - j, i + y);
-			}
 		}
 	}
 }

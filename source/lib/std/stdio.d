@@ -141,6 +141,7 @@ void log(T...)(uint indent, const string fmt, T args) {
 }
 
 void panic(string file = __FILE__, size_t line = __LINE__, T...)(const string fmt, T args) {
+	showCursor(false);
 	plotScreen(Color.Background);
 
 	// !!!
