@@ -10,6 +10,7 @@ void initAlloc() {
 	writefln("\nAllocator Init:");
 
 	initBitSlabAlloc();
+	writefln("BitSlab allocator initialized successfully");
 }
 
 /// Allocates memory for a supplied obj
