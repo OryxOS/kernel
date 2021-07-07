@@ -7,9 +7,9 @@ module shell;
 
 import lib.std.stdio;
 import lib.std.string;
+import lib.std.heap;
 
 import io.framebuffer;
-import common.memory.alloc;
 import common.memory.physical;
 
 version (X86_64) import arch.amd64.drivers.legacy.keyboard : getKeyEvent;
@@ -109,13 +109,38 @@ private void handleCommand(string command) {
 		break;
 
 	case "test-alloc":
-		foreach(_; 0..1000000) {
-			ubyte*[1000] allocs;
-			allocs[0..1000] = newObj!(ubyte)(16);
+		// Test 1
+		writefln("Test 1: Allocation and Deleting of 1000 4 byte objects");
+		auto objects = newArr!(uint)(1000);
+		auto result  = delArr!(uint)(objects);
+		if (objects != null && result == true)
+			writefln("Test 1: Passed");
+		else
+			writefln("Test 1: Failed");
 
-			foreach (alloc; allocs)
-				delObj!(ubyte)(alloc);
-		}
+		// Test 2
+		writefln("Test 2: Linked Lists: Allocation, Addition and Removal of elements");
+		alias BoolList = LinkedList!(bool);
+		BoolList bools = BoolList(7, true);
+		bools ~= true;
+		writefln("%d", bools.capacity);
+		//bools.remove(2);
+		writefln("%d", bools.capacity);
+		//if (bools[0] == true && bools[6] == true)
+		//	writefln("Test 2: Passed");
+		//else
+		//	writefln("Test 2: Failed");
+		while (1) {}
+		// Test 3
+		/*
+		writefln("Test 3: Linked Lists: Creation and Destruction");
+		BoolList list = BoolList(16, true);
+		list.destroy();
+		if (list.capacity == 0)
+			writefln("Test 3: Passed");
+		else
+			writefln("Test 3: Failed");
+		*/
 		break;
 		
 	default:
