@@ -148,11 +148,11 @@ bool delBitSlabAlloc(void* where) {
 	auto curControlPage = controlPages;
 
 	while (true) {
-		for (size_t i = 0; i< controlPages.slots.length; i++) {
+		for (size_t i = 0; i < controlPages.slots.length; i++) {
 			auto slot = &curControlPage.slots[i];
 
 			// Object is in this slot
-			if (where >= slot.page && where < slot.page + PageSize) {
+			if (slot.page != null && where >= slot.page && where < slot.page + PageSize) {
 				auto bit = (cast(size_t)(where) % PageSize) / slot.gran;
 
 				slot.bitMap.unsetBit(bit);

@@ -66,20 +66,24 @@ bool delArr(T)(T* array)  {
 //    Linked Lists    //
 ////////////////////////
 
+
 struct LinkedList(T) {
-	// List Node
-	private struct Node {
-		Node* next = null;
-		T     item;
-	}
+    private struct Node {
+        Node* next;
+        T     item;
+    }
 
-	private Node* list; // Actual list
-	size_t capacity;    // Number of elements in the list
+    private Node*  storage;
+    private size_t length;
 
-	this(size_t initSize, T initValue) {
-		this.list = newObj!(Node)();
+    /// Creates a new LinkedList
+    /// Params:
+    ///     initSize  = initial number of elements
+    ///     initValue = value to set al initial elements to
+    this(size_t initSize, T initValue) {
+		this.storage = newObj!(Node)();
 
-		auto curNode = this.list;
+		auto curNode = this.storage;
 		foreach (_; 1..initSize) {
 			curNode.next = newObj!(Node)();
 			curNode.item = initValue;
@@ -87,82 +91,66 @@ struct LinkedList(T) {
 			curNode = curNode.next;
 		}
 
-		this.capacity = initSize;
+		this.length = initSize;
 	}
-	/*
-	~this() {
-		foreach (i; 0..this.capacity - 1)
-			this.remove(i);
+
+    /// Deletes a LinkedList (Removes all elements)
+    void removeAll() {
+		foreach (i; 0..this.length - 1)
+			this.remove(0);
 	}
-	*/
 
-	ref T opIndex(size_t index) {
-		assert (index < this.capacity); // Overflow Prevention
+    // Index operator overload. eg: list[12]
+    ref T opIndex(size_t index) {
+		assert (index < this.length); // Overflow Prevention
 
-		// Loop though all nodes
-		auto curNode = this.list;
+		// Loop though all nodes until index node is found
+		auto curNode = this.storage;
 		foreach ( _; 0..index)
 			curNode = curNode.next;
 
 		return curNode.item;
 	}
 
-	auto opOpAssign(string op, T)(T value) {
-		writefln("Called");
-		switch(op) {
-		case "~":
-			// Loop though all nodes to find last
-			auto curNode = this.list;
-			foreach ( _; 0..this.capacity - 1)
-				curNode = curNode.next;
+    /// Add an element to the end of the list
+    void append(T value) {
+		// Loop though all nodes to find last 
+		// TODO: Keep a pointer to the last node - will greatly improve speed
+		auto lastNode = this.storage;
+		foreach ( _; 0..this.length)
+			lastNode = lastNode.next;
 
-			//  Setup new node
-			auto append  = newObj!(Node)();
-			append.item  = value;
-			curNode.next = append;
+		lastNode.next = newObj!(Node)();
 
-			this.capacity++;
-			break;
+		lastNode.next.item = value;
+		lastNode.next.next = null;
 
-		default:
-			panic("Linked Lists do not support operand \"%s\"", op);
-			break;
-		}
-		return this;
+		this.length++;
 	}
 
-	void remove(size_t index) {
-		writefln("Called with index: %d", index);
-		assert (index < this.capacity); // Overflow Prevention
+    /// Remove a value from the list
+    void remove(size_t index) {
+		assert (index < this.length); // Overflow Prevention
+
+		this.length--;
 
 		if (index == 0) {
-			if (this.list.next != null) { 
-				Node* newFirst = this.list.next;	// Save Node at index 1
-				delObj!(Node)(this.list);			// Destroy index 0
-				this.list = newFirst;				// Set index 0 to index 1
-			} else {
-				delObj!(Node)(this.list);			// Destroy index 0
-				this.list = null;					// Set index 0 to null
-			}			
-		} else if (index == this.capacity - 1) {
-			// Get node before index
-			auto curNode = this.list;
-			foreach(_; 0..index - 1)
-				curNode = curNode.next;
-			
-			delObj!(Node)(curNode.next); // Delete Node
-			curNode.next = null;         // Set end of node
-		} else {
-			// Get node before & after index
-			auto preNode = this.list;
-			foreach (_; 0..index - 1)
-				preNode = preNode.next;
-			auto postNode = preNode.next.next;
+			auto newFirst = this.storage.next;
 
-			delObj!(Node)(preNode.next); // Delete index node
-			preNode.next = postNode;     // Stitch list back together
+			delObj!(Node)(this.storage);
+
+			this.storage = newFirst;
+			return;
 		}
-		
-		this.capacity--;
+
+		// Get node before & after index
+		auto preNode = this.storage;
+		foreach(_; 0..index - 1)
+			preNode = preNode.next;
+		auto postNode = preNode.next.next;
+
+		delObj!(Node)(preNode.next);
+
+		preNode.next = postNode;
 	}
 }

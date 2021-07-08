@@ -113,34 +113,33 @@ private void handleCommand(string command) {
 		writefln("Test 1: Allocation and Deleting of 1000 4 byte objects");
 		auto objects = newArr!(uint)(1000);
 		auto result  = delArr!(uint)(objects);
-		if (objects != null && result == true)
-			writefln("Test 1: Passed");
-		else
-			writefln("Test 1: Failed");
 
-		// Test 2
-		writefln("Test 2: Linked Lists: Allocation, Addition and Removal of elements");
-		alias BoolList = LinkedList!(bool);
-		BoolList bools = BoolList(7, true);
-		bools ~= true;
-		writefln("%d", bools.capacity);
-		//bools.remove(2);
-		writefln("%d", bools.capacity);
-		//if (bools[0] == true && bools[6] == true)
-		//	writefln("Test 2: Passed");
-		//else
-		//	writefln("Test 2: Failed");
-		while (1) {}
-		// Test 3
-		/*
-		writefln("Test 3: Linked Lists: Creation and Destruction");
-		BoolList list = BoolList(16, true);
-		list.destroy();
-		if (list.capacity == 0)
-			writefln("Test 3: Passed");
+		if (objects != null && result == true)
+			writefln("        Passed");
 		else
-			writefln("Test 3: Failed");
-		*/
+			writefln("        Failed");
+
+		// Test 2.1
+		alias BoolList = LinkedList!(bool);
+		writefln("Test 2.1: Linked Lists: Allocation, Addition and Removal of elements");
+		
+		BoolList bools = BoolList(7, true);
+
+		bools.append(false);
+		bools.remove(3);
+
+		if (bools[0] == true && bools[6] == false)
+			writefln("          Passed");
+		else
+			writefln("          Failed");
+
+		// Test 2.2
+		writefln("Test 2.2: Linked Lists: Allocation and Destruction");
+		BoolList booleans = BoolList(16, true);
+
+		booleans.removeAll();
+
+		writefln("          Passed");
 		break;
 		
 	default:
