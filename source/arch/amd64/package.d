@@ -20,6 +20,10 @@ void initArch(StivaleInfo* stivale) {
 	initPic();
 	initVmm(stivale);
 
-	initAcpi(stivale);
+	auto tag = cast(XsdtPointerTag*)(stivale.getTag(XsdtPointerID));
+
+	initAcpi(tag.pointer);
+
+
 	initMadt();
 }

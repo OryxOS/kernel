@@ -90,5 +90,5 @@ align (1) struct MemMapTag {
 
 align (1) struct XsdtPointerTag {
 	StivaleTag tag;
-	void*       pointer;
+	size_t     pointer;
 }

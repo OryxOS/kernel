@@ -107,9 +107,9 @@ __gshared void* lapicAddr;
 
 void initMadt() {
 	// Get the MADT
-	auto madt = getTable!(Madt)(madtSignature);
-	//if (madt == null)
-	//	panic("No MADT found. Init cannot continue");
+	auto madt = getTable(madtSignature);
+	if (madt == null)
+		panic("No MADT found. Init cannot continue");
 
 	// Look for the 64 bit lapic address, if not found, use the 32 bit one;
 	//writefln("Lapic addr: %d", madt.lapicAddr);
