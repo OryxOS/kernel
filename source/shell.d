@@ -2,7 +2,7 @@ module shell;
 
 /* OryxOS Kernel Shell
  * This is just a simple shell in ring 0 that is
- * nice for tsting parts of the kernel
+ * nice for testing parts of the kernel
  */
 
 import lib.std.stdio;

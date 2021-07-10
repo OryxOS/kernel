@@ -94,6 +94,10 @@ struct LinkedList(T) {
 		this.length = initSize;
 	}
 
+	size_t getLength() {
+		return this.length;
+	}
+
     /// Deletes a LinkedList (Removes all elements)
     void removeAll() {
 		foreach (i; 0..this.length - 1)

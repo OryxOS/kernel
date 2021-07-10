@@ -8,7 +8,8 @@ import arch.amd64.gdt       : initGdt;
 import arch.amd64.idt       : initIdt;
 import arch.amd64.pic       : initPic;
 
-import arch.acpi            : initAcpi; 
+import arch.acpi            : initAcpi;
+import arch.acpi.madt       : initMadt; 
 
 void initArch(StivaleInfo* stivale) {
 	writefln("\nAmd64 Init:");
@@ -19,5 +20,6 @@ void initArch(StivaleInfo* stivale) {
 	initPic();
 	initVmm(stivale);
 
-	//initAcpi(stivale);
+	initAcpi(stivale);
+	initMadt();
 }

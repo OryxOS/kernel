@@ -8,5 +8,5 @@ void initAlloc() {
 	writefln("\nAllocator Init:");
 
 	initBitSlabAlloc();
-	writefln("BitSlab allocator initialized successfully");
+	log(1, "BitSlab allocator initialized successfully");
 }

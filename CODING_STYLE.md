@@ -17,7 +17,7 @@ OryxOS is a non-unix, microkernel-based operating system written in D. OryxOS ai
 
 ## Screenshot
 
-![shell](assets/shell.png)
+![Shell](/home/ox512/Source/OryxOS/kernel/assets/Shell.png)
 
 
 
