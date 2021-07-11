@@ -1,8 +1,7 @@
-/// ACPI table parsing and analysis.
 module arch.acpi;
 
-import lib.std.stdio;
-
+import lib.util.console;
+import lib.stivale;
 
 /* OryxOS ACPI initialisation
  * This module contains methods for parsing the initial ACPI tables,
@@ -45,35 +44,41 @@ struct SdtHeader {
 private __gshared bool  rev2;
 private __gshared Rsdt* rsdt;
 
+//////////////////////////////
+//         Instance         //
+//////////////////////////////
 
-void initAcpi(size_t rsdpAddress) {
-    const rsdp = cast(RsdtPointer*)rsdpAddress;
+void initAcpi(StivaleInfo* stivale) {
+    auto tag = cast(XsdtPointerTag*) stivale.getTag(XsdtPointerID);
+    auto rsdp = cast(RsdtPointer*) tag.pointer;
 
     if (rsdp.revision >= 2 && rsdp.xsdtAddr) {
         rev2 = true;
-        rsdt = cast(Rsdt*)(cast(void*)(rsdp.xsdtAddr));
+        rsdt = cast(Rsdt*) (cast(void*) rsdp.xsdtAddr);
     } else {
         rev2 = false;
-        rsdt = cast(Rsdt*)(cast(void*)(rsdp.rsdtAddr));
+        rsdt = cast(Rsdt*) (cast(void*) rsdp.rsdtAddr);
     }
 }
 
-
+/// Attempts to locate a ACPI table
+/// Params:
+/// 	sig = 4 char signature of the desired table
 void* getTable(char[4] signature) {
     const size_t limit = (rsdt.header.length - rsdt.header.sizeof) / (rev2 ? 8 : 4);
 
     SdtHeader* ptr;
     foreach (i; 0..limit) {
         if (rev2) {
-            auto p = cast(ulong*)(&rsdt.sdtPtr);
+            auto p = cast(ulong*) &rsdt.sdtPtr;
             ptr = cast(SdtHeader*)p[i];
         } else {
-            auto p = cast(uint*)(&rsdt.sdtPtr);
+            auto p = cast(uint*) &rsdt.sdtPtr;
             ptr = cast(SdtHeader*)p[i];
         }
 
         if (ptr.signature == signature) {
-            return cast(void*)ptr;
+            return cast(void*) ptr;
         }
     }
 

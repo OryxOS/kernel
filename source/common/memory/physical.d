@@ -7,22 +7,23 @@ module commom.memory.physical;
  */
 
 import lib.stivale;
-import lib.std.math;
-import lib.std.stdio;
-import lib.std.result;
-import lib.std.bitmap;
+import lib.util.math;
+import lib.util.result;
+import lib.util.console;
+import lib.util.bitmap;
 
 import common.memory;
 import common.memory.map;
 
-version (X86_64) enum BlockSize = 0x1000;
+// Cannot use PageSize - cyclical dependacies
+version (X86_64) private enum BlockSize = 0x1000;
 
 private __gshared BitMap bitMap;
 
 void initPmm(StivaleInfo* stivale) {
 	writefln("\nPmm Init:");
 
-	auto info = RegionInfo(cast(MemMapTag*)(stivale.getTag(MemMapID)));
+	auto info = RegionInfo(cast(MemMapTag*) stivale.getTag(MemMapID));
 
 	// 1. Calculate size needed for bitmap
 	size_t highestByte;
@@ -53,7 +54,7 @@ void initPmm(StivaleInfo* stivale) {
 		if (curRegion.type != RegionType.Usable || curRegion.length < bitMap.size * 8)
 			continue;
 		
-		bitMap.map = cast(ubyte*)(curRegion.base + PhysOffset);
+		bitMap.map = cast(ubyte*) (curRegion.base + PhysOffset);
 
 		// Reserve entire bitmap - Safer than setting entire bitmap as free
 		bitMap.map[0..bitMap.size / 8] = 0xFF;
@@ -70,6 +71,7 @@ void initPmm(StivaleInfo* stivale) {
 	// 3. Correctly populate the Bitmap with usable regions
 	for (size_t i = 0; i < info.count; i++) {
 		immutable auto curRegion = info.regions[i];
+
 
 		if(curRegion.type != RegionType.Usable)
 			continue;
@@ -90,9 +92,8 @@ void initPmm(StivaleInfo* stivale) {
  }
 
 // Error handling
-enum PmmError{
+enum PmmError {
 	NotEnoughMemory,
-
 	AddressNotAligned,	
 	BlockAlreadyFreed,
 	BlockOutOfRange,
@@ -141,7 +142,7 @@ PmmResult newBlock(size_t count = 1, bool zero = true) {
 
 			// Zero if asked to
 			if (zero) {
-				ubyte* region = cast(ubyte*)(regionStart * BlockSize + PhysOffset);
+				ubyte* region = cast(ubyte*) (regionStart * BlockSize + PhysOffset);
 				region[0..(count * BlockSize)] = 0;
 			}
 
@@ -150,12 +151,12 @@ PmmResult newBlock(size_t count = 1, bool zero = true) {
 			for (i = regionStart + count; i < bitMap.size; i++) {
 				if (!bitMap.testBit(i)) {
 					bitMap.nextFree = i;
-					return PmmResult(cast(PhysAddress)(regionStart * BlockSize));
+					return PmmResult(cast(PhysAddress) (regionStart * BlockSize));
 				}
 			}
 			if (i == bitMap.size) {
 				bitMap.full = true;
-				return PmmResult(cast(PhysAddress)(regionStart * BlockSize));
+				return PmmResult(cast(PhysAddress) (regionStart * BlockSize));
 			}
 		}
 	}
@@ -170,12 +171,12 @@ PmmResult newBlock(size_t count = 1, bool zero = true) {
 /// 	or an error
 PmmResult delBlock(PhysAddress blockStart, size_t count) {
 	// Safety checks
-	if (cast(size_t)(blockStart) % BlockSize != 0)
+	if (cast(size_t) blockStart % BlockSize != 0)
 		return PmmResult(PmmError.AddressNotAligned);
-	if (cast(size_t)(blockStart) / BlockSize + count > bitMap.size)
+	if (cast(size_t) blockStart / BlockSize + count > bitMap.size)
 		return PmmResult(PmmError.BlockOutOfRange);
 
-	size_t start = (cast(size_t)(blockStart)) / BlockSize;
+	size_t start = (cast(size_t) blockStart) / BlockSize;
 
 	for (size_t i = start; i < start + count; i++)
 		if (!bitMap.testBit(i))

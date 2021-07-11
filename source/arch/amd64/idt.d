@@ -7,7 +7,7 @@ module arch.amd64.idt;
  * file being the actual logic
  */
 
-import lib.std.stdio;
+import lib.util.console;
 
 import arch.amd64.gdt                     : KernelCodeSegment;
 import arch.amd64.drivers.legacy.keyboard : keyboardHandler;
@@ -33,14 +33,14 @@ private struct IdtEntry {
 	uint   reserved;
 
 	this(Handler handler, ubyte ring, Gate gate) {
-		size_t address = cast(size_t)(handler);
+		size_t address = cast(size_t) handler;
 
-		this.lowBase    = cast(ushort)(address);
+		this.lowBase    = cast(ushort) address;
 		this.csSelector = KernelCodeSegment;
 		this.ist        = 0;
 		this.attributes = Present | gate | (ring & 0b00000011);
-		this.midBase    = cast(ushort)(address >> 16);
-		this.highBase   = cast(uint)(address >> 32);
+		this.midBase    = cast(ushort) (address >> 16);
+		this.highBase   = cast(uint)   (address >> 32);
 	}
 }
 

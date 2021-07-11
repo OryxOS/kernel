@@ -1,7 +1,7 @@
-deprecated("Compiler intrinsics. Do not invoke") module lib.std.runtime._assert;
+deprecated("Compiler intrinsics. Do not invoke") module lib.util.runtime._assert;
 
-import lib.std.string;
-import lib.std.stdio;
+import lib.util.string;
+import lib.util.console;
 
 // ``assert`` function
 extern (C) void __assert(const char* exp, const char* file, uint line) {

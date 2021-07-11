@@ -1,6 +1,6 @@
 module common.memory.alloc;
 
-import lib.std.stdio;
+import lib.util.console;
 
 import common.memory.alloc.bitslab;
 

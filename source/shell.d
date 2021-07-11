@@ -5,9 +5,9 @@ module shell;
  * nice for testing parts of the kernel
  */
 
-import lib.std.stdio;
-import lib.std.string;
-import lib.std.heap;
+import lib.util.console;
+import lib.util.string;
+import lib.util.heap;
 
 import io.framebuffer;
 import common.memory.physical;
@@ -29,7 +29,7 @@ void shellMain() {
 	showCursor(true);
 
 	// Event loop
-	while(1) {
+	while (1) {
 		asm { hlt; }
 		immutable auto event = getKeyEvent();
 
@@ -102,7 +102,7 @@ private void handleCommand(string command) {
 	case "test-pmm":
 		PmmResult test = newBlock(1);
 		if (test.isOkay) {
-			writefln("Block allocated: %h", cast(ulong)(test.unwrapResult()));
+			writefln("Block allocated: %h", test.unwrapResult());
 		} else {
 			writefln("Allocation failed: %d", test.unwrapError());
 		}
@@ -115,9 +115,9 @@ private void handleCommand(string command) {
 		auto result  = delArr!(uint)(objects);
 
 		if (objects != null && result == true)
-			writefln("        Passed");
+			writefln("\t\tPassed");
 		else
-			writefln("        Failed");
+			writefln("\t\tFailed");
 
 		// Test 2.1
 		alias BoolList = LinkedList!(bool);
@@ -129,9 +129,9 @@ private void handleCommand(string command) {
 		bools.remove(3);
 
 		if (bools[0] == true && bools[6] == false)
-			writefln("          Passed");
+			writefln("\t\tPassed");
 		else
-			writefln("          Failed");
+			writefln("\t\tFailed");
 
 		// Test 2.2
 		writefln("Test 2.2: Linked Lists: Allocation and Destruction");
@@ -139,7 +139,7 @@ private void handleCommand(string command) {
 
 		booleans.removeAll();
 
-		writefln("          Passed");
+		writefln("\t\tPassed");
 		break;
 		
 	default:
@@ -150,6 +150,6 @@ private void handleCommand(string command) {
 
 private void putPromt() {
 	putChr('[');
-	putStr("Demo", Color.HighLight2);
+	putStr("Test-Suite", Color.HighLight2);
 	putStr("@OryxOS] > ");
 }

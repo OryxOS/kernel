@@ -1,7 +1,7 @@
 module arch.acpi.madt;
 
-import lib.std.heap;
-import lib.std.stdio;
+import lib.util.heap;
+import lib.util.console;
 
 import arch.acpi;
 
@@ -12,15 +12,15 @@ import arch.acpi;
 
 private static immutable char[4] madtSignature = ['A', 'P', 'I', 'C'];
 
-private align (1) struct Madt {
+private struct Madt {
+	align (1):
 	SdtHeader header;
-
-	uint  lapicAddr;
-	uint  flags;
-	void* entries;
+	uint      lapicAddr;
+	uint      flags;
+	void*     entries;
 }
 
-private enum Type: ubyte {
+private enum EntryType: ubyte {
 	ProccesorLapic    = 0,
 	IoApic            = 1,
 	IoApicIso         = 2,
@@ -30,21 +30,24 @@ private enum Type: ubyte {
 	Proccesorx2Lapic  = 9,
 }
 
-private align (1) struct Header {
-	Type  type;
-	ubyte length;
+private struct EntryHeader {
+	align (1):
+	EntryType type;
+	ubyte     length;
 }
 
 // Info about a LAPIC-Processor combo
-align (1) struct LapicInfo {
-	Header header;
+struct LapicInfo {
+	align (1):
+	EntryHeader header;
 	ubyte  procId;
 	ubyte  apicId;    
 }
 
 // Info about an IO APIC
-align (1) struct IoApicInfo {
-	Header header;
+struct IoApicInfo {
+	align (1):
+	EntryHeader header;
 	ubyte  ioApicIdent;
 	ubyte  reserved;
 	uint   ioApicAddr;
@@ -52,8 +55,9 @@ align (1) struct IoApicInfo {
 }
 
 // Info about an IO APIC Interrupt Source Override
-align (1) struct IoApicIsoInfo {
-	Header header;
+struct IoApicIsoInfo {
+	align (1):
+	EntryHeader header;
 	ubyte  busSource;
 	ubyte  irqSource;
 	ubyte  gsi;
@@ -61,8 +65,9 @@ align (1) struct IoApicIsoInfo {
 }
 
 // Info about an IO APIC Non-Maskable Interrupt Source
-align (1) struct IoApicNmiSourceInfo {
-	Header header;
+struct IoApicNmiSourceInfo {
+	align (1):
+	EntryHeader header;
 	ubyte  source;
 	ubyte  reserved;
 	ushort flags;
@@ -70,22 +75,25 @@ align (1) struct IoApicNmiSourceInfo {
 }
 
 // Info about a LAPIC Non-Maskable Interrupt
-align (1) struct LapicNmiInfo {
-	Header header;
+struct LapicNmiInfo {
+	align (1):
+	EntryHeader header;
 	ubyte  procId;
 	ushort flags;
 	ushort ident;
 }
 
 // Contains the 64 bit address of the lapic if available
-private align(1) struct LapicAddrOverride {
-	Header header;
+private struct LapicAddrOverride {
+	align (1):
+	EntryHeader header;
 	uint   reserved;
 	ulong  address;
 }
 
-align (1) struct X2LapicInfo {
-	Header header;
+struct X2LapicInfo {
+	align (1):
+	EntryHeader header;
 	uint   reserved;
 	ushort apicIdent;
 	uint   flags;
@@ -110,7 +118,4 @@ void initMadt() {
 	auto madt = getTable(madtSignature);
 	if (madt == null)
 		panic("No MADT found. Init cannot continue");
-
-	// Look for the 64 bit lapic address, if not found, use the 32 bit one;
-	//writefln("Lapic addr: %d", madt.lapicAddr);
 }

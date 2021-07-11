@@ -1,6 +1,6 @@
 module lib.stivale;
 
-import lib.std.stdio;
+import lib.util.console;
 
 import common.memory.map;
 
@@ -10,12 +10,14 @@ enum MemMapID      = 0x2187f79e8612de07;
 enum XsdtPointerID = 0x9e1786930a375e78;	
 
 // All tags have this at their start
-align (1) struct StivaleTag {
+struct StivaleTag {
+	align (1):
 	ulong ident;
 	StivaleTag* next;
 }
 
-align (1) struct StivaleInfo {
+struct StivaleInfo {
+	align (1):
 	char[64] bootloaderBrand;
 	char[64] bootloaderVersion;
 
@@ -27,7 +29,7 @@ align (1) struct StivaleInfo {
 		while(1) {
 			// Tag is present
 			if (curTag.ident == ident) {
-				return cast(void*)(curTag);
+				return cast(void*) curTag;
 			}
 
 			// Tag isn't present
@@ -62,10 +64,11 @@ align (1) struct StivaleInfo {
 }
 
 
-align (1) struct FrameBufferTag {
+struct FrameBufferTag {
+	align (1):
 	StivaleTag tag;
 
-	void*  address;
+	void* address;
 
 	ushort width;
 	ushort height;
@@ -82,13 +85,15 @@ align (1) struct FrameBufferTag {
 }
 
 
-align (1) struct MemMapTag {
+struct MemMapTag {
+	align (1):
 	StivaleTag tag;
 	ulong      entryCount;
 	Region     entries;	   // Varlength arrays don't exist in D
 }
 
-align (1) struct XsdtPointerTag {
+struct XsdtPointerTag {
+	align (1):
 	StivaleTag tag;
 	size_t     pointer;
 }

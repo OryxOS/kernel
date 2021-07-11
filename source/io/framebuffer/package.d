@@ -16,13 +16,12 @@ alias pixel = uint;
 // Private and only for internal use, use ``FrameBufferInfo`` instead 
 private struct FrameBuffer {
 	pixel* address;
-	
-	uint width;
-	uint height;
-	uint pitch;
+	uint   width;
+	uint   height;
+	uint   pitch;
 
 	this (FrameBufferTag* tag) {
-		this.address = cast(pixel*)(tag.address);
+		this.address = cast(pixel*) tag.address;
 
 		this.width  = tag.width;
 		this.height = tag.height;
@@ -46,7 +45,7 @@ private __gshared FrameBuffer buffer;
 
 void initFrameBuffer(StivaleInfo* stivale) {
 	// Try access the FrameBufferTag passed by stivale
- FrameBufferTag* fb = cast(FrameBufferTag*)(stivale.getTag(FrameBufferID));
+ FrameBufferTag* fb = cast(FrameBufferTag*) stivale.getTag(FrameBufferID);
 	
 	// Very unlikely so we don't properly handle these
 	assert(fb != null);

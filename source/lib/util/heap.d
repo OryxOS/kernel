@@ -1,11 +1,11 @@
-module lib.std.heap;
+module lib.util.heap;
 
 /* OryxOS Heap Allocation Library
  * This is library of useful heap allocation
  * functions and structures
  */
 
-import lib.std.stdio;
+import lib.util.console;
 
 import common.memory.alloc.bitslab;
 import arch.amd64.memory;
@@ -18,7 +18,7 @@ import arch.amd64.memory;
 /// 	addr = Address of the allocation
 T* newObj(T)() {
 	if (T.sizeof <= PageSize)
-		return cast(T*)(newBitSlabAlloc(T.sizeof, true));
+		return cast(T*) newBitSlabAlloc(T.sizeof, true);
 	else
 		panic("TODO: allocations > than PageSize");
 
@@ -32,7 +32,7 @@ T* newObj(T)() {
 /// 	true  = deletion was a success
 /// 	false = deletion failed (Object not on heap)
 bool delObj(T)(T* obj) {
-	return delBitSlabAlloc(cast(void*)(obj));
+	return delBitSlabAlloc(cast(void*) obj);
 }
 
 /// Allocates space for a contiguous array of objects on the heap
@@ -44,7 +44,7 @@ bool delObj(T)(T* obj) {
 /// 	addr = Address of the allocation
 T* newArr(T)(size_t size) {
 	if (T.sizeof * size <= PageSize)
-		return cast(T*)(newBitSlabAlloc(T.sizeof * size, true));
+		return cast(T*) newBitSlabAlloc(T.sizeof * size, true);
 	else
 		panic("TODO: allocations > than PageSize");
 
@@ -59,7 +59,7 @@ T* newArr(T)(size_t size) {
 /// 	true  = deletion was a success
 /// 	false = deletion failed (Array not on heap)
 bool delArr(T)(T* array)  {
-	return delBitSlabAlloc(cast(void*)(array));
+	return delBitSlabAlloc(cast(void*) array);
 }
 
 ////////////////////////
@@ -151,6 +151,7 @@ struct LinkedList(T) {
 		auto preNode = this.storage;
 		foreach(_; 0..index - 1)
 			preNode = preNode.next;
+			
 		auto postNode = preNode.next.next;
 
 		delObj!(Node)(preNode.next);

@@ -1,4 +1,4 @@
-module lib.std.result;
+module lib.util.result;
 
 /* OryxOS Result<T, E> implementation
  * In kernel land, there is no RTTI, meaning that error handling
@@ -7,7 +7,7 @@ module lib.std.result;
  * universal error handling solution
  */
 
- import lib.std.stdio;
+ import lib.util.console;
 
 struct Result(T, E) {
 	private T    result;  // Result presuming success

@@ -1,4 +1,4 @@
-module lib.std.math;
+module lib.util.math;
 // Module containing useful mathematical functions
 
 /// Divides, rounding up if remainder is > 0

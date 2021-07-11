@@ -7,9 +7,9 @@ module common.memory.alloc.bitslab;
  * and other metadata
  */
 
-import lib.std.stdio;
-import lib.std.result;
-import lib.std.bitmap;
+import lib.util.result;
+import lib.util.bitmap;
+import lib.util.console;
 
 import common.memory.physical;
 
@@ -51,8 +51,8 @@ private __gshared BitMapPage* topBitMapPage;
 
 void initBitSlabAlloc() {
 	// Allocate 1 page to each list 
-	controlPages  = cast(ControlPage*)(newBlock().unwrapResult());
-	topBitMapPage = cast(BitMapPage*)(newBlock().unwrapResult());
+	controlPages  = cast(ControlPage*) newBlock().unwrapResult();
+	topBitMapPage = cast(BitMapPage*)  newBlock().unwrapResult();
 
 	controlPages.next  = null;
 }
@@ -71,23 +71,23 @@ void* newBitSlabAlloc(size_t size, bool zero) {
 				auto bit = slot.bitMap.nextFree;
 				slot.bitMap.setBit(bit);
 
-				ubyte* alloc = cast(ubyte*)(slot.page + slot.gran * bit);
+				ubyte* alloc = cast(ubyte*) (slot.page + slot.gran * bit);
 
 				if (zero) 
 					alloc[0..BlockSizes[index]] = 0;
 
 				// Update nextFree and return
 				size_t j;
-				for (j = 0; j < slot.bitMap.size; j++) {
+				for (j = slot.bitMap.nextFree; j < slot.bitMap.size; j++) {
 					if (!slot.bitMap.testBit(j)) {
 						slot.bitMap.nextFree = j;
-						return cast(void*)(alloc);
+						return cast(void*) alloc;
 					}
 				}
 				// No more free space in bitmap
 				if (j == slot.bitMap.size) {
 					slot.bitMap.full = true;
-					return cast(void*)(alloc);
+					return cast(void*) alloc;
 				}
 			}
 
@@ -111,11 +111,11 @@ void* newBitSlabAlloc(size_t size, bool zero) {
 				} else {
 					auto result2 = newBlock(1, false);		
 					if (result.isOkay)
-						topBitMapPage = cast(BitMapPage*)(result2.unwrapResult());
+						topBitMapPage = cast(BitMapPage*) result2.unwrapResult();
 					else
 						return null;
 				
-					map = cast(ubyte*)(topBitMapPage + BitMapPage.sizeof);
+					map = cast(ubyte*) (topBitMapPage + BitMapPage.sizeof);
 				}
 
 				// Create slot
@@ -137,7 +137,7 @@ void* newBitSlabAlloc(size_t size, bool zero) {
 		// Allocate a new control page
 		auto result = newBlock(1, false);
 		if (result.isOkay)
-			curControlPage.next = cast(ControlPage*)(result.unwrapResult());
+			curControlPage.next = cast(ControlPage*) result.unwrapResult();
 		else
 			return null;
 		curControlPage = curControlPage.next;
@@ -153,7 +153,7 @@ bool delBitSlabAlloc(void* where) {
 
 			// Object is in this slot
 			if (slot.page != null && where >= slot.page && where < slot.page + PageSize) {
-				auto bit = (cast(size_t)(where) % PageSize) / slot.gran;
+				auto bit = (cast(size_t) where % PageSize) / slot.gran;
 
 				slot.bitMap.unsetBit(bit);
 				slot.bitMap.nextFree = bit;

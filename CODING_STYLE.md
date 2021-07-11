@@ -1,26 +1,94 @@
-# The OryxOS Kernel
+# Coding Style
 
-## What is OryxOS?
-OryxOS is a non-unix, microkernel-based operating system written in D. OryxOS aims to be fast and to provide a clean and modern API, free of legacy bloat.
+when submitting a pull request, it important to follow the OryxOS Coding Style, this keeps the code base clean and consistent.
 
-#### Features
+## Basics:
 
-- [x] Core Amd64 structures
-- [x] Physical Memory Management (Fixed block size)
-- [x] Virtual Memory Management (Fixed page size)
-- [x] Allocator (200 000 000 allocations/second)
-- [x] PS2 Keyboard driver
-- [x] Kernel Shell (used for testing)
-- [x] D Language features
+- Structs, enums, enum-variants and constant names: ``PascalCase``
+- Function and variable names: ``camelCase``
+- Tabs for indentation, spaces for alignment
+- ``enum`` keyword is to be used for constants where possible
+- Bracket-less control flow is encouraged
+
+```d
+struct Structure {
+    ulong a;
+    uint  b;
+    char  c;  // Note how struct-members are aligned
+}
+
+// Acronyms are stylized as such:
+struct GdtPointer {
+    ...
+}
+
+enum ColorRed = 0xFFF // Hexadecimals are capitalised
+
+enum Jobs {
+    Cleaner,
+    Engineer, // Note the last Comma
+}
+
+void sayHello(string name) {
+    // Bracket-less if statement
+    if (name == "Rob") // Note the spacing between the `if` and the `(`
+        writefln("Welcome back Rob");
+	else
+		writefln("Hello %s", name);
+}
+```
 
 
 
-## Screenshot
+## for (...) vs foreach (...)
 
-![Shell](/home/ox512/Source/OryxOS/kernel/assets/Shell.png)
+- Use foreach wherever possible - it is shorter and cleaner
+- For cases when the accumulator is not needed use the syntax ``foreach (_; 0..1000)``
 
 
 
-## Contributing
+## shared vs __gshared
 
-Contributions of any sort are welcome. For coding style guidelines, please read ``CODING_STYLE.md``. There is a discord where you can talk to the developers and hang out with the community: https://discord.gg/WjgYK9tMPQ
+although, ``shared`` is better for userspace applications, it is simply impractical for kernel code as kernels simply rely too heavily on C-style globals
+
+## Casting 
+
+- If a cast is used in a variable declaration, use the ``auto`` keyword - it saves unnecessary repetition
+
+- use the syntax ``cast(T) variable`` - note the space and lack of brackets around the variable
+
+  
+
+## General File Structure
+
+```d
+module blah; // Module declaration
+
+// Imports should form a pyramid
+
+// Library imports
+import lib.util;
+import lib.stivale;
+
+// Other imports
+import arch.amd64.memory;
+import arch.acpi;
+
+/* General comment, should explain the purpose and design of the system
+ * contained in the file. Should be kept at 70 chars per line.
+ */
+
+/* Typically, files tend to have a library side and an 'instance', for
+ * example, GDT managment code and the actual GDT, these are to be
+ * seperated as such, with the instance following the library side:
+ */
+
+//////////////////////////////
+//         Instance         //
+//////////////////////////////
+
+...
+```
+
+
+

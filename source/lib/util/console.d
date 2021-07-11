@@ -1,4 +1,4 @@
-module lib.std.stdio;
+module lib.util.console;
 
 import io.framebuffer;
 import io.framebuffer.fancy;
@@ -15,10 +15,8 @@ enum Color: pixel {
 // Control Structure
 private struct Console {
 	bool showCursor;
-
 	uint posX; 
 	uint posY;
-
 	uint maxX;
 	uint maxY;
 
@@ -32,7 +30,6 @@ private __gshared Console console;
 
 void initConsole() {
 	console = Console(getFrameBufferInfo());
-
 	plotScreen(Color.Background);
 }
 
@@ -262,20 +259,24 @@ void putItem(bool item, bool dec) {
 	}
 }
 
+void putItem(void* item, bool dec) {
+	dec ? printDecNum(cast(size_t) item) : printHexNum(cast(size_t) item);
+}
+
 void putItem(ulong item, bool dec) {
 	dec ? printDecNum(item) : printHexNum(item);
 }
 
 void putItem(uint item, bool dec) {
-	dec ? printDecNum(cast(ulong)(item)) : printHexNum(cast(ulong)(item));
+	dec ? printDecNum(cast(ulong) item) : printHexNum(cast(ulong) item);
 }
 
 void putItem(ushort item, bool dec) {
-	dec ? printDecNum(cast(ulong)(item)) : printHexNum(cast(ulong)(item));
+	dec ? printDecNum(cast(ulong) item) : printHexNum(cast(ulong) item);
 }
 
 void putItem(ubyte item, bool dec) {
-	dec ? printDecNum(cast(ulong)(item)) : printHexNum(cast(ulong)(item));
+	dec ? printDecNum(cast(ulong) item) : printHexNum(cast(ulong) item);
 }
 
 //////////////////////////////

@@ -5,7 +5,7 @@ module arch.amd64.gdt;
  * becuase of this, this GDT implementation is very simplistic and unflexible.
  */
 
-import lib.std.stdio;
+import lib.util.console;
 
 private struct GdtEntry {
 	align (1):
@@ -49,7 +49,7 @@ void initGdt() {
 	gdtEntries[2] = GdtEntry(0b10010010, 0b00000000); // Kernel Data
 
 	// Set pointer
-	gdtPointer = GdtPointer(gdtEntries.sizeof - 1, cast(void*)(&gdtEntries));
+	gdtPointer = GdtPointer(gdtEntries.sizeof - 1, cast(void*) &gdtEntries);
 
 	// Load the GDT
 	asm {

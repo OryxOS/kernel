@@ -116,7 +116,7 @@ noDeviceHandler:
 	handler 7
 
 global doubleFaultHandler
-doubleFaultHandler
+doubleFaultHandler:
 	handlerWithErrorCode 8
 
 global invTssHandler

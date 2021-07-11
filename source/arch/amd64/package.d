@@ -1,12 +1,13 @@
 module arch.amd64;
 
-import lib.std.stdio;
 import lib.stivale;
+import lib.util.console;
 
-import arch.amd64.memory    : initVmm;
 import arch.amd64.gdt       : initGdt;
 import arch.amd64.idt       : initIdt;
 import arch.amd64.pic       : initPic;
+import arch.amd64.memory    : initVmm;
+
 
 import arch.acpi            : initAcpi;
 import arch.acpi.madt       : initMadt; 
@@ -20,10 +21,6 @@ void initArch(StivaleInfo* stivale) {
 	initPic();
 	initVmm(stivale);
 
-	auto tag = cast(XsdtPointerTag*)(stivale.getTag(XsdtPointerID));
-
-	initAcpi(tag.pointer);
-
-
+	initAcpi(stivale);
 	initMadt();
 }

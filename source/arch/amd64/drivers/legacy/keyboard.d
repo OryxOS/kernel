@@ -14,7 +14,7 @@ private __gshared bool shiftActive;
 private __gshared bool ctrlActive;
 private __gshared bool altActive;
 
-private shared bool doubleScancode;
+private shared bool doubleScanCode;
 
 // Important scancodes
 

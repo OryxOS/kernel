@@ -1,9 +1,9 @@
 module arch.amd64.memory;
 
 import lib.stivale;
-import lib.std.math;
-import lib.std.stdio;
-import lib.std.result;
+import lib.util.math;
+import lib.util.result;
+import lib.util.console;
 
 import common.memory;
 import common.memory.map;
@@ -25,7 +25,7 @@ import common.memory.physical;
 
 enum PageSize = 0x1000;                  // Standard x86 page size (4kb)
 
-private enum Flags {         // Table:       Description:
+private enum Flags {                // Table:       Description:
 	Present         = 1UL << 0,     // All          Marks the entry as present in memory
 	Writeable       = 1UL << 1,     // All          Marks the entry as writeable
 	UserAccessable  = 1UL << 2,     // All          Marks the entry as accessible from ring-3 code
@@ -61,20 +61,19 @@ private alias Entry = ulong;
 private enum VmmResult {
 	Good,
 	NotEnoughSpaceForTables,
-
-	PageAlreadyUnmapped
+	PageAlreadyUnmapped,
 }
 
 struct AddressSpace {
 	private Entry* pml4;
 
 	this(PhysAddress pml4Block) {
-		assert(cast(ulong)(pml4Block) % PageSize == 0);
-		this.pml4 = cast(Entry*)(pml4Block + PhysOffset);
+		assert(cast(ulong) pml4Block % PageSize == 0);
+		this.pml4 = cast(Entry*) (pml4Block + PhysOffset);
 	}
 
 	void setActive() {
-		auto root = cast(ulong)(this.pml4) - PhysOffset;
+		auto root = cast(ulong) this.pml4 - PhysOffset;
 		asm {
 			mov RAX, root;
 			mov CR3, RAX;
@@ -86,7 +85,7 @@ struct AddressSpace {
 	/// 	virtual = page-aligned virtual address
 	/// Returns: VmmResult varient
 	VmmResult unmapPage(VirtAddress virtual) {
-		assert(cast(size_t)(virtual)  % PageSize == 0);
+		assert(cast(size_t) virtual % PageSize == 0);
 
 		// Find the Pml1Entry
 		Entry* pml1Entry = getPml1Entry(virtual, Flags.None, false);
@@ -106,8 +105,8 @@ struct AddressSpace {
 	/// 	flags    = the flags to map the page and all its levels with
 	/// Returns: VmmResult varient
 	VmmResult mapPage(VirtAddress virtual, PhysAddress physical, Flags flags) {
-		assert(cast(size_t)(physical) % PageSize == 0);
-		assert(cast(size_t)(virtual)  % PageSize == 0);
+		assert(cast(size_t) physical % PageSize == 0);
+		assert(cast(size_t) virtual  % PageSize == 0);
 
 		// Find or create the required pml tables
 		Entry* pml1Entry = getPml1Entry(virtual, flags, true);
@@ -115,16 +114,16 @@ struct AddressSpace {
 		if (pml1Entry == null)
 			return VmmResult.NotEnoughSpaceForTables;
 
-		*pml1Entry = cast(ulong)(physical) | flags;
+		*pml1Entry = cast(ulong) physical | flags;
 
 		return VmmResult.Good;
 	}
 
 	private Entry* getPml1Entry(VirtAddress virtual, Flags flags, bool create) {
-		immutable ulong pml4Index = (cast(ulong)(virtual) & 0x1FFUL << 39) >> 39;
-		immutable ulong pml3Index = (cast(ulong)(virtual) & 0x1FFUL << 30) >> 30;
-		immutable ulong pml2Index = (cast(ulong)(virtual) & 0x1FFUL << 21) >> 21;
-		immutable ulong pml1Index = (cast(ulong)(virtual) & 0x1FFUL << 12) >> 12;
+		immutable ulong pml4Index = (cast(ulong) virtual & 0x1FFUL << 39) >> 39;
+		immutable ulong pml3Index = (cast(ulong) virtual & 0x1FFUL << 30) >> 30;
+		immutable ulong pml2Index = (cast(ulong) virtual & 0x1FFUL << 21) >> 21;
+		immutable ulong pml1Index = (cast(ulong) virtual & 0x1FFUL << 12) >> 12;
 
 		// Find or create the required Pml tables
 		Entry* pml3 = getNextLevel(this.pml4, pml4Index, flags, create);
@@ -135,14 +134,14 @@ struct AddressSpace {
 		if (pml3 == null || pml2 == null || pml1 == null)
 			return null;
 
-		return cast(Entry*)(&pml1[pml1Index]);
+		return cast(Entry*) &pml1[pml1Index];
 	}
 	
 	// Finds or creates a table below the current one
 	private Entry* getNextLevel(Entry* curTable, size_t entry, Flags flags, bool create) {
 		// Entry already exists
 		if (curTable[entry] & 0x1)
-			return cast(Entry*)((curTable[entry] & ~(0xfff)) + PhysOffset);
+			return cast(Entry*) ((curTable[entry] & ~(0xfff)) + PhysOffset);
 
 		if (!create)
 			return null;
@@ -152,8 +151,8 @@ struct AddressSpace {
 		if (!result.isOkay)
 			return null;
 
-		curTable[entry] = cast(ulong)(result.unwrapResult) | flags; // Physical set
-		return cast(Entry*)(result.unwrapResult + PhysOffset);      // Virtual returned
+		curTable[entry] = cast(ulong) result.unwrapResult | flags; // Physical set
+		return cast(Entry*) (result.unwrapResult + PhysOffset);    // Virtual returned
 	}
 
 }
@@ -165,7 +164,7 @@ struct AddressSpace {
 private __gshared AddressSpace kernelSpace;
 
 void initVmm(StivaleInfo* stivale) {
-	auto info = RegionInfo(cast(MemMapTag*)(stivale.getTag(MemMapID)));
+	auto info = RegionInfo(cast(MemMapTag*) stivale.getTag(MemMapID));
 
 	kernelSpace = AddressSpace(newBlock()
 	                          .unwrapResult("Cannot allocate space for Pml4, init cannot continue"));
@@ -179,11 +178,11 @@ void initVmm(StivaleInfo* stivale) {
 
 	// Region 1 and 2
 	for (size_t i = 0; i < 0x100000000; i += PageSize) {
-		VmmResult map1 = kernelSpace.mapPage(cast(VirtAddress)(i + PhysOffset),
-		                                     cast(PhysAddress)(i), Flags.Present | Flags.Writeable);
+		VmmResult map1 = kernelSpace.mapPage(cast(VirtAddress) i + PhysOffset,
+		                                     cast(PhysAddress) i, Flags.Present | Flags.Writeable);
 
-		VmmResult map2 = kernelSpace.mapPage(cast(VirtAddress)(i),
-		                                     cast(PhysAddress)(i), Flags.Present | Flags.Writeable);
+		VmmResult map2 = kernelSpace.mapPage(cast(VirtAddress) i,
+		                                     cast(PhysAddress) i, Flags.Present | Flags.Writeable);
 
 		if (map1 != VmmResult.Good || map2 != VmmResult.Good)
 			panic("Not enough memory for Pml tables. Init cannot continue");
@@ -191,8 +190,8 @@ void initVmm(StivaleInfo* stivale) {
 
 	// Region 3
 	for (size_t i = 0; i < 0x80000000; i += PageSize) {
-		VmmResult map = kernelSpace.mapPage(cast(VirtAddress)(i + KernelBase),
-		                                    cast(PhysAddress)(i), Flags.Present | Flags.Writeable);
+		VmmResult map = kernelSpace.mapPage(cast(VirtAddress) i + KernelBase,
+		                                    cast(PhysAddress) i, Flags.Present | Flags.Writeable);
 		if (map != VmmResult.Good)
 			panic("Not enough memory for Pml tables. Init cannot continue");
 	}
@@ -207,11 +206,11 @@ void initVmm(StivaleInfo* stivale) {
 			if (j < 0x100000000)
 				continue;
 
-			VmmResult map1 = kernelSpace.mapPage(cast(VirtAddress)(j + PhysOffset),
-		                                         cast(PhysAddress)(j), Flags.Present | Flags.Writeable);
+			VmmResult map1 = kernelSpace.mapPage(cast(VirtAddress) j + PhysOffset,
+		                                         cast(PhysAddress) j, Flags.Present | Flags.Writeable);
 
-			VmmResult map2 = kernelSpace.mapPage(cast(VirtAddress)(j),
-		                                         cast(PhysAddress)(j), Flags.Present | Flags.Writeable);
+			VmmResult map2 = kernelSpace.mapPage(cast(VirtAddress) j,
+		                                         cast(PhysAddress) j, Flags.Present | Flags.Writeable);
 
 			if (map1 != VmmResult.Good || map2 != VmmResult.Good)
 				panic("Not enough memory for Pml tables. Init cannot continue");

@@ -1,4 +1,4 @@
-module lib.std.bitmap;
+module lib.util.bitmap;
 
 // Module for working with bitmaps, used in both our heap and physical allocator
 

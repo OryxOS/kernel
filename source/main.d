@@ -1,5 +1,5 @@
 import lib.stivale;
-import lib.std.stdio;
+import lib.util.console;
 
 import shell                   : shellMain;
 import io.framebuffer          : initFrameBuffer;
@@ -21,8 +21,7 @@ extern (C) void main(StivaleInfo* stivale) {
 	initArch(stivale);
 
 	writefln("\nInit Complete - press ENTER to enter shell");
-	while (true) {
+	while (true)
 		if (getKeyEvent() == '\n')
 			shellMain();
-	}
 }

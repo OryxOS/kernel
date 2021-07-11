@@ -18,9 +18,9 @@ module arch.amd64.pic;
 
  */
 
-import arch.amd64.cpu;
+import lib.util.console;
 
-import lib.std.stdio;
+import arch.amd64.cpu;
 
 private enum Command {
 	Init           = 0x11,

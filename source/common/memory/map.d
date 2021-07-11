@@ -22,7 +22,8 @@ enum RegionType: uint {
  }
 
 // Do not modify, this matches the stivale spec
-align(1) struct Region {
+struct Region {
+	align (1):
 	ulong      base;
 	ulong      length;
 	RegionType type;

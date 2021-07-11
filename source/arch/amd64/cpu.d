@@ -21,7 +21,7 @@ extern (C) ubyte readByte(ushort port) {
 }
 
 extern (C) void writeByte(ushort port, ubyte data) {
-		asm {
+	asm {
 		naked;
 		mov DX, DI   ;
 		mov AX, SI   ;
@@ -43,7 +43,7 @@ extern (C) ubyte readWord(ushort port) {
 }
 
 extern (C) void writeWord(ushort port, ubyte data) {
-		asm {
+	asm {
 		naked;
 		mov DX, DI   ;
 		mov AX, SI   ;
