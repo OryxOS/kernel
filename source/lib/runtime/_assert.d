@@ -6,7 +6,7 @@ import lib.util.console;
 // ``assert`` function
 extern (C) void __assert(const char* exp, const char* file, uint line) {
 	putChr('[');
-	putChr('!', Color.HighLight2);
+	putChr('!', theme[2]);
 	putStr("] ");
 
 	writef("[%s:%d] %s", fromCString(file), line, fromCString(exp));

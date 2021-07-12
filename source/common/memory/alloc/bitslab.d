@@ -77,18 +77,15 @@ void* newBitSlabAlloc(size_t size, bool zero) {
 					alloc[0..BlockSizes[index]] = 0;
 
 				// Update nextFree and return
-				size_t j;
-				for (j = slot.bitMap.nextFree; j < slot.bitMap.size; j++) {
+				for (size_t j = slot.bitMap.nextFree; j < slot.bitMap.size; j++) {
 					if (!slot.bitMap.testBit(j)) {
 						slot.bitMap.nextFree = j;
 						return cast(void*) alloc;
 					}
-				}
+				}	
 				// No more free space in bitmap
-				if (j == slot.bitMap.size) {
-					slot.bitMap.full = true;
-					return cast(void*) alloc;
-				}
+				slot.bitMap.full = true;
+				return cast(void*) alloc;
 			}
 
 			/* Slots full up contigously, therefore an empty slot means
@@ -106,7 +103,7 @@ void* newBitSlabAlloc(size_t size, bool zero) {
 				
 				// Find or create space for a new bitmap
 				ubyte* map;
-				if (cast(size_t)(&topBitMapPage.top) < PageSize) {
+				if (cast(size_t) &topBitMapPage.top < PageSize) {
 					map = topBitMapPage.top;
 				} else {
 					auto result2 = newBlock(1, false);		

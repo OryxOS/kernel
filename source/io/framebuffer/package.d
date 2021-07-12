@@ -79,8 +79,8 @@ void plotChr(pixel fore, pixel back, char c, uint x, uint y) {
 	 * 1 => pixel-foreground. 0 => pixel-background.
 	 * Finally, inverse x.
 	 */
-	for (uint i = 0; i < 15; i++) {
-		for (uint j = 0; j < 7; j++) {
+	for (uint i = 0; i < 16; i++) {
+		for (uint j = 0; j < 8; j++) {
 			if ((glyph[i] >> j & 1) == 1)
 				plotPixel(fore, x + 7 - j, i + y);
 			else

@@ -66,22 +66,29 @@ private void handleCommand(string command) {
 	switch (command) {
 	case "help":
 		writefln("Commands:
-		help         - show this dialog
-		clear        - clear the screen
-		info         - basic info about OryxOS\nTests:
-		test-scroll  - scroll through 100 lines
-		test-panic   - display the panic screen (Fatal)
-		test-int     - calls interrupt 3 (Fatal)
-		test-pmm     - allocate a 4kb block of memory
-		test-alloc   - test the kernel allocator");
+		help               - show this dialog
+		clear              - clear the screen
+		theme-[light|dark] - changes the console's theme
+		\nTests:
+		test-scroll        - scroll through 100 lines
+		test-panic         - display the panic screen (Fatal)
+		test-int           - calls interrupt 3 (Fatal)
+		test-pmm           - allocate a 4kb block of memory
+		test-alloc         - test the kernel allocator");
 		break;
 
 	case "clear":
 		clearConsole();
 		break;
 	
-	case "info":
-		writefln("OryxOS version 0.0.0 (Amd64)");
+	case "theme-dark":
+		setTheme(true);
+		clearConsole();
+		break;
+
+	case "theme-light":
+		setTheme(false);
+		clearConsole();
 		break;
 
 	case "test-scroll":
@@ -149,7 +156,6 @@ private void handleCommand(string command) {
 }
 
 private void putPromt() {
-	putChr('[');
-	putStr("Test-Suite", Color.HighLight2);
-	putStr("@OryxOS] > ");
+	putStr("Test-Suite", theme[2]);
+	putStr("@OryxOS > ");
 }
