@@ -105,17 +105,67 @@ struct X2LapicInfo {
 //         Instance         //
 //////////////////////////////
 
-__gshared LinkedList!(LapicInfo)           lapicInfo;
-__gshared LinkedList!(LapicNmiInfo)        lapicNmiInfo;
-__gshared LinkedList!(IoApicInfo)          ioApicInfo;
-__gshared LinkedList!(IoApicIsoInfo)       ioApicIsoInfo;
-__gshared LinkedList!(IoApicNmiSourceInfo) ioApicNmiSourceInfo;
+__gshared LinkedList!(LapicInfo*)           lapicInfo;
+__gshared LinkedList!(LapicNmiInfo*)        lapicNmiInfo;
+__gshared LinkedList!(IoApicInfo*)          ioApicInfo;
+__gshared LinkedList!(IoApicIsoInfo*)       ioApicIsoInfo;
+__gshared LinkedList!(IoApicNmiSourceInfo*) ioApicNmiSourceInfo;
 
-__gshared void* lapicAddr;
+__gshared size_t lapicAddr;
 
 void initMadt() {
 	// Get the MADT
-	auto madt = getTable(madtSignature);
+	auto madt = cast(Madt*) getTable(madtSignature);
 	if (madt == null)
 		panic("No MADT found. Init cannot continue");
+	
+	log(1, "Parsing MADT");
+
+	// Parse and sort all MADT entries
+	ubyte* entries;
+	auto end = cast(size_t) madt + madt.header.length;
+	bool lapicOverriden = false;
+	for (entries = cast(ubyte*) &madt.entries; cast(size_t) entries < end; entries += *(entries + 1)) {
+		switch (*entries) {
+		case EntryType.ProccesorLapic:
+			lapicInfo.append(cast(LapicInfo*) entries);
+			log(1, "LAPIC-Processor entry found");
+			break;
+
+		case EntryType.LapicNmi:
+			lapicNmiInfo.append(cast(LapicNmiInfo*) entries);
+			log(1, "LAPIC NMI entry found");
+			break;
+
+		case EntryType.IoApic:
+			ioApicInfo.append(cast(IoApicInfo*) entries);
+			log(1, "IO APIC entry found");
+			break;
+
+		case EntryType.IoApicIso:
+			ioApicIsoInfo.append(cast(IoApicIsoInfo*) entries);
+			log(1, "IO APIC ISO entry found");
+			break;
+
+		case EntryType.IoApicNmiSource:
+			ioApicNmiSourceInfo.append(cast(IoApicNmiSourceInfo*) entries);
+			log(1, "IO APIC NMI Source entry found");
+			break;
+
+		case EntryType.LapicAddrOverride:
+			auto over = cast(LapicAddrOverride*) entries;
+			lapicAddr = over.address;
+			lapicOverriden = true;
+			log(1, "LAPIC address override found");
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	if (!lapicOverriden)
+		lapicAddr = cast(size_t) madt.lapicAddr;
+
+	writefln("LAPIC Address: %h", lapicAddr);
 }

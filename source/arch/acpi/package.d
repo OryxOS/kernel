@@ -55,9 +55,11 @@ void initAcpi(StivaleInfo* stivale) {
     if (rsdp.revision >= 2 && rsdp.xsdtAddr) {
         rev2 = true;
         rsdt = cast(Rsdt*) (cast(void*) rsdp.xsdtAddr);
+        log(1, "XSDT Found. ACPI Revision: %d", rsdp.revision);
     } else {
         rev2 = false;
         rsdt = cast(Rsdt*) (cast(void*) rsdp.rsdtAddr);
+        log(1, "RSDT Found. ACPI Revision: %d", rsdp.revision);
     }
 }
 
