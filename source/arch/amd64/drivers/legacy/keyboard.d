@@ -2,8 +2,8 @@ module arch.amd64.drivers.legacy.keyboard;
 
 // Legacy PS2 keyboard support
 
-import arch.amd64.pic : endInterrupt;
-import arch.amd64.cpu : readByte;
+import arch.amd64.apic : endInterrupt;
+import arch.amd64.cpu  : readByte;
 
 // Event buffer
 private __gshared char curEvent;
@@ -125,8 +125,6 @@ extern (C) void keyboardHandler() {
 		push R15           ;
 
 		call handler       ;
-
-		mov RDI, 33        ;
 		call endInterrupt  ;
 
 		pop R15            ;

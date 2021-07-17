@@ -120,6 +120,18 @@ struct LinkedList(T) {
     void append(T value) {
 		// Loop though all nodes to find last 
 		// TODO: Keep a pointer to the last node - will greatly improve speed
+
+		if (this.storage == null) {
+			this.storage = newObj!(Node)();
+
+			this.storage.item = value;
+			this.storage.next = null;
+
+			this.length++;
+
+			return;
+		}
+
 		auto lastNode = this.storage;
 		foreach ( _; 0..this.length)
 			lastNode = lastNode.next;

@@ -41,16 +41,17 @@ struct LapicInfo {
 	align (1):
 	EntryHeader header;
 	ubyte  procId;
-	ubyte  apicId;    
+	ubyte  apicId;
+	uint   flags;
 }
 
 // Info about an IO APIC
 struct IoApicInfo {
 	align (1):
 	EntryHeader header;
-	ubyte  ioApicIdent;
+	ubyte  ident;
 	ubyte  reserved;
-	uint   ioApicAddr;
+	uint   address;
 	uint   gsiBase;
 }
 
@@ -60,7 +61,7 @@ struct IoApicIsoInfo {
 	EntryHeader header;
 	ubyte  busSource;
 	ubyte  irqSource;
-	ubyte  gsi;
+	uint   gsi;
 	ushort flags;
 }
 
@@ -80,7 +81,7 @@ struct LapicNmiInfo {
 	EntryHeader header;
 	ubyte  procId;
 	ushort flags;
-	ushort ident;
+	ubyte  ident;
 }
 
 // Contains the 64 bit address of the lapic if available
@@ -139,6 +140,7 @@ void initMadt() {
 
 		case EntryType.IoApic:
 			ioApicInfo.append(cast(IoApicInfo*) entries);
+			auto lmao = cast(IoApicInfo*) entries;
 			log(1, "IO APIC entry found");
 			break;
 
@@ -167,5 +169,5 @@ void initMadt() {
 	if (!lapicOverriden)
 		lapicAddr = cast(size_t) madt.lapicAddr;
 
-	writefln("LAPIC Address: %h", lapicAddr);
+	log(1, "LAPIC Address: %h", lapicAddr);
 }

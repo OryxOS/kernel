@@ -73,3 +73,11 @@ extern (C) void writeDouble(ushort port, uint data) {
 		ret;
 	}
 }
+
+// Enables or disables interrupts
+void enableInterrupts(bool enable) {
+	if (enable)
+		asm { sti; }
+	else
+		asm { cli; }
+}
