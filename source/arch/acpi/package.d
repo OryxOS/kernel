@@ -1,7 +1,8 @@
 module arch.acpi;
 
-import lib.util.console;
 import lib.stivale;
+import lib.util.types;
+import lib.util.console;
 
 /* OryxOS ACPI initialisation
  * This module contains methods for parsing the initial ACPI tables,
@@ -67,7 +68,7 @@ void initAcpi(StivaleInfo* stivale) {
 /// Params:
 /// 	sig = 4 char signature of the desired table
 void* getTable(char[4] signature) {
-    const size_t limit = (rsdt.header.length - rsdt.header.sizeof) / (rev2 ? 8 : 4);
+    const usize limit = (rsdt.header.length - rsdt.header.sizeof) / (rev2 ? 8 : 4);
 
     SdtHeader* ptr;
     foreach (i; 0..limit) {

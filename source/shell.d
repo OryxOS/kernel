@@ -5,18 +5,21 @@ module shell;
  * nice for testing parts of the kernel
  */
 
-import lib.util.console;
-import lib.util.string;
 import lib.util.heap;
+import lib.util.types;
+import lib.util.string;
+import lib.util.console;
 
 import io.framebuffer;
-import common.memory.physical;
 
-version (X86_64) import arch.amd64.drivers.legacy.keyboard : getKeyEvent;
+version (X86_64) {
+	import arch.amd64.memory;
+	import arch.amd64.drivers.legacy.keyboard;
+}
 
 // Command buffer - null terminated
 private __gshared char[64] cmdBuffer = '\0';
-private __gshared size_t   bufferPos;
+private __gshared usize   bufferPos;
 
 void shellMain() {
 	clearConsole();
@@ -73,7 +76,7 @@ private void handleCommand(string command) {
 		test-scroll        - scroll through 100 lines
 		test-panic         - display the panic screen (Fatal)
 		test-int           - calls interrupt 3 (Fatal)
-		test-pmm           - allocate a 4kb block of memory
+		test-mm            - allocate a 4kb page of memory
 		test-alloc         - test the kernel allocator");
 		break;
 
@@ -106,10 +109,10 @@ private void handleCommand(string command) {
 		version (X86_64) asm { int 3; }
 		break;
 	
-	case "test-pmm":
-		PmmResult test = newBlock(1);
+	case "test-mm":
+		auto test = newPage();
 		if (test.isOkay) {
-			writefln("Block allocated: %h", test.unwrapResult());
+			writefln("Page allocated: %h", test.unwrapResult());
 		} else {
 			writefln("Allocation failed: %d", test.unwrapError());
 		}

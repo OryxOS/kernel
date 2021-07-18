@@ -8,6 +8,7 @@ module commom.memory.physical;
 
 import lib.stivale;
 import lib.util.math;
+import lib.util.types;
 import lib.util.result;
 import lib.util.console;
 import lib.util.bitmap;
@@ -26,8 +27,8 @@ void initPmm(StivaleInfo* stivale) {
 	auto info = RegionInfo(cast(MemMapTag*) stivale.getTag(MemMapID));
 
 	// 1. Calculate size needed for bitmap
-	size_t highestByte;
-	for (size_t i = 0; i < info.count; i++) {
+	usize highestByte;
+	for (usize i = 0; i < info.count; i++) {
 		immutable auto curRegion = info.regions[i];
 
 		if (curRegion.type != RegionType.Usable
@@ -39,7 +40,7 @@ void initPmm(StivaleInfo* stivale) {
 		 * as memory will always have holes, so this
 		 * method is used
 		 */
-		immutable size_t top = curRegion.base + curRegion.length;
+		immutable usize top = curRegion.base + curRegion.length;
 		if (top > highestByte)
 			highestByte = top;
 
@@ -47,7 +48,7 @@ void initPmm(StivaleInfo* stivale) {
 	}
 
 	// 2. Find region large enough to fit bitmap
-	for (size_t i = 0; i < info.count; i++) {
+	for (usize i = 0; i < info.count; i++) {
 		immutable auto curRegion = info.regions[i];
 
 		// Get a Usable region big enough to fit the bitmap
@@ -69,19 +70,19 @@ void initPmm(StivaleInfo* stivale) {
 	}
 
 	// 3. Correctly populate the Bitmap with usable regions
-	for (size_t i = 0; i < info.count; i++) {
+	for (usize i = 0; i < info.count; i++) {
 		immutable auto curRegion = info.regions[i];
 
 
 		if(curRegion.type != RegionType.Usable)
 			continue;
 
-		for (size_t j = 0; j < curRegion.length; j += BlockSize) 
+		for (usize j = 0; j < curRegion.length; j += BlockSize) 
 			bitMap.unsetBit((curRegion.base + j) / BlockSize);
 	}
 
 	// 4. Set `bitMap.nextFree` to the next available block
-	for (size_t i = 0; i < bitMap.size; i++) {
+	for (usize i = 0; i < bitMap.size; i++) {
 		if (!bitMap.testBit(i)) {
 			bitMap.nextFree = i;
 			break;
@@ -100,18 +101,18 @@ enum PmmError {
 }
 alias PmmResult = Result!(PhysAddress, PmmError);
 
-/// Returns `count` blocks of zeroed out memory
+/// Returns `count` blocks of memory (zeroed out if chosen)
 /// Params:
 /// 	count = number of blocks to allocate
 /// Returns: 
-/// 	Physical Address to the start of the blocks
+/// 	Physical address to the start of the blocks
 /// 	or an error
-PmmResult newBlock(size_t count = 1, bool zero = true) {													
-	size_t regionStart = bitMap.nextFree;
+PmmResult newBlock(usize count = 1, bool zero = true) {													
+	usize regionStart = bitMap.nextFree;
 	while (1) {
 		bool  newRegionNeeded;												
 
-		for (size_t i = regionStart; i < regionStart + count; i++) {
+		for (usize i = regionStart; i < regionStart + count; i++) {
 			if (i >= bitMap.size) 
 				return PmmResult(PmmError.NotEnoughMemory);
 
@@ -147,7 +148,7 @@ PmmResult newBlock(size_t count = 1, bool zero = true) {
 			}
 
 			// Set `bitMap.nextFree` to the next free region
-			size_t i;
+			usize i;
 			for (i = regionStart + count; i < bitMap.size; i++) {
 				if (!bitMap.testBit(i)) {
 					bitMap.nextFree = i;
@@ -167,22 +168,22 @@ PmmResult newBlock(size_t count = 1, bool zero = true) {
 /// 	blockStart = Physical address of the blocks
 /// 	count      = Number of blocks to free
 /// Returns: 
-/// 	Physical Address to the start of the blocks
+/// 	Physical address to the start of the blocks
 /// 	or an error
-PmmResult delBlock(PhysAddress blockStart, size_t count) {
+PmmResult delBlock(PhysAddress blockStart, usize count) {
 	// Safety checks
-	if (cast(size_t) blockStart % BlockSize != 0)
+	if (cast(usize) blockStart % BlockSize != 0)
 		return PmmResult(PmmError.AddressNotAligned);
-	if (cast(size_t) blockStart / BlockSize + count > bitMap.size)
+	if (cast(usize) blockStart / BlockSize + count > bitMap.size)
 		return PmmResult(PmmError.BlockOutOfRange);
 
-	size_t start = (cast(size_t) blockStart) / BlockSize;
+	usize start = (cast(usize) blockStart) / BlockSize;
 
-	for (size_t i = start; i < start + count; i++)
+	for (usize i = start; i < start + count; i++)
 		if (!bitMap.testBit(i))
 			return PmmResult(PmmError.BlockAlreadyFreed);
 
-	for (size_t i = start; i < start + count; i++)
+	for (usize i = start; i < start + count; i++)
 		bitMap.unsetBit(i);
 
 	if (bitMap.nextFree > start)

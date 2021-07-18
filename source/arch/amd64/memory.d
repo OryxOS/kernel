@@ -2,6 +2,7 @@ module arch.amd64.memory;
 
 import lib.stivale;
 import lib.util.math;
+import lib.util.types;
 import lib.util.result;
 import lib.util.console;
 
@@ -58,7 +59,7 @@ private enum Flags {                // Table:       Description:
 
 private alias Entry = ulong;
 
-private enum VmmResult {
+private enum MapResult {
 	Good,
 	NotEnoughSpaceForTables,
 	PageAlreadyUnmapped,
@@ -83,19 +84,19 @@ struct AddressSpace {
 	/// Unmaps a Virtual address from a physical one
 	/// Params:
 	/// 	virtual = page-aligned virtual address
-	/// Returns: VmmResult varient
-	VmmResult unmapPage(VirtAddress virtual) {
-		assert(cast(size_t) virtual % PageSize == 0);
+	/// Returns: MapResult varient
+	MapResult unmapPage(VirtAddress virtual) {
+		assert(cast(usize) virtual % PageSize == 0);
 
 		// Find the Pml1Entry
 		Entry* pml1Entry = getPml1Entry(virtual, Flags.None, false);
 
 		if (pml1Entry == null)
-			return VmmResult.PageAlreadyUnmapped;
+			return MapResult.PageAlreadyUnmapped;
 
 		*pml1Entry = 0;
 
-		return VmmResult.Good;
+		return MapResult.Good;
 	}
 
 	/// Maps a Virtual address to a physical one
@@ -103,20 +104,20 @@ struct AddressSpace {
 	/// 	virtual  = page-aligned virtual address
 	/// 	physical = page-aligned physical address
 	/// 	flags    = the flags to map the page and all its levels with
-	/// Returns: VmmResult varient
-	VmmResult mapPage(VirtAddress virtual, PhysAddress physical, Flags flags) {
-		assert(cast(size_t) physical % PageSize == 0);
-		assert(cast(size_t) virtual  % PageSize == 0);
+	/// Returns: MapResult varient
+	MapResult mapPage(VirtAddress virtual, PhysAddress physical, Flags flags) {
+		assert(cast(usize) physical % PageSize == 0);
+		assert(cast(usize) virtual  % PageSize == 0);
 
 		// Find or create the required pml tables
 		Entry* pml1Entry = getPml1Entry(virtual, flags, true);
 
 		if (pml1Entry == null)
-			return VmmResult.NotEnoughSpaceForTables;
+			return MapResult.NotEnoughSpaceForTables;
 
 		*pml1Entry = cast(ulong) physical | flags;
 
-		return VmmResult.Good;
+		return MapResult.Good;
 	}
 
 	private Entry* getPml1Entry(VirtAddress virtual, Flags flags, bool create) {
@@ -138,7 +139,7 @@ struct AddressSpace {
 	}
 	
 	// Finds or creates a table below the current one
-	private Entry* getNextLevel(Entry* curTable, size_t entry, Flags flags, bool create) {
+	private Entry* getNextLevel(Entry* curTable, usize entry, Flags flags, bool create) {
 		// Entry already exists
 		if (curTable[entry] & 0x1)
 			return cast(Entry*) ((curTable[entry] & ~(0xfff)) + PhysOffset);
@@ -177,42 +178,42 @@ void initVmm(StivaleInfo* stivale) {
 	 */
 
 	// Region 1 and 2
-	for (size_t i = 0; i < 0x100000000; i += PageSize) {
-		VmmResult map1 = kernelSpace.mapPage(cast(VirtAddress) i + PhysOffset,
+	for (usize i = 0; i < 0x100000000; i += PageSize) {
+		MapResult map1 = kernelSpace.mapPage(cast(VirtAddress) i + PhysOffset,
 		                                     cast(PhysAddress) i, Flags.Present | Flags.Writeable);
 
-		VmmResult map2 = kernelSpace.mapPage(cast(VirtAddress) i,
+		MapResult map2 = kernelSpace.mapPage(cast(VirtAddress) i,
 		                                     cast(PhysAddress) i, Flags.Present | Flags.Writeable);
 
-		if (map1 != VmmResult.Good || map2 != VmmResult.Good)
+		if (map1 != MapResult.Good || map2 != MapResult.Good)
 			panic("Not enough memory for Pml tables. Init cannot continue");
 	}
 
 	// Region 3
-	for (size_t i = 0; i < 0x80000000; i += PageSize) {
-		VmmResult map = kernelSpace.mapPage(cast(VirtAddress) i + KernelBase,
+	for (usize i = 0; i < 0x80000000; i += PageSize) {
+		MapResult map = kernelSpace.mapPage(cast(VirtAddress) i + KernelBase,
 		                                    cast(PhysAddress) i, Flags.Present | Flags.Writeable);
-		if (map != VmmResult.Good)
+		if (map != MapResult.Good)
 			panic("Not enough memory for Pml tables. Init cannot continue");
 	}
 
 	// Region 4
-    for (size_t i = 0; i < info.count; i++) {
+    for (usize i = 0; i < info.count; i++) {
         immutable auto base = alignDown(info.regions[i].base, PageSize);
 		immutable auto top  = alignUp(info.regions[i].base + info.regions[i].length, PageSize);
 
-		for (size_t j = base; j < top; j += PageSize) {
+		for (usize j = base; j < top; j += PageSize) {
 			// Ignore first 4gb, they are already mapped
 			if (j < 0x100000000)
 				continue;
 
-			VmmResult map1 = kernelSpace.mapPage(cast(VirtAddress) j + PhysOffset,
+			MapResult map1 = kernelSpace.mapPage(cast(VirtAddress) j + PhysOffset,
 		                                         cast(PhysAddress) j, Flags.Present | Flags.Writeable);
 
-			VmmResult map2 = kernelSpace.mapPage(cast(VirtAddress) j,
+			MapResult map2 = kernelSpace.mapPage(cast(VirtAddress) j,
 		                                         cast(PhysAddress) j, Flags.Present | Flags.Writeable);
 
-			if (map1 != VmmResult.Good || map2 != VmmResult.Good)
+			if (map1 != MapResult.Good || map2 != MapResult.Good)
 				panic("Not enough memory for Pml tables. Init cannot continue");
 
 		}
@@ -221,3 +222,43 @@ void initVmm(StivaleInfo* stivale) {
 	kernelSpace.setActive();
 	log(1, "New Pml tables loaded");
 }
+
+enum VmmError {
+	NotEnoughMemory,
+	AddressNotAligned,
+	PageAlreadyFree,
+}
+
+alias VmmResult = Result!(VirtAddress, VmmError);
+
+/// Returns `count` pages of memory (zeroed out if chosen)
+/// Params:
+/// 	count = number of blocks to allocate
+/// Returns: 
+/// 	Virtual address to the start of the pages
+/// 	or an error
+VmmResult newPage(usize count = 1, bool zero = true) {
+	auto result = newBlock(count, zero);
+
+	if (result.isOkay)
+		return VmmResult(result.unwrapResult() + PhysOffset);
+	else
+		return VmmResult(cast(VmmError) result.unwrapError());
+}
+
+/// Frees `count` blocks of memory
+/// Params:
+/// 	pageStart = Virtual address of the blocks
+/// 	count      = Number of blocks to free
+/// Returns: 
+/// 	Virtual address to the start of the pages
+/// 	or an error
+VmmResult delBlock(PhysAddress pageStart, usize count) {
+	auto result = delBlock(pageStart, count);
+
+	if (result.isOkay)
+		return VmmResult(result.unwrapResult() + PhysOffset);
+	else
+		return VmmResult(cast(VmmError) result.unwrapError());
+}
+

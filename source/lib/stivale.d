@@ -1,5 +1,6 @@
 module lib.stivale;
 
+import lib.util.types;
 import lib.util.console;
 
 import common.memory.map;
@@ -95,5 +96,5 @@ struct MemMapTag {
 struct XsdtPointerTag {
 	align (1):
 	StivaleTag tag;
-	size_t     pointer;
+	usize     pointer;
 }

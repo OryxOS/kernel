@@ -7,19 +7,18 @@ module common.memory.alloc.bitslab;
  * and other metadata
  */
 
+import lib.util.types;
 import lib.util.result;
 import lib.util.bitmap;
 import lib.util.console;
-
-import common.memory.physical;
 
 version(X86_64) import arch.amd64.memory;
 
 private static immutable BlockSizes = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096];
 
 // Determines which list a block allocation should fit in
-private size_t getBlockIndex(size_t allocSize) {
-	for (size_t i = 0; i < BlockSizes.length; i++) 
+private usize getBlockIndex(usize allocSize) {
+	for (usize i = 0; i < BlockSizes.length; i++) 
 		if (BlockSizes[i] >= allocSize)
 			return i;
 	
@@ -29,13 +28,13 @@ private size_t getBlockIndex(size_t allocSize) {
 private struct Slot {
 	void*   page;   // Page that is under this Slot's control
 	BitMap  bitMap; // Bitmap that manages the page
-	size_t  gran;   // Size of each allocation
+	usize  gran;   // Size of each allocation
 }
 
 // Must be exactly one page in size
 private struct ControlPage {
 	ControlPage* next;
-	Slot[(PageSize - size_t.sizeof) / Slot.sizeof] slots;
+	Slot[(PageSize - usize.sizeof) / Slot.sizeof] slots;
 }
 
 private struct BitMapPage {
@@ -51,19 +50,19 @@ private __gshared BitMapPage* topBitMapPage;
 
 void initBitSlabAlloc() {
 	// Allocate 1 page to each list 
-	controlPages  = cast(ControlPage*) newBlock().unwrapResult();
-	topBitMapPage = cast(BitMapPage*)  newBlock().unwrapResult();
+	controlPages  = cast(ControlPage*) newPage().unwrapResult();
+	topBitMapPage = cast(BitMapPage*)  newPage().unwrapResult();
 
 	controlPages.next  = null;
 }
 
-void* newBitSlabAlloc(size_t size, bool zero) {
-	size_t index = getBlockIndex(size);
+VirtAddress newBitSlabAlloc(usize size, bool zero) {
+	usize index = getBlockIndex(size);
 
 	// Find or create a slot
 	auto curControlPage = controlPages;
 	while (true) {
-		for (size_t i = 0; i < curControlPage.slots.length; i++) {
+		for (usize i = 0; i < curControlPage.slots.length; i++) {
 			auto slot = &curControlPage.slots[i];
 
 			// Slot with correct granularity and space found
@@ -77,7 +76,7 @@ void* newBitSlabAlloc(size_t size, bool zero) {
 					alloc[0..BlockSizes[index]] = 0;
 
 				// Update nextFree and return
-				for (size_t j = slot.bitMap.nextFree; j < slot.bitMap.size; j++) {
+				for (usize j = slot.bitMap.nextFree; j < slot.bitMap.size; j++) {
 					if (!slot.bitMap.testBit(j)) {
 						slot.bitMap.nextFree = j;
 						return cast(void*) alloc;
@@ -93,7 +92,7 @@ void* newBitSlabAlloc(size_t size, bool zero) {
 			 */
 			if (slot.page == null) {
 				void* page;
-				auto result = newBlock(1, false);
+				auto result = newPage(1, false);
 				if (result.isOkay)
 					page = result.unwrapResult();
 				else
@@ -103,10 +102,10 @@ void* newBitSlabAlloc(size_t size, bool zero) {
 				
 				// Find or create space for a new bitmap
 				ubyte* map;
-				if (cast(size_t) &topBitMapPage.top < PageSize) {
+				if (cast(usize) &topBitMapPage.top < PageSize) {
 					map = topBitMapPage.top;
 				} else {
-					auto result2 = newBlock(1, false);		
+					auto result2 = newPage(1, false);		
 					if (result.isOkay)
 						topBitMapPage = cast(BitMapPage*) result2.unwrapResult();
 					else
@@ -132,7 +131,7 @@ void* newBitSlabAlloc(size_t size, bool zero) {
 		}
 
 		// Allocate a new control page
-		auto result = newBlock(1, false);
+		auto result = newPage(1, false);
 		if (result.isOkay)
 			curControlPage.next = cast(ControlPage*) result.unwrapResult();
 		else
@@ -141,16 +140,16 @@ void* newBitSlabAlloc(size_t size, bool zero) {
 	}
 }
 
-bool delBitSlabAlloc(void* where) {
+bool delBitSlabAlloc(VirtAddress where) {
 	auto curControlPage = controlPages;
 
 	while (true) {
-		for (size_t i = 0; i < controlPages.slots.length; i++) {
+		for (usize i = 0; i < controlPages.slots.length; i++) {
 			auto slot = &curControlPage.slots[i];
 
 			// Object is in this slot
 			if (slot.page != null && where >= slot.page && where < slot.page + PageSize) {
-				auto bit = (cast(size_t) where % PageSize) / slot.gran;
+				auto bit = (cast(usize) where % PageSize) / slot.gran;
 
 				slot.bitMap.unsetBit(bit);
 				slot.bitMap.nextFree = bit;

@@ -2,6 +2,7 @@ module arch.amd64.apic;
 
 import core.volatile;
 
+import lib.util.types;
 import lib.util.console;
 
 import arch.acpi.madt;
@@ -18,17 +19,17 @@ private enum IdResgister  = 0x20;
 private enum SpurVector   = 0xFF;
 
 // Reads data from a LAPIC register
-private uint readLapic(size_t reg) {
+private uint readLapic(usize reg) {
 	return volatileLoad(cast(uint*) (lapicAddr + reg));
 }
 
 // Writes data to a LAPIC register
-private void writeLapic(size_t reg, uint val) {
+private void writeLapic(usize reg, uint val) {
 	volatileStore(cast(uint*) (lapicAddr + reg), val);
 }
 
 // Reads data from an IO APIC register
-private uint readIoApic(size_t ioApicId, uint reg) {
+private uint readIoApic(usize ioApicId, uint reg) {
 	auto base = cast(uint*) ioApicInfo[ioApicId].address;
 
 	volatileStore(base, reg);      // Select register
@@ -36,7 +37,7 @@ private uint readIoApic(size_t ioApicId, uint reg) {
 }
 
 // Writes data to an IO APIC register
-private void writeIoApic(size_t ioApicId, uint reg, uint data) {
+private void writeIoApic(usize ioApicId, uint reg, uint data) {
 	auto base = cast(uint*) ioApicInfo[ioApicId].address;
 
 	volatileStore(base, reg);      // Select register
@@ -49,12 +50,12 @@ private void enableLapic() {
 }
 
 // Returns the maximum number of redirections an IO APIC can hold
-private uint maxRedirCount(size_t ioApicId) {
+private uint maxRedirCount(usize ioApicId) {
 	return (readIoApic(ioApicId, 1) & 0xFF0000) >> 16;
 }
 
 // Determines which IO APIC handles a given gsi. Returns -1 upon failure
-private size_t getIoApicFromGsi(uint gsi) {
+private isize getIoApicFromGsi(uint gsi) {
 	foreach (i; 0..ioApicInfo.getLength()) {
 		// Check if GSI is in range of IO APIC
 		if (ioApicInfo[i].gsiBase <= gsi && ioApicInfo[i].gsiBase + maxRedirCount(i) > gsi)
@@ -65,7 +66,7 @@ private size_t getIoApicFromGsi(uint gsi) {
 }
 
 private void mapGsiToVec(ubyte vec, uint gsi, ushort flags) {
-	size_t ioApicId = getIoApicFromGsi(gsi);
+	usize ioApicId = getIoApicFromGsi(gsi);
 
 	if (ioApicId == -1)
 		panic("TODO: APIC error handling");

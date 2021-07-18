@@ -1,6 +1,7 @@
 module arch.acpi.madt;
 
 import lib.util.heap;
+import lib.util.types;
 import lib.util.console;
 
 import arch.acpi;
@@ -112,7 +113,7 @@ __gshared LinkedList!(IoApicInfo*)          ioApicInfo;
 __gshared LinkedList!(IoApicIsoInfo*)       ioApicIsoInfo;
 __gshared LinkedList!(IoApicNmiSourceInfo*) ioApicNmiSourceInfo;
 
-__gshared size_t lapicAddr;
+__gshared usize lapicAddr;
 
 void initMadt() {
 	// Get the MADT
@@ -124,16 +125,16 @@ void initMadt() {
 
 	bool lapicOverriden = false;
 	
-	size_t lapicCount;
-	size_t lapicNmiCount;
-	size_t ioApicCount;
-	size_t ioApicIsoCount;
-	size_t ioApicNmiSourceCount;
+	usize lapicCount;
+	usize lapicNmiCount;
+	usize ioApicCount;
+	usize ioApicIsoCount;
+	usize ioApicNmiSourceCount;
 
 	// Parse and sort all MADT entries
 	ubyte* entries;
-	auto end = cast(size_t) madt + madt.header.length;
-	for (entries = cast(ubyte*) &madt.entries; cast(size_t) entries < end; entries += *(entries + 1)) {
+	auto end = cast(usize) madt + madt.header.length;
+	for (entries = cast(ubyte*) &madt.entries; cast(usize) entries < end; entries += *(entries + 1)) {
 		switch (*entries) {
 		case EntryType.ProccesorLapic:
 			lapicInfo.append(cast(LapicInfo*) entries);
@@ -172,7 +173,7 @@ void initMadt() {
 	}
 
 	if (!lapicOverriden)
-		lapicAddr = cast(size_t) madt.lapicAddr;
+		lapicAddr = cast(usize) madt.lapicAddr;
 
 	log(1, "MADT Parsed:
 		LAPIC-Processor entries:\t%d

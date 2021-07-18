@@ -3,7 +3,7 @@ section .stivale2hdr
 header:
 	dq 0			; Entry point - 0 for linkr-Entry
 	dq stack.top	; Stack address
-	dq 0
+	dq 0b0010
 	dq framebufferTag;
 
 section .data

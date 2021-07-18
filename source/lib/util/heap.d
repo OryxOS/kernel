@@ -5,6 +5,7 @@ module lib.util.heap;
  * functions and structures
  */
 
+import lib.util.types;
 import lib.util.console;
 
 import common.memory.alloc.bitslab;
@@ -42,7 +43,7 @@ bool delObj(T)(T* obj) {
 /// Returns:
 /// 	null = allocation failed (NEM)
 /// 	addr = Address of the allocation
-T* newArr(T)(size_t size) {
+T* newArr(T)(usize size) {
 	if (T.sizeof * size <= PageSize)
 		return cast(T*) newBitSlabAlloc(T.sizeof * size, true);
 	else
@@ -74,13 +75,13 @@ struct LinkedList(T) {
     }
 
     private Node*  storage;
-    private size_t length;
+    private usize  length;
 
     /// Creates a new LinkedList
     /// Params:
     ///     initSize  = initial number of elements
     ///     initValue = value to set al initial elements to
-    this(size_t initSize, T initValue) {
+    this(usize initSize, T initValue) {
 		this.storage = newObj!(Node)();
 
 		auto curNode = this.storage;
@@ -94,7 +95,7 @@ struct LinkedList(T) {
 		this.length = initSize;
 	}
 
-	size_t getLength() {
+	usize getLength() {
 		return this.length;
 	}
 
@@ -105,7 +106,7 @@ struct LinkedList(T) {
 	}
 
     // Index operator overload. eg: list[12]
-    ref T opIndex(size_t index) {
+    ref T opIndex(usize index) {
 		assert (index < this.length); // Overflow Prevention
 
 		// Loop though all nodes until index node is found
@@ -145,7 +146,7 @@ struct LinkedList(T) {
 	}
 
     /// Remove a value from the list
-    void remove(size_t index) {
+    void remove(usize index) {
 		assert (index < this.length); // Overflow Prevention
 
 		this.length--;

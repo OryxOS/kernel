@@ -1,7 +1,9 @@
 module lib.util.string;
 
-private size_t stringLength(const char* str) {
-	size_t len;
+import lib.util.types;
+
+private usize stringLength(const char* str) {
+	usize len;
 	for(len = 0; str[len] != '\0'; len++) {}
 
 	return len;

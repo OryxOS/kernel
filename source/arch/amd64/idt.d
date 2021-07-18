@@ -7,6 +7,7 @@ module arch.amd64.idt;
  * file being the actual logic
  */
 
+import lib.util.types;
 import lib.util.console;
 
 import arch.amd64.gdt                     : KernelCodeSegment;
@@ -33,7 +34,7 @@ private struct IdtEntry {
 	uint   reserved;
 
 	this(Handler handler, ubyte ring, Gate gate) {
-		size_t address = cast(size_t) handler;
+		usize address = cast(usize) handler;
 
 		this.lowBase    = cast(ushort) address;
 		this.csSelector = KernelCodeSegment;

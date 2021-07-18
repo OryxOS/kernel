@@ -1,5 +1,7 @@
 module lib.util.console;
 
+import lib.util.types;
+
 import io.framebuffer;
 import io.framebuffer.fancy;
 
@@ -142,7 +144,7 @@ void log(T...)(uint indent, const string fmt, T args) {
 	writefln(fmt, args);
 }
 
-void panic(string file = __FILE__, size_t line = __LINE__, T...)(const string fmt, T args) {
+void panic(string file = __FILE__, usize line = __LINE__, T...)(const string fmt, T args) {
 	showCursor(false);
 	plotScreen(theme[0]);
 
@@ -265,7 +267,7 @@ void putItem(bool item, bool dec) {
 }
 
 void putItem(void* item, bool dec) {
-	dec ? printDecNum(cast(size_t) item) : printHexNum(cast(size_t) item);
+	dec ? printDecNum(cast(usize) item) : printHexNum(cast(usize) item);
 }
 
 void putItem(ulong item, bool dec) {
