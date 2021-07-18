@@ -118,28 +118,28 @@ struct LinkedList(T) {
 
     /// Add an element to the end of the list
     void append(T value) {
-		// Loop though all nodes to find last 
-		// TODO: Keep a pointer to the last node - will greatly improve speed
-
+		// Find append handled differently
 		if (this.storage == null) {
 			this.storage = newObj!(Node)();
-
-			this.storage.item = value;
+			
 			this.storage.next = null;
+			this.storage.item = value;
 
 			this.length++;
-
 			return;
 		}
 
-		auto lastNode = this.storage;
-		foreach ( _; 0..this.length)
-			lastNode = lastNode.next;
+		// Standard append
 
-		lastNode.next = newObj!(Node)();
+		// Get the end of the list
+		auto current = this.storage;
+		while (current.next != null)
+			current = current.next;
 
-		lastNode.next.item = value;
-		lastNode.next.next = null;
+		current.next = newObj!(Node)();
+
+		current.next.item = value;
+		current.next.next = null;
 
 		this.length++;
 	}

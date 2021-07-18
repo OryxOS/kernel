@@ -85,8 +85,6 @@ private void mapGsiToVec(ubyte vec, uint gsi, ushort flags) {
 	// Get the LAPIC ID (Will change with SMP)
 	redirect |= cast(ulong) readLapic(IdResgister) << 56;
 
-	writefln("ID: %d", readLapic(IdResgister));
-
 	uint register = (gsi - ioApicInfo[ioApicId].gsiBase) * 2 + 16;
 
 	// Load register in 2 parts
@@ -105,7 +103,7 @@ void enableLegacyIrq(ubyte irq) {
 			return;
 		}
 	}
-	
+
 	// Interrupt not overriden
 	mapGsiToVec(cast(ubyte) (irq + 0x20), irq, 0);
 }
@@ -116,6 +114,7 @@ void endInterrupt() {
 
 void initApic() {
 	enableLapic();
-	
 	enableLegacyIrq(1);
+
+	log(1, "APIC enabled");
 }

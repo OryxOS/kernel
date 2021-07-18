@@ -122,43 +122,48 @@ void initMadt() {
 	
 	log(1, "Parsing MADT");
 
+	bool lapicOverriden = false;
+	
+	size_t lapicCount;
+	size_t lapicNmiCount;
+	size_t ioApicCount;
+	size_t ioApicIsoCount;
+	size_t ioApicNmiSourceCount;
+
 	// Parse and sort all MADT entries
 	ubyte* entries;
 	auto end = cast(size_t) madt + madt.header.length;
-	bool lapicOverriden = false;
 	for (entries = cast(ubyte*) &madt.entries; cast(size_t) entries < end; entries += *(entries + 1)) {
 		switch (*entries) {
 		case EntryType.ProccesorLapic:
 			lapicInfo.append(cast(LapicInfo*) entries);
-			log(1, "LAPIC-Processor entry found");
+			lapicCount++;
 			break;
 
 		case EntryType.LapicNmi:
 			lapicNmiInfo.append(cast(LapicNmiInfo*) entries);
-			log(1, "LAPIC NMI entry found");
+			lapicNmiCount++;
 			break;
 
 		case EntryType.IoApic:
 			ioApicInfo.append(cast(IoApicInfo*) entries);
-			auto lmao = cast(IoApicInfo*) entries;
-			log(1, "IO APIC entry found");
+			ioApicCount++;
 			break;
 
 		case EntryType.IoApicIso:
 			ioApicIsoInfo.append(cast(IoApicIsoInfo*) entries);
-			log(1, "IO APIC ISO entry found");
+			ioApicIsoCount++;
 			break;
 
 		case EntryType.IoApicNmiSource:
 			ioApicNmiSourceInfo.append(cast(IoApicNmiSourceInfo*) entries);
-			log(1, "IO APIC NMI Source entry found");
+			ioApicNmiSourceCount++;
 			break;
 
 		case EntryType.LapicAddrOverride:
 			auto over = cast(LapicAddrOverride*) entries;
 			lapicAddr = over.address;
 			lapicOverriden = true;
-			log(1, "LAPIC address override found");
 			break;
 
 		default:
@@ -168,6 +173,16 @@ void initMadt() {
 
 	if (!lapicOverriden)
 		lapicAddr = cast(size_t) madt.lapicAddr;
+
+	log(1, "MADT Parsed:
+		LAPIC-Processor entries:\t%d
+		LAPIC NMI entries:\t\t\t%d
+		IO APIC entries:\t\t\t%d
+		IO APIC ISOs:\t\t\t\t\t%d
+		IO APIC NMI entries:\t\t%d",
+		lapicCount, lapicNmiCount,
+		ioApicCount,ioApicIsoCount,
+		ioApicNmiSourceCount);
 
 	log(1, "LAPIC Address: %h", lapicAddr);
 }
