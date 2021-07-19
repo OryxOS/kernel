@@ -1,10 +1,12 @@
 module arch.amd64.gdt;
 
 /* OryxOS Amd64 GDT implementation
- * The GDT isn't very import on the Amd64 architecture and is mostly a set-once structure.
- * becuase of this, this GDT implementation is very simplistic and unflexible.
+ * The GDT isn't very important im the Amd64 architecture and is mostly
+ * a set-once structure. becuase of this, this GDT implementation is 
+ * very simplistic and unflexible.
  */
 
+import lib.util.types;
 import lib.util.console;
 
 private struct GdtEntry {
@@ -32,6 +34,34 @@ private struct GdtPointer {
 	void* address;
 }
 
+// Structure that holds info about a TSS
+private struct TssEntry {
+	align (1):
+	ushort limit;
+	ushort lowBase;
+	ubyte  midBase;
+	ubyte  lowFlags;
+	ubyte  highFlags;
+	ubyte  highBase;
+	uint   upperBase;
+	uint   reserved;
+
+	this(ubyte lowFlags, ubyte highFlags) {
+		this.limit = 104; // Size of a TSS
+
+		this.lowFlags  = lowFlags;
+		this.highFlags = highFlags;
+
+		// Address set later
+	}
+}
+
+private struct Gdt {
+	align (1):
+	GdtEntry[5] entries;
+	TssEntry    tss;
+}
+
 //////////////////////////////
 //         Instance         //
 //////////////////////////////
@@ -39,17 +69,22 @@ private struct GdtPointer {
 // Selectors
 enum KernelCodeSegment = 0x08;    
 enum KernelDataSegment = 0x10;
+enum TssSegment        = 0x28;
 
-private __gshared GdtEntry[3] gdtEntries;
+private __gshared Gdt gdt;
 private __gshared GdtPointer  gdtPointer;
 
 void initGdt() {
-	gdtEntries[0] = GdtEntry(0b00000000, 0b00000000); // Null
-	gdtEntries[1] = GdtEntry(0b10011010, 0b00100000); // Kernel Code
-	gdtEntries[2] = GdtEntry(0b10010010, 0b00000000); // Kernel Data
+	gdt.entries[0] = GdtEntry(0b00000000, 0b00000000); // Null
+	gdt.entries[1] = GdtEntry(0b10011010, 0b00100000); // Kernel Code
+	gdt.entries[2] = GdtEntry(0b10010010, 0b00000000); // Kernel Data
+	gdt.entries[3] = GdtEntry(0b11111010, 0b00100000); // User Code
+	gdt.entries[4] = GdtEntry(0b11110010, 0b00000000); // User Data
+
+	gdt.tss = TssEntry(0b10001001, 0); // TSS
 
 	// Set pointer
-	gdtPointer = GdtPointer(gdtEntries.sizeof - 1, cast(void*) &gdtEntries);
+	gdtPointer = GdtPointer(gdt.sizeof - 1, cast(void*) &gdt);
 
 	// Load the GDT
 	asm {
@@ -61,7 +96,7 @@ void initGdt() {
 		push RBX;
 		pushfq;
 		push KernelCodeSegment;
-		lea RAX, L1; // Putting L1 directly dereferences L1. (According to streak)
+		lea RAX, L1; // Putting L1 directly dereferences L1. (According to streaks)
 		push RAX;
 		iretq;
 
@@ -73,5 +108,20 @@ void initGdt() {
 		mov GS, AX;
 	}
 
-	log(1, "Gdt initialized with %d descriptors", gdtEntries.length);
+	log(1, "GDT initialized with %d descriptors + 1 TSS descriptor", gdt.entries.length);
+}
+
+void loadTss(usize addr) {
+	// Address
+	gdt.tss.lowBase   = cast(ushort) addr;
+	gdt.tss.midBase   = cast(ubyte) (addr >> 16);
+	gdt.tss.highBase  = cast(ubyte) (addr >> 24);
+	gdt.tss.upperBase = cast(uint) (addr >> 32);
+
+	// Load TSS using `ltr`
+	asm {
+		push TssSegment;
+		ltr [RSP];
+		add RSP, 8;
+	}
 }

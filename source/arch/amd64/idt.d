@@ -115,7 +115,7 @@ void initIdt() {
 	idtEntries[33] = IdtEntry(&keyboardHandler,      0, Gate.Interrupt);
 	
 	asm { lidt [idtPointer]; }
-	log(1, "Idt initialized with %d descriptors", idtEntries.length);
+	log(1, "IDT initialized with %d handlers", idtEntries.length);
 }
 
 // Assembly stubs
