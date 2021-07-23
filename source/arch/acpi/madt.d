@@ -5,6 +5,7 @@ import lib.util.types;
 import lib.util.console;
 
 import arch.acpi;
+import common.memory;
 
 /* OryxOS MADT Management
  * The Madt is a stucture that contains information
@@ -174,6 +175,8 @@ void initMadt() {
 
 	if (!lapicOverriden)
 		lapicAddr = cast(usize) madt.lapicAddr;
+
+	lapicAddr += PhysOffset;
 
 	log(1, "MADT Parsed:
 		LAPIC-Processor entries:\t%d

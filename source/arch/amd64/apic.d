@@ -5,6 +5,7 @@ import core.volatile;
 import lib.util.types;
 import lib.util.console;
 
+import common.memory;
 import arch.acpi.madt;
 
 /* OryxOS APIC management
@@ -30,7 +31,7 @@ private void writeLapic(usize reg, uint val) {
 
 // Reads data from an IO APIC register
 private uint readIoApic(usize ioApicId, uint reg) {
-	auto base = cast(uint*) ioApicInfo[ioApicId].address;
+	auto base = cast(uint*) (ioApicInfo[ioApicId].address + PhysOffset);
 
 	volatileStore(base, reg);      // Select register
 	return volatileLoad(base + 4); // Read data
@@ -38,7 +39,7 @@ private uint readIoApic(usize ioApicId, uint reg) {
 
 // Writes data to an IO APIC register
 private void writeIoApic(usize ioApicId, uint reg, uint data) {
-	auto base = cast(uint*) ioApicInfo[ioApicId].address;
+	auto base = cast(uint*) (ioApicInfo[ioApicId].address + PhysOffset);
 
 	volatileStore(base, reg);      // Select register
 	volatileStore(base + 4, data); // Store data
@@ -116,6 +117,5 @@ void endInterrupt() {
 void initApic() {
 	enableLapic();
 	enableLegacyIrq(1);
-
 	log(1, "APIC enabled");
 }

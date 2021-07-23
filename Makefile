@@ -18,7 +18,7 @@ DFLAGS := -mtriple=amd64-unknown-elf -relocation-model=static \
 
 LDFLAGS   := --oformat elf_amd64 --nostdlib
 
-ASFLAGS   := $(ASFLAGS) -felf64
+ASFLAGS   := -felf64
 
 # Source to compile.
 DSOURCE   := $(shell find $(SOURCEDIR) -type f -name '*.d')

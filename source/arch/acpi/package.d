@@ -4,6 +4,8 @@ import lib.stivale;
 import lib.util.types;
 import lib.util.console;
 
+import common.memory;
+
 /* OryxOS ACPI initialisation
  * This module contains methods for parsing the initial ACPI tables,
  * note that this does not contain any runtime management code.
@@ -55,7 +57,7 @@ void initAcpi(StivaleInfo* stivale) {
 
     if (rsdp.revision >= 2 && rsdp.xsdtAddr) {
         rev2 = true;
-        rsdt = cast(Rsdt*) (cast(void*) rsdp.xsdtAddr);
+        rsdt = cast(Rsdt*) (cast(void*) rsdp.xsdtAddr + PhysOffset);
         log(1, "XSDT Found. ACPI Revision: %d", rsdp.revision);
     } else {
         rev2 = false;
@@ -74,10 +76,10 @@ void* getTable(char[4] signature) {
     foreach (i; 0..limit) {
         if (rev2) {
             auto p = cast(ulong*) &rsdt.sdtPtr;
-            ptr = cast(SdtHeader*)p[i];
+            ptr = cast(SdtHeader*) (p[i] + PhysOffset);
         } else {
             auto p = cast(uint*) &rsdt.sdtPtr;
-            ptr = cast(SdtHeader*)p[i];
+            ptr = cast(SdtHeader*) (p[i] + PhysOffset);
         }
 
         if (ptr.signature == signature) {

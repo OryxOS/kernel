@@ -110,9 +110,9 @@ void putChr(const char c, pixel col = theme[1]) {
 
 	// Scroll
 	if(console.posY == console.maxY) {
-		scrollScreen(16, getFrameBufferInfo().height % 16);                  // Move new data up
+		scrollScreen(16, getFrameBufferInfo().height % 16);          // Move new data up
 		plotRect(theme[0], 0, console.maxY - 16, console.maxX, 16);  // Clear line
-		console.posY = console.maxY - 16;                                    // Reset cursor
+		console.posY = console.maxY - 16;                            // Reset cursor
 	}
 
 	// Update cursor 
