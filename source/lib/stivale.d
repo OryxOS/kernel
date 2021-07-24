@@ -1,6 +1,7 @@
 module lib.stivale;
 
 import lib.util.types;
+import lib.util.string;
 import lib.util.console;
 
 import common.memory.map;
@@ -9,6 +10,7 @@ import common.memory.map;
 enum FrameBufferID = 0x506461d2950408fa;
 enum MemMapID      = 0x2187f79e8612de07;
 enum XsdtPointerID = 0x9e1786930a375e78;	
+enum ModuleID      = 0x4b6fe466aade04ce;
 
 // All tags have this at their start
 struct StivaleTag {
@@ -85,7 +87,6 @@ struct FrameBufferTag {
 	ubyte bMaskShift;
 }
 
-
 struct MemMapTag {
 	align (1):
 	StivaleTag tag;
@@ -96,5 +97,33 @@ struct MemMapTag {
 struct XsdtPointerTag {
 	align (1):
 	StivaleTag tag;
-	usize     pointer;
+	usize      pointer;
+}
+
+struct ModuleTag {
+	align (1):
+	StivaleTag tag;
+	usize      count;
+	Module     modules;
+
+	/// Attempts to find a module with a string matching `str`
+	Module* getModule(string str) {
+		foreach (i; 0..this.count) {
+			auto mod = cast (Module*) (cast (usize) &this.modules + i * Module.sizeof);
+
+			// Check if strings match
+			if (fromCString(cast(char*) &mod.str) == str)
+				return mod;
+		}
+
+		// No module could be found
+		return null;
+	}
+}
+
+struct Module {
+	align(1):
+	usize     start;
+	usize     end;
+	char[512] str;
 }

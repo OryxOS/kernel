@@ -22,7 +22,7 @@ extern (C) void main(StivaleInfo* stivale) {
 
 	initArch(stivale);
 
-	initScheduler();
+	initScheduler(stivale);
 	
 	while (1) {}
 }
