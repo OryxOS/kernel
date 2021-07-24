@@ -1,6 +1,8 @@
 extern stackInfo
 global jumpUserSpace
 
+section .text
+
 ; RDI - function address
 ; RSI - stack top address
 jumpUserSpace:

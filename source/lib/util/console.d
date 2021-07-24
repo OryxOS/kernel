@@ -58,7 +58,6 @@ void clearConsole() {
 	plotScreen(theme[0]);
 }
 
-
 void putChr(const char c, pixel col = theme[1]) {
 	// End of line
 	if(console.posX >= console.maxX) {
@@ -125,7 +124,6 @@ void putStr(const string s, pixel col = theme[1]) {
 		putChr(c, col);
 	}
 }
-
 
 //////////////////////////////
 //    Variadic Printing     //

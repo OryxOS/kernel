@@ -1,6 +1,8 @@
 global initSyscalls
 global stackInfo
 
+section .data
+
 ; There will always be 2 stacks in use, the kernel 
 ; stack and the current process's stack. Whenever a
 ; process is switched to, this structs values must be updated
@@ -8,6 +10,13 @@ global stackInfo
 stackInfo:
 	dq 0 ; Kernel Stack
 	dq 0 ; User stack
+
+align 16
+syscallTable:
+	extern syscallPutStr
+	dq syscallPutStr
+
+section .text
 
 initSyscalls:
 	; Enable `syscall` and `sysret`
@@ -58,7 +67,8 @@ syscallHandler:
 	push r14
 	push r15
 
-	; Handle syscall
+    lea rbx, [rel syscallTable]
+    call [rbx + r10 * 8]
 
 	pop r15
 	pop r14

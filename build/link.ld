@@ -2,26 +2,32 @@ ENTRY(main)
  
 SECTIONS
 {
-    . = 0xFFFFFFFF80200000;
+	. = 0xFFFFFFFF80200000;
 
-    .stivale2hdr : {
-        KEEP(*(.stivale2hdr))
-    }
+	.stivale2hdr : {
+		KEEP(*(.stivale2hdr))
+	}
  
-    .text : {
-        *(.text*)
-    }
+	.text : {
+		*(.text*)
+	}
  
-    .rodata : {
-        *(.rodata*)
-    }
+	.rodata : {
+		*(.rodata*)
+	}
  
-    .data : {
-        *(.data*)
-    }
+	.data : {
+		*(.data*)
+	}
  
-    .bss : {
-        *(COMMON)
-        *(.bss*)
-    }
+	.bss : {
+		*(COMMON)
+		*(.bss*)
+	}
+	
+	. = 0x2000000;
+
+	.user_text : {
+		*(.user_text*)
+	}
 }
