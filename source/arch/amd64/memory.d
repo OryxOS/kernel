@@ -140,7 +140,7 @@ struct AddressSpace {
 	
 	// Finds or creates a table below the current one
 	private Entry* getNextLevel(Entry* curTable, usize entry, EntryFlags flags, bool create) {
-		// Entry already exists
+		// Entry already exist
 		if (curTable[entry] & 0x1)
 			return cast(Entry*) ((curTable[entry] & ~(0xfff)) + PhysOffset);
 
