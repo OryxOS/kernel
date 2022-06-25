@@ -6,7 +6,7 @@ module commom.memory.physical;
  * in one bitmap, this is done as it is the simplest approach.
  */
 
-import lib.stivale;
+import lib.limine;
 import lib.util.math;
 import lib.util.types;
 import lib.util.result;
@@ -21,19 +21,17 @@ version (X86_64) private enum BlockSize = 0x1000;
 
 private __gshared BitMap bitMap;
 
-void initPmm(StivaleInfo* stivale) {
+void initPmm(MemoryMapResponse* limineMap) {
 	writefln("\nPmm Init:");
 
-	auto info = RegionInfo(cast(MemMapTag*) stivale.getTag(MemMapID));
+	auto info = RegionInfo(limineMap);
 
 	// 1. Calculate size needed for bitmap
-	usize highestByte;
+	usize highestByte = 0;
 	for (usize i = 0; i < info.count; i++) {
-		immutable auto curRegion = info.regions[i];
+		auto curRegion = info.regions[i];
 
-		if (curRegion.type != RegionType.Usable
-			&& curRegion.type != RegionType.KernelOrModule
-			&& curRegion.type != RegionType.BootloaderReclaimable)
+		if (curRegion.type != RegionType.Usable && curRegion.type != RegionType.BootloaderReclaimable)
 			continue;
 
 		/* Regions cannot simply have their length added
@@ -49,7 +47,7 @@ void initPmm(StivaleInfo* stivale) {
 
 	// 2. Find region large enough to fit bitmap
 	for (usize i = 0; i < info.count; i++) {
-		immutable auto curRegion = info.regions[i];
+		auto curRegion = info.regions[i];
 
 		// Get a Usable region big enough to fit the bitmap
 		if (curRegion.type != RegionType.Usable || curRegion.length < bitMap.size * 8)
@@ -71,7 +69,7 @@ void initPmm(StivaleInfo* stivale) {
 
 	// 3. Correctly populate the Bitmap with usable regions
 	for (usize i = 0; i < info.count; i++) {
-		immutable auto curRegion = info.regions[i];
+	auto curRegion = info.regions[i];
 
 
 		if(curRegion.type != RegionType.Usable)

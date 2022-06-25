@@ -13,8 +13,8 @@ stackInfo:
 
 align 16
 syscallTable:
-	extern syscallPutStr
-	dq syscallPutStr
+	extern syscallPutChr
+	dq syscallPutChr
 
 section .text
 

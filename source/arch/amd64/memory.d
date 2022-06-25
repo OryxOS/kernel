@@ -1,6 +1,6 @@
 module arch.amd64.memory;
 
-import lib.stivale;
+import lib.limine;
 import lib.util.math;
 import lib.util.types;
 import lib.util.result;
@@ -140,7 +140,7 @@ struct AddressSpace {
 	
 	// Finds or creates a table below the current one
 	private Entry* getNextLevel(Entry* curTable, usize entry, EntryFlags flags, bool create) {
-		// Entry already exist
+		// Entry already exists
 		if (curTable[entry] & 0x1)
 			return cast(Entry*) ((curTable[entry] & ~(0xfff)) + PhysOffset);
 
@@ -158,59 +158,48 @@ struct AddressSpace {
 
 }
 
+
 //////////////////////////////
 //         Instance         //
 //////////////////////////////
 
 __gshared AddressSpace kernelSpace;
 
-void initVmm(StivaleInfo* stivale) {
-	auto info = RegionInfo(cast(MemMapTag*) stivale.getTag(MemMapID));
+void initVmm(MemoryMapResponse* limineMap, KernelAddressResponse* kernelAddress) {
+	auto info = RegionInfo(limineMap);
 
 	kernelSpace = AddressSpace(newBlock()
 	                          .unwrapResult("Cannot allocate space for Pml4, init cannot continue"));
 	log(1, "Pml4 block allocated");
 
-	/* Regions:
-	 * 1. Physical: 0000000000000000-0000000100000000 Virtual: ffff800000000000-ffff800100000000 - pw
-	 * 2. Physical: 0000000000000000-0000000080000000 Virtual: ffffffff80000000-ffffffffffffffff - pw
+	/* Higher half needs to be shared amongst all processes, so it is
+	 * necessary to initialise them all
 	 */
+	foreach (i; 256..512) {
+		Entry* res = 
+			kernelSpace.getNextLevel(kernelSpace.pml4, i, EntryFlags.Present | EntryFlags.Writeable, true);
 
-	// Region 1
-	for (usize i = 0; i < 0x100000000; i += PageSize) {
+		if (res == null)
+			panic("Not enough memory for Pml tables. Init cannot continue");
+	}
+
+	// Region 1 (Kernel):
+	for (ulong  i = 0; i < 0x10000000; i += PageSize) {
+		MapResult map = kernelSpace.mapPage(cast(VirtAddress) i + kernelAddress.virtBase,
+		                                    cast(PhysAddress) i + kernelAddress.physBase, 
+											EntryFlags.Present | EntryFlags.Writeable);
+		if (map != MapResult.Good)
+			panic("Not enough memory for Pml tables. Init cannot continue");
+	}
+
+	// Region 2:
+	for (usize i = 0x1000; i < 0x100000000; i += PageSize) {
 		MapResult map = kernelSpace.mapPage(cast(VirtAddress) i + PhysOffset,
 		                                    cast(PhysAddress) i, EntryFlags.Present | EntryFlags.Writeable);
 
 		if (map != MapResult.Good)
 			panic("Not enough memory for Pml tables. Init cannot continue");
 	}
-
-	// Region 3
-	for (usize i = 0; i < 0x80000000; i += PageSize) {
-		MapResult map = kernelSpace.mapPage(cast(VirtAddress) i + KernelBase,
-		                                    cast(PhysAddress) i, EntryFlags.Present | EntryFlags.Writeable);
-		if (map != MapResult.Good)
-			panic("Not enough memory for Pml tables. Init cannot continue");
-	}
-
-	// Region 4
-    for (usize i = 0; i < info.count; i++) {
-        immutable auto base = alignDown(info.regions[i].base, PageSize);
-		immutable auto top  = alignUp(info.regions[i].base + info.regions[i].length, PageSize);
-
-		for (usize j = base; j < top; j += PageSize) {
-			// Ignore first 4gb, they are already mapped
-			if (j < 0x100000000)
-				continue;
-
-			MapResult map = kernelSpace.mapPage(cast(VirtAddress) j + PhysOffset,
-		                                        cast(PhysAddress) j, EntryFlags.Present | EntryFlags.Writeable);
-
-			if (map != MapResult.Good)
-				panic("Not enough memory for Pml tables. Init cannot continue");
-
-		}
-    }
 
 	kernelSpace.setActive();
 	log(1, "New Pml tables loaded");
@@ -239,15 +228,15 @@ VmmResult newPage(usize count = 1, bool zero = true) {
 		return VmmResult(cast(VmmError) result.unwrapError());
 }
 
-/// Frees `count` blocks of memory
+/// Frees `count` pages of memory
 /// Params:
 /// 	pageStart = Virtual address of the blocks
 /// 	count      = Number of blocks to free
 /// Returns: 
 /// 	Virtual address to the start of the pages
 /// 	or an error
-VmmResult delBlock(PhysAddress pageStart, usize count) {
-	auto result = delBlock(pageStart, count);
+VmmResult delPage(PhysAddress pageStart, usize count) {
+	auto result = delPage(pageStart, count);
 
 	if (result.isOkay)
 		return VmmResult(result.unwrapResult() + PhysOffset);

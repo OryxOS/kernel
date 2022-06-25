@@ -1,33 +1,36 @@
 ENTRY(main)
- 
+
+/* Section permissions, required for bootloader */
+PHDRS
+{
+    text    PT_LOAD    FLAGS((1 << 0) | (1 << 2)) ; /* Read | Execute */
+    rodata  PT_LOAD    FLAGS((1 << 2)) ;            /* Read */
+    data    PT_LOAD    FLAGS((1 << 1) | (1 << 2)) ; /* Read | Write */
+}
+
 SECTIONS
 {
-	. = 0xFFFFFFFF80200000;
+    /* Place kernel in the higher half */
+    . = 0xffffffff80000000;
 
-	.stivale2hdr : {
-		KEEP(*(.stivale2hdr))
-	}
- 
-	.text : {
-		*(.text*)
-	}
- 
-	.rodata : {
-		*(.rodata*)
-	}
- 
-	.data : {
-		*(.data*)
-	}
- 
-	.bss : {
-		*(COMMON)
-		*(.bss*)
-	}
-	
-	. = 0x2000000;
+    .text : {
+        *(.text .text.*)
+    } :text
 
-	.user_text : {
-		*(.user_text*)
-	}
+    . += CONSTANT(MAXPAGESIZE);
+
+    .rodata : {
+        *(.rodata .rodata.*)
+    } :rodata
+
+    . += CONSTANT(MAXPAGESIZE);
+
+    .data : {
+        *(.data .data.*)
+    } :data
+
+    .bss : {
+        *(COMMON)
+        *(.bss .bss.*)
+    } :data
 }

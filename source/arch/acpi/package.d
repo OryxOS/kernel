@@ -1,6 +1,6 @@
 module arch.acpi;
 
-import lib.stivale;
+import lib.limine;
 import lib.util.types;
 import lib.util.console;
 
@@ -51,9 +51,8 @@ private __gshared Rsdt* rsdt;
 //         Instance         //
 //////////////////////////////
 
-void initAcpi(StivaleInfo* stivale) {
-    auto tag = cast(XsdtPointerTag*) stivale.getTag(XsdtPointerID);
-    auto rsdp = cast(RsdtPointer*) tag.pointer;
+void initAcpi(XSDTPointerResponse* xsdtPointer) {
+    auto rsdp = cast(RsdtPointer*) xsdtPointer.address;
 
     if (rsdp.revision >= 2 && rsdp.xsdtAddr) {
         rev2 = true;

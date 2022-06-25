@@ -1,7 +1,7 @@
 module common.scheduler;
 
 import lib.elf;
-import lib.stivale;
+import lib.limine;
 import lib.util.math; 
 import lib.util.types;
 import lib.util.string;
@@ -25,7 +25,7 @@ struct Process {
 	// Creates a new userspace context from an ELF file
 	this(Elf64Header* header) {
 		this.addressSpace = AddressSpace(newBlock()
-										.unwrapResult("Not enough space for process's PML Tables"));
+		                                 .unwrapResult("Not enough space for process's PML Tables"));
 
 		usize stackBottom = cast(usize) newBlock().unwrapResult("Not enough space for stack");
 
@@ -69,15 +69,14 @@ struct Process {
 	}
 }
 
-void initScheduler(StivaleInfo* stivale) {
-	auto moduleTag = cast(ModuleTag*) stivale.getTag(ModuleID);
+void initScheduler(ModuleResponse* limineModules) {
 
-	auto shellElfModule = moduleTag.getModule("application.shell");
+	LimineFile* shellModule = limineModules.getModule("/applications/shell.elf");
 
-	if (shellElfModule == null)
+	if (shellModule == null)
 		panic("No Shell found!");
 
-	auto shellElfHeader = cast(Elf64Header*) shellElfModule.start;
+	auto shellElfHeader = cast(Elf64Header*) shellModule.address;
 	auto shellContext = Process(shellElfHeader);
 
 	shellContext.start();

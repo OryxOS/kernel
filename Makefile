@@ -1,6 +1,6 @@
 .PHONY: clean
 
-KERNEL    := oryx.kernel
+KERNEL    := kernel.elf
 
 SOURCEDIR := source
 BUILDDIR  := build

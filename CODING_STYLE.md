@@ -68,7 +68,7 @@ module blah; // Module declaration
 
 // Library imports
 import lib.util;
-import lib.stivale;
+import lib.limine;
 
 // Other imports
 import arch.amd64.memory;

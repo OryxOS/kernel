@@ -9,18 +9,20 @@ module io.framebuffer;
  */
 
 import io.framebuffer.font;
-import lib.stivale;
+import lib.limine;
 
 alias pixel = uint;
 
-// Private and only for internal use, use ``FrameBufferInfo`` instead 
+/* Private and only for internal use, use ``FrameBufferInfo`` instead. 
+ * Using a different structure allows to free bootloader resources later.
+ */
 private struct FrameBuffer {
 	pixel* address;
-	uint   width;
-	uint   height;
-	uint   pitch;
+	ulong width;
+	ulong height;
+	ulong pitch;
 
-	this (FrameBufferTag* tag) {
+	this (LimineFrameBufferInfo* tag) {
 		this.address = cast(pixel*) tag.address;
 
 		this.width  = tag.width;
@@ -33,8 +35,8 @@ private struct FrameBuffer {
  * want to have direct access to the framebuffer.
  */
 struct FrameBufferInfo {
-	uint width;
-	uint height;
+	ulong width;
+	ulong height;
 }
 
 //////////////////////////////
@@ -43,25 +45,25 @@ struct FrameBufferInfo {
 
 private __gshared FrameBuffer buffer;
 
-void initFrameBuffer(StivaleInfo* stivale) {
-	// Try access the FrameBufferTag passed by stivale
- FrameBufferTag* fb = cast(FrameBufferTag*) stivale.getTag(FrameBufferID);
-	
+void initFrameBuffer(FrameBufferResponse* fbInfo) {
+	// Try access the FrameBuffer information
+ 	LimineFrameBufferInfo* fb = fbInfo.framebuffers[0];
+
 	// Very unlikely so we don't properly handle these
 	assert(fb != null);
 	assert(fb.bpp == 32);	
 
-	// Tag is good
+	// Info structure is good for use
 	buffer = FrameBuffer(fb);
 }
 
-void plotPixel(pixel p, uint x, uint y) {
+void plotPixel(pixel p, ulong x, ulong y) {
 	buffer.address[(buffer.pitch * y) + x] = p;
 }
 
-void plotRect(pixel p, uint x, uint y, uint width, uint height) {
-	for(uint i = 0; i < height; i++) {
-		int where = buffer.pitch * y + buffer.pitch * i + x;
+void plotRect(pixel p, ulong x, ulong y, ulong width, ulong height) {
+	for(ulong i = 0; i < height; i++) {
+		ulong where = buffer.pitch * y + buffer.pitch * i + x;
 
 		buffer.address[(where)..(where + width)] = p;
 	}
@@ -71,7 +73,7 @@ void plotScreen(pixel p) {
 	buffer.address[0..(buffer.pitch * buffer.height)] = p;
 }
 
-void plotChr(pixel fore, pixel back, char c, uint x, uint y) {
+void plotChr(pixel fore, pixel back, char c, ulong x, ulong y) {
 	ubyte[16] glyph = charToGlyph(c);
 
 	/* Go through each row of the glyph,
@@ -79,8 +81,8 @@ void plotChr(pixel fore, pixel back, char c, uint x, uint y) {
 	 * 1 => pixel-foreground. 0 => pixel-background.
 	 * Finally, inverse x.
 	 */
-	for (uint i = 0; i < 16; i++) {
-		for (uint j = 0; j < 8; j++) {
+	for (ulong i = 0; i < 16; i++) {
+		for (ulong j = 0; j < 8; j++) {
 			if ((glyph[i] >> j & 1) == 1)
 				plotPixel(fore, x + 7 - j, i + y);
 			else
@@ -89,7 +91,7 @@ void plotChr(pixel fore, pixel back, char c, uint x, uint y) {
 	}
 }
 
-void scrollScreen(uint amount, uint offsetFromBottom = 0) {
+void scrollScreen(ulong amount, ulong offsetFromBottom = 0) {
 	buffer.address[0..((buffer.height - amount - offsetFromBottom) * buffer.pitch)] 
 		= buffer.address[amount * buffer.pitch..(buffer.height - offsetFromBottom) * buffer.pitch];
 }

@@ -1,13 +1,12 @@
 module syscalls;
 
 /* OryxOS System Calls
- * these are all the syscalls that OryxOS provides
+ * These are all the syscalls that OryxOS provides
  * to userspace
  */
 
-extern (C) void syscallPutStr(char* str) {
-    import lib.util.console : putStr;
-    import lib.util.string : fromCString;
+extern (C) void syscallPutChr(char chr, uint col) {
+    import lib.util.console : putChr;
 
-    putStr(fromCString(str), 0x000000);
+    putChr(chr, col);
 }

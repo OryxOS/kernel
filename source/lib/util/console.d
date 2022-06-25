@@ -11,10 +11,10 @@ static immutable pixel[4] lightTheme = [0xFDFAEF, 0x3A4D53, 0x00866B, 0xEDEDED];
 // Control Structure
 private struct Console {
 	bool showCursor;
-	uint posX; 
-	uint posY;
-	uint maxX;
-	uint maxY;
+	ulong posX; 
+	ulong posY;
+	ulong maxX;
+	ulong maxY;
 
 	this(FrameBufferInfo fb) {
 		this.maxX = fb.width - fb.width % 8;

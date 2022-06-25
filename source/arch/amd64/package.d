@@ -1,6 +1,6 @@
 module arch.amd64;
 
-import lib.stivale;
+import lib.limine;
 import lib.util.types;
 import lib.util.console;
 
@@ -17,16 +17,17 @@ import arch.acpi.madt       : initMadt;
 
 extern extern (C) void initSyscalls();
 
-void initArch(StivaleInfo* stivale) {
+void initArch(MemoryMapResponse* limineMap, XSDTPointerResponse* xsdtPointer, KernelAddressResponse* kernelAddress) {
 	writefln("\nAmd64 Init:");
 
 	initGdt();
 	initIdt();
 	initTss();
 
-	initVmm(stivale);
+	initVmm(limineMap, kernelAddress);
 
-	initAcpi(stivale);
+	initAcpi(xsdtPointer);
+
 	initMadt();
 
 	disablePic();
