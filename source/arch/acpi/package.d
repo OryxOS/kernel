@@ -1,8 +1,8 @@
 module arch.acpi;
 
 import lib.limine;
-import lib.util.types;
-import lib.util.console;
+import au.types;
+import io.console;
 
 import common.memory;
 

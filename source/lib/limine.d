@@ -1,8 +1,8 @@
 module lib.limine;
 
-import lib.util.types;
-import lib.util.string;
-import lib.util.console;
+import au.types;
+import au.string;
+import io.console;
 
 import common.memory.map;
 

@@ -5,10 +5,10 @@ module shell;
  * nice for testing parts of the kernel
  */
 
-import lib.util.heap;
-import lib.util.types;
-import lib.util.string;
-import lib.util.console;
+import common.memory.heap;
+import au.types;
+import au.string;
+import io.console;
 
 import io.framebuffer;
 

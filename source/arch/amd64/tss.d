@@ -1,8 +1,8 @@
 module arch.amd64.tss;
 
-import lib.util.heap;
-import lib.util.types;
-import lib.util.console;
+import common.memory.heap;
+import au.types;
+import io.console;
 
 import arch.amd64.gdt;
 

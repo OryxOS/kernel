@@ -1,6 +1,6 @@
 import lib.limine;
-import lib.util.string;
-import lib.util.console;
+import au.string;
+import io.console;
 
 import shell                   : shellMain;
 import io.framebuffer          : initFrameBuffer;

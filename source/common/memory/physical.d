@@ -7,11 +7,11 @@ module commom.memory.physical;
  */
 
 import lib.limine;
-import lib.util.math;
-import lib.util.types;
-import lib.util.result;
-import lib.util.console;
-import lib.util.bitmap;
+import au.math;
+import au.types;
+import au.result;
+import io.console;
+import au.bitmap;
 
 import common.memory;
 import common.memory.map;

@@ -1,6 +1,6 @@
 deprecated("Compiler intrinsics. Do not invoke") module lib.runtime.memory;
 
-import lib.util.types;
+import au.types;
 
 version (X86_64) {
 	// `rep movsb` memcpy implementation

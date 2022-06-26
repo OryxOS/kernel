@@ -7,10 +7,10 @@ module common.memory.alloc.bitslab;
  * and other metadata
  */
 
-import lib.util.types;
-import lib.util.result;
-import lib.util.bitmap;
-import lib.util.console;
+import au.types;
+import au.result;
+import au.bitmap;
+import io.console;
 
 version(X86_64) import arch.amd64.memory;
 

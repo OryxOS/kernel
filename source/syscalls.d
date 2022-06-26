@@ -6,7 +6,7 @@ module syscalls;
  */
 
 extern (C) void syscallPutChr(char chr, uint col) {
-    import lib.util.console : putChr;
+    import io.console : putChr;
 
     putChr(chr, col);
 }

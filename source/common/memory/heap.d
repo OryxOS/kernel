@@ -1,12 +1,12 @@
-module lib.util.heap;
+module common.memory.heap;
 
 /* OryxOS Heap Allocation Library
  * This is library of useful heap allocation
  * functions and structures
  */
 
-import lib.util.types;
-import lib.util.console;
+import au.types;
+import io.console;
 
 import common.memory.alloc.bitslab;
 import arch.amd64.memory;

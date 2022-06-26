@@ -4,7 +4,7 @@ module arch.amd64.pic;
  * This code has only 1 job, and that is to correctly disable the PIC
  */
 
-import lib.util.console;
+import io.console;
 
 import arch.amd64.cpu;
 

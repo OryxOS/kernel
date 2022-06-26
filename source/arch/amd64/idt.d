@@ -7,8 +7,8 @@ module arch.amd64.idt;
  * file being the actual logic
  */
 
-import lib.util.types;
-import lib.util.console;
+import au.types;
+import io.console;
 
 import arch.amd64.gdt                     : KernelCodeSegment;
 import arch.amd64.drivers.legacy.keyboard : keyboardHandler;

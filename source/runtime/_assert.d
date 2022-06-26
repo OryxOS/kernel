@@ -1,9 +1,9 @@
 deprecated("Compiler intrinsics. Do not invoke") module lib.util.runtime._assert;
 
-import lib.util.string;
-import lib.util.console;
+import au.string;
+import io.console;
 
-// ``assert`` function
+// called on assert()
 extern (C) void __assert(const char* exp, const char* file, uint line) {
 	putChr('[');
 	putChr('!', theme[2]);

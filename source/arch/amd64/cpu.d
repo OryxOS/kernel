@@ -1,7 +1,7 @@
 module arch.amd64.cpu;
 
-import lib.util.types;
-import lib.util.console;
+import au.types;
+import io.console;
 
 import common.memory;
 import arch.amd64.memory;

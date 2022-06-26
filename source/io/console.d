@@ -1,6 +1,6 @@
-module lib.util.console;
+module io.console;
 
-import lib.util.types;
+import au.types;
 
 import io.framebuffer;
 import io.framebuffer.fancy;

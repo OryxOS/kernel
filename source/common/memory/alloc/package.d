@@ -1,6 +1,6 @@
 module common.memory.alloc;
 
-import lib.util.console;
+import io.console;
 
 import common.memory.alloc.bitslab;
 

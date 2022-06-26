@@ -1,8 +1,8 @@
 module arch.amd64;
 
 import lib.limine;
-import lib.util.types;
-import lib.util.console;
+import au.types;
+import io.console;
 
 import arch.amd64.gdt       : initGdt;
 import arch.amd64.idt       : initIdt;

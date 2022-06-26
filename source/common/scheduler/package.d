@@ -2,10 +2,10 @@ module common.scheduler;
 
 import lib.elf;
 import lib.limine;
-import lib.util.math; 
-import lib.util.types;
-import lib.util.string;
-import lib.util.console;
+import au.math; 
+import au.types;
+import au.string;
+import io.console;
 
 import common.memory;
 import common.memory.physical;

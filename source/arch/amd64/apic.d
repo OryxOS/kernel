@@ -2,8 +2,8 @@ module arch.amd64.apic;
 
 import core.volatile;
 
-import lib.util.types;
-import lib.util.console;
+import au.types;
+import io.console;
 
 import common.memory;
 import arch.acpi.madt;

@@ -6,8 +6,8 @@ module arch.amd64.gdt;
  * very simplistic and unflexible.
  */
 
-import lib.util.types;
-import lib.util.console;
+import au.types;
+import io.console;
 
 private struct GdtEntry {
 	align (1):

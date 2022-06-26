@@ -1,10 +1,10 @@
 module arch.amd64.memory;
 
 import lib.limine;
-import lib.util.math;
-import lib.util.types;
-import lib.util.result;
-import lib.util.console;
+import au.math;
+import au.types;
+import au.result;
+import io.console;
 
 import common.memory;
 import common.memory.map;
