@@ -1,6 +1,6 @@
 module arch.amd64.tss;
 
-import common.memory.heap;
+import memory.heap;
 import au.types;
 import io.console;
 

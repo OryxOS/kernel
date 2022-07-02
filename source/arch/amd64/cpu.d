@@ -3,9 +3,9 @@ module arch.amd64.cpu;
 import au.types;
 import io.console;
 
-import common.memory;
+import memory;
 import arch.amd64.memory;
-import common.memory.physical;
+import memory.physical;
 
 // General function relating to Amd64 CPUs
 

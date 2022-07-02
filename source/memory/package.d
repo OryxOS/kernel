@@ -1,4 +1,4 @@
-module common.memory;
+module memory;
 
 // Arch-independant constants
 enum PhysOffset = 0xFFFF800000000000;    // Oryx is a higher half kernel (>PML4:256)

@@ -5,7 +5,7 @@ module shell;
  * nice for testing parts of the kernel
  */
 
-import common.memory.heap;
+import memory.heap;
 import au.types;
 import au.string;
 import io.console;

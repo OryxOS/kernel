@@ -1,4 +1,4 @@
-module common.memory.alloc.bitslab;
+module memory.alloc.bitslab;
 
 /* OryxOS BitSlab (Bitmap + Slab) Allocator
  * The BitSlab allocator consists of a linked list of 

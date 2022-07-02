@@ -1,11 +1,11 @@
 module arch.acpi.madt;
 
-import common.memory.heap;
+import memory.heap;
 import au.types;
 import io.console;
 
 import arch.acpi;
-import common.memory;
+import memory;
 
 /* OryxOS MADT Management
  * The Madt is a stucture that contains information

@@ -1,4 +1,4 @@
-module commom.memory.physical;
+module memory.physical;
 
 /* OryxOS Amd64 Physical Memory Manager
  * This is oryxOS's physical memory manager, it allocates and frees physical memory
@@ -13,8 +13,8 @@ import au.result;
 import io.console;
 import au.bitmap;
 
-import common.memory;
-import common.memory.map;
+import memory;
+import memory.map;
 
 // Cannot use PageSize - cyclical dependacies
 version (X86_64) private enum BlockSize = 0x1000;

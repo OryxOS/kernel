@@ -4,7 +4,7 @@ import lib.limine;
 import au.types;
 import io.console;
 
-import common.memory;
+import memory;
 
 /* OryxOS ACPI initialisation
  * This module contains methods for parsing the initial ACPI tables,

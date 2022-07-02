@@ -5,7 +5,7 @@ import core.volatile;
 import au.types;
 import io.console;
 
-import common.memory;
+import memory;
 import arch.acpi.madt;
 
 /* OryxOS APIC management

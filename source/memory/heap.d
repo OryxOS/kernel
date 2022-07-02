@@ -1,4 +1,4 @@
-module common.memory.heap;
+module memory.heap;
 
 /* OryxOS Heap Allocation Library
  * This is library of useful heap allocation
@@ -8,7 +8,7 @@ module common.memory.heap;
 import au.types;
 import io.console;
 
-import common.memory.alloc.bitslab;
+import memory.alloc.bitslab;
 import arch.amd64.memory;
 
 /// Allocates space for an object on the heap

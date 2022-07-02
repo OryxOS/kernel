@@ -1,8 +1,8 @@
-module common.memory.alloc;
+module memory.alloc;
 
 import io.console;
 
-import common.memory.alloc.bitslab;
+import memory.alloc.bitslab;
 
 void initAlloc() {
 	writefln("\nAllocator Init:");

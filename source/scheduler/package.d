@@ -1,4 +1,4 @@
-module common.scheduler;
+module scheduler;
 
 import lib.elf;
 import lib.limine;
@@ -7,9 +7,9 @@ import au.types;
 import au.string;
 import io.console;
 
-import common.memory;
-import common.memory.heap;
-import common.memory.physical;
+import memory;
+import memory.heap;
+import memory.physical;
 
 version (X86_64) import arch.amd64.memory;
 
@@ -80,8 +80,9 @@ struct Process {
 //         Instance         //
 //////////////////////////////
 
+// Actual process structures
 private __gshared LinkedList!(Process) processes = LinkedList!(Process)();
-private __gshared ulong currentPID;
+private __gshared ulong activePID;
 
 void initScheduler(ModuleResponse* limineModules) {
 
@@ -99,18 +100,18 @@ void initScheduler(ModuleResponse* limineModules) {
 
 	processes[0].start();
 
-	currentPID = 0;
+	activePID = 0;
 }
 
 // TODO: priorities
-extern (C) void syscallYeild(VirtAddress execPoint, VirtAddress stack) {
-	processes[currentPID].execPoint = execPoint;
-	processes[currentPID].stack = stack;
+void switchNext(VirtAddress execPoint, VirtAddress stack) {
+	processes[activePID].execPoint = execPoint;
+	processes[activePID].stack = stack;
 
-	if (currentPID == processes.getLength() - 1)
-		currentPID = 0;
+	if (activePID == processes.getLength() - 1)
+		activePID = 0;
 	else
-		currentPID++;
+		activePID++;
 	
-	processes[currentPID].switchTo();
+	processes[activePID].switchTo();
 }

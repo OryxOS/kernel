@@ -4,7 +4,7 @@ import au.types;
 import au.string;
 import io.console;
 
-import common.memory.map;
+import memory.map;
 
 // Request IDs
 enum FrameBufferRequestID = [0xc7b1dd30df4c8b88, 0x0a82e883a194f07b, 0x9d5827dcd881dd75, 0xa3148604f6fab11b];

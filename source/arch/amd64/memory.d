@@ -6,9 +6,9 @@ import au.types;
 import au.result;
 import io.console;
 
-import common.memory;
-import common.memory.map;
-import common.memory.physical;
+import memory;
+import memory.map;
+import memory.physical;
 
 /* OryxOS Amd64 Virtual Memory Manager
  *

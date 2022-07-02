@@ -2,11 +2,11 @@ import lib.limine;
 import au.string;
 import io.console;
 
-import shell                   : shellMain;
-import io.framebuffer          : initFrameBuffer;
-import common.memory.physical  : initPmm;
-import common.memory.alloc     : initAlloc;
-import common.scheduler        : initScheduler;
+import shell           : shellMain;
+import io.framebuffer  : initFrameBuffer;
+import memory.physical : initPmm;
+import memory.alloc    : initAlloc;
+import scheduler       : initScheduler;
 
 version (X86_64) import arch.amd64;
 version (X86_64) import arch.amd64.drivers.legacy.keyboard;

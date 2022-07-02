@@ -1,4 +1,4 @@
-module common.memory.map;
+module memory.map;
 
 import lib.limine;
 
