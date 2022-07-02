@@ -119,7 +119,7 @@ struct LinkedList(T) {
 
     /// Add an element to the end of the list
     void append(T value) {
-		// Find append handled differently
+		// First append handled differently
 		if (this.storage == null) {
 			this.storage = newObj!(Node)();
 			

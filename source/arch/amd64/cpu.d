@@ -88,34 +88,3 @@ void enableInterrupts(bool enable) {
 	else
 		asm { cli; }
 }
-
-/* Context management
- * A Context is the environment in which a CPU operates
- * It consists of registers, the stack and page tables.
- * Contexts are the most basic taking structure
- */
-
-// Amd64 registers
-struct Registers {
-    // General registers
-    ulong rax;
-    ulong rbx;
-    ulong rcx;
-    ulong rdx;
-
-    // Additional registers
-    ulong r8;
-    ulong r9;
-    ulong r10;
-    ulong r11;
-    ulong r12;
-    ulong r15;
-
-    // Other
-    ulong rip;
-    ulong rsi;
-    ulong rdi;
-    ulong rbp;
-
-    ulong rflags;
-}

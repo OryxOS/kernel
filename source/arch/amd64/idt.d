@@ -178,10 +178,11 @@ private __gshared string[] exceptions = [
 
 // Universal exception handler
 extern (C) void exceptionHandler(InterruptFrame* frame) {
-	showCursor(false);
-	panic("%s exception occured - Error code: %d
+	writefln("%s exception occured - Error code: %d
 		RAX: %h\tRBX: %h\tRCX: %h\tRDX: %h
 		RIP: %h\tRSP: %h\tRDI: %h\tRSI: %h", exceptions[frame.ident], frame.error, 
 		frame.rax, frame.rbx, frame.rcx, frame.rdx, frame.rip, 
 		frame.rsp, frame.rdi, frame.rsi);
+
+	asm { hlt; }
 }

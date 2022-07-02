@@ -36,6 +36,8 @@ extern (C) void main() {
 
 	initArch(memoryMapRequest.response, xsdtPointerRequest.response, kernelAddressRequest.response);
 
+	//shellMain();
+
 	initScheduler(moduleRequest.response);
 
 	while (1) {}

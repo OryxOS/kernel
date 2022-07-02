@@ -13,6 +13,8 @@ stackInfo:
 
 align 16
 syscallTable:
+	extern syscallYeild
+	dq syscallYeild
 	extern syscallPutChr
 	dq syscallPutChr
 
@@ -20,15 +22,15 @@ section .text
 
 initSyscalls:
 	; Enable `syscall` and `sysret`
-	mov RCX, 0xC0000082 
+	mov rcx, 0xC0000082 
 	wrmsr               
-	mov RCX, 0xC0000080 
+	mov rcx, 0xC0000080 
 	rdmsr               
-	or EAX, 1           
+	or eax, 1           
 	wrmsr               
-	mov RCX, 0xC0000081 
+	mov rcx, 0xC0000081 
 	rdmsr               
-	mov EDX, 0x00180008 
+	mov edx, 0x00180008 
 	wrmsr               
 
 	; Set the KernelGSBase MSR to point to the Stack Info struct
@@ -39,52 +41,35 @@ initSyscalls:
 	wrmsr
 
 	; Set the syscall handler		
-	mov RCX, 0xc0000082
-	mov RDX, syscallHandler
-	shr RDX, 32
-	mov RAX, syscallHandler
+	mov rcx, 0xc0000082
+	mov rdx, syscallHandler
+	shr rdx, 32
+	mov rax, syscallHandler
 	wrmsr
 	ret
+
 
 syscallHandler:
 	swapgs
 	mov gs:8, rsp ; Save user stack
 	mov rsp, gs:0 ; Switch to kernel stack
 
-	push rax
- 	push rbx
  	push rcx
- 	push rdx
- 	push rbp
- 	push rsi
- 	push rdi
- 	push r8
- 	push r9
- 	push r10
- 	push r11
- 	push r12
- 	push r13
-	push r14
-	push r15
 
+	; Check if syscall is `yield`
+	cmp R10, 0
+	je yieldSyscall
+	jne normalSyscall
+
+	yieldSyscall:
+	mov rdi, rcx  ; Save process execution point
+	mov rsi, gs:8 ; Save process stack address
+
+	normalSyscall:
     lea rbx, [rel syscallTable]
     call [rbx + r10 * 8]
 
-	pop r15
-	pop r14
-	pop r13
-	pop r12
-	pop r11
-	pop r10
-	pop r9
-	pop r8
-	pop rdi
-	pop rsi
-	pop rbp
-	pop rdx
 	pop rcx
-	pop rbx
-	pop rax
 
 	mov gs:0, rsp   ; Save kernel stack
 	mov rsp, [gs:8] ; Switch to user stack

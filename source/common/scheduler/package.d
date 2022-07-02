@@ -8,18 +8,18 @@ import au.string;
 import io.console;
 
 import common.memory;
+import common.memory.heap;
 import common.memory.physical;
 
-version (X86_64) import arch.amd64.cpu;
 version (X86_64) import arch.amd64.memory;
 
 extern extern (C) void jumpUserSpace(VirtAddress start, VirtAddress stack);
+extern extern (C) void returnUserSpace(VirtAddress start, VirtAddress stack);
 
 struct Process {
-	Registers    registers;
 	AddressSpace addressSpace;
 	VirtAddress  stack;
-	VirtAddress  entry;
+	VirtAddress  execPoint;
 
 
 	// Creates a new userspace context from an ELF file
@@ -29,8 +29,8 @@ struct Process {
 
 		usize stackBottom = cast(usize) newBlock().unwrapResult("Not enough space for stack");
 
-		this.stack = cast(VirtAddress) (stackBottom + PageSize);
-		this.entry = cast(VirtAddress) (header.entry);
+		this.stack = cast(VirtAddress) stackBottom + PageSize;
+		this.execPoint = cast(VirtAddress) header.entry;
 
 		// Map kernel and higher half
 		auto procTables = cast(ulong[512]*) this.addressSpace.pml4;
@@ -57,27 +57,60 @@ struct Process {
 
 				for (usize j = 0; j < pageCount; j++) {
 					this.addressSpace.mapPage(cast(VirtAddress) (virtStart + j * PageSize), cast(PhysAddress) (physStart + j * 4096),
-								  EntryFlags.Present | EntryFlags. Writeable | EntryFlags.UserAccessable);
+								  EntryFlags.Present | EntryFlags.Writeable | EntryFlags.UserAccessable);
 				}
 			}
 		}
 	}
 
+	// Only used when doing a fresh jump to userspace
 	void start() {
 		this.addressSpace.setActive();
-		jumpUserSpace(this.entry, this.stack);
+		jumpUserSpace(this.execPoint, this.stack);
+	}
+
+	// Used in yield syscall
+	void switchTo() {
+		this.addressSpace.setActive();
+		returnUserSpace(this.execPoint, this.stack);
 	}
 }
 
+//////////////////////////////
+//         Instance         //
+//////////////////////////////
+
+private __gshared LinkedList!(Process) processes = LinkedList!(Process)();
+private __gshared ulong currentPID;
+
 void initScheduler(ModuleResponse* limineModules) {
 
-	LimineFile* shellModule = limineModules.getModule("/applications/shell.elf");
+	LimineFile* yesModule = limineModules.getModule("/applications/yes.elf");
+	LimineFile* noModule = limineModules.getModule("/applications/no.elf");
 
-	if (shellModule == null)
-		panic("No Shell found!");
+	if (yesModule == null || noModule == null)
+		panic("No yes or no found!");
 
-	auto shellElfHeader = cast(Elf64Header*) shellModule.address;
-	auto shellContext = Process(shellElfHeader);
+	processes.append(Process(cast(Elf64Header*) yesModule.address));
+	processes.append(Process(cast(Elf64Header*) noModule.address));
 
-	shellContext.start();
+	writefln("Yes entrypoint: %h", processes[0].execPoint);
+	writefln("No entrypoint: %h", processes[1].execPoint);
+
+	processes[0].start();
+
+	currentPID = 0;
+}
+
+// TODO: priorities
+extern (C) void syscallYeild(VirtAddress execPoint, VirtAddress stack) {
+	processes[currentPID].execPoint = execPoint;
+	processes[currentPID].stack = stack;
+
+	if (currentPID == processes.getLength() - 1)
+		currentPID = 0;
+	else
+		currentPID++;
+	
+	processes[currentPID].switchTo();
 }

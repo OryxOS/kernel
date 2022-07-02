@@ -2,6 +2,8 @@ module arch.amd64.drivers.legacy.keyboard;
 
 // Legacy PS2 keyboard support
 
+import io.console;
+
 import arch.amd64.apic : endInterrupt;
 import arch.amd64.cpu  : readByte;
 
@@ -85,6 +87,11 @@ private extern (C) void handler() {
 		default:                                                 break;
 	}
 
+	if (input == 35 && ctrlActive) {
+		writefln("Halt command triggered! System has been placed in an endless loop  ");
+		while(1) {}
+	}
+
 	if (input > 57)
 		return;
 
@@ -142,7 +149,7 @@ extern (C) void keyboardHandler() {
 		pop RCX            ;
 		pop RBX            ;
 		pop RAX            ;
-		
+
 		iretq              ; 
 	}
 }

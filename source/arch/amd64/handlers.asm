@@ -4,7 +4,7 @@ extern exceptionHandler;
 
 %macro handler 1
 	; Interrupt frame already on the stack
-	push 0			; Error code
+	push 0 ; Error code
 	push %1
 	push rax
  	push rbx
@@ -21,8 +21,10 @@ extern exceptionHandler;
  	push r13
 	push r14
 	push r15
+
 	mov rdi, rsp
 	call exceptionHandler
+
 	push r15
 	push r14
 	push r13
@@ -38,6 +40,7 @@ extern exceptionHandler;
 	push rcx
 	push rbx
 	push rax
+
 	add rsp, 16
 	iret
 %endmacro
