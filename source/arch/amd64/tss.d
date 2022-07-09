@@ -1,10 +1,15 @@
 module arch.amd64.tss;
 
-import memory.heap;
 import au.types;
+
 import io.console;
 
+import lib.collections;
+
+import memory.allocator;
+
 import arch.amd64.gdt;
+import arch.amd64.memory;
 
 /* OryxOS Amd64 TSS implementation
  * The TSS is a legacy structure that was peviously
@@ -12,15 +17,15 @@ import arch.amd64.gdt;
  * purpose is for switching between privilege rings
  */
 
-align (16) private struct Tss {
+align private struct Tss {
 	align (1):
-	uint     reserved1;
-	ulong[3] privStackTable;
-	ulong    reserved2;
-	ulong[7] intStackTable;
-	ulong    reserved3;
-	ushort   reserved4;
-	ushort   ioMapAddr;
+	uint reserved1;
+	ulong[3] priv_stack_tbl;
+	ulong reserved2;
+	ulong[7] int_stack_tbl;
+	ulong reserved3;
+	ushort reserved4;
+	ushort io_map_addr;
 }
 
 //////////////////////////////
@@ -29,7 +34,7 @@ align (16) private struct Tss {
 
 private __gshared Tss tss;
 
-void initTss() {
-	tss.privStackTable[0] = cast(ulong) newArr!(ubyte)(4096);
-	loadTss(cast(usize) &tss);
+void init_tss() {
+	tss.priv_stack_tbl[0] = cast(ulong) new_arr!(ubyte)(PageSize) + PageSize;
+	load_tss(cast(usize) &tss);
 }

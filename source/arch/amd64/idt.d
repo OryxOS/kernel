@@ -8,40 +8,41 @@ module arch.amd64.idt;
  */
 
 import au.types;
+
 import io.console;
 
 import arch.amd64.gdt                     : KernelCodeSegment;
-import arch.amd64.drivers.legacy.keyboard : keyboardHandler;
+import arch.amd64.drivers.legacy.keyboard : kbd_handler;
 
 private alias Handler = extern (C) void function();
 
 private enum Gate: ubyte {
-	Interrupt = 0b000_01110,
-	Trap      = 0b000_00111,
-	Task      = 0b000_00101,
+	Interrupt = 0b00001110,
+	Trap      = 0b00000111,
+	Task      = 0b00000101,
 }
 
 private enum Present = 0b10000000;
 
 private struct IdtEntry {
 	align (1):
-	ushort lowBase;
-	ushort csSelector;
-	ubyte  ist;
-	ubyte  attributes;
-	ushort midBase;
-	uint   highBase;
-	uint   reserved;
+	ushort low_base;
+	ushort cs_selector;
+	ubyte ist;
+	ubyte attributes;
+	ushort mid_base;
+	uint high_base;
+	uint reserved;
 
-	this(Handler handler, ubyte ring, Gate gate) {
+	this(Handler handler, ubyte ist, ubyte ring, Gate gate) {
 		usize address = cast(usize) handler;
 
-		this.lowBase    = cast(ushort) address;
-		this.csSelector = KernelCodeSegment;
-		this.ist        = 0;
-		this.attributes = Present | gate | (ring & 0b00000011);
-		this.midBase    = cast(ushort) (address >> 16);
-		this.highBase   = cast(uint)   (address >> 32);
+		this.low_base    = cast(ushort) address;
+		this.cs_selector = KernelCodeSegment;
+		this.ist         = ist;
+		this.attributes  = Present | gate | (ring & 0b00000011);
+		this.mid_base    = cast(ushort) (address >> 16);
+		this.high_base   = cast(uint)   (address >> 32);
 	}
 }
 
@@ -52,7 +53,8 @@ private struct IdtPointer {
 }
 
 // Useful information for debugging
-private struct InterruptFrame {
+private align struct InterruptFrame {
+	align (1):
 	ulong r15;
 	ulong r14;
 	ulong r13;
@@ -83,62 +85,62 @@ private struct InterruptFrame {
 //         Instance         //
 //////////////////////////////
 
-private __gshared IdtEntry[256] idtEntries;
-private __gshared IdtPointer    idtPointer;
+private __gshared align IdtEntry[256] idt_entries;
+private __gshared IdtPointer idt_ptr;
 
-void initIdt() {
-	idtPointer = IdtPointer(idtEntries.sizeof - 1, idtEntries.ptr);
+void init_idt() {
+	idt_ptr = IdtPointer(idt_entries.sizeof - 1, idt_entries.ptr);
 
 	// Set all exception handlers
-	idtEntries[0]  = IdtEntry(&divZeroHandler,       0, Gate.Interrupt);
-	idtEntries[1]  = IdtEntry(&debugHandler,         0, Gate.Interrupt);
-	idtEntries[2]  = IdtEntry(&nmiHandler,           0, Gate.Interrupt);
-	idtEntries[3]  = IdtEntry(&breakpointHandler,    0, Gate.Interrupt);
-	idtEntries[4]  = IdtEntry(&overflowHandler,      0, Gate.Interrupt);
-	idtEntries[5]  = IdtEntry(&boundRangeHandler,    0, Gate.Interrupt);
-	idtEntries[6]  = IdtEntry(&invOpcodeHandler,     0, Gate.Interrupt);
-	idtEntries[7]  = IdtEntry(&noDeviceHandler,      0, Gate.Interrupt);
-	idtEntries[8]  = IdtEntry(&doubleFaultHandler,   0, Gate.Interrupt);
-	idtEntries[10] = IdtEntry(&invTssHandler,        0, Gate.Interrupt);
-	idtEntries[11] = IdtEntry(&segNotPresentHandler, 0, Gate.Interrupt);
-	idtEntries[12] = IdtEntry(&ssFaultHandler,       0, Gate.Interrupt);
-	idtEntries[13] = IdtEntry(&gpfHandler,           0, Gate.Interrupt);
-	idtEntries[14] = IdtEntry(&pageFaultHandler,     0, Gate.Interrupt);
-	idtEntries[16] = IdtEntry(&fpuFaultHandler,      0, Gate.Interrupt);
-	idtEntries[17] = IdtEntry(&alignCheckHandler,    0, Gate.Interrupt);
-	idtEntries[18] = IdtEntry(&machineCheckHandler,  0, Gate.Interrupt);
-	idtEntries[19] = IdtEntry(&simdFaultHandler,     0, Gate.Interrupt);
-	idtEntries[20] = IdtEntry(&virtFaultHandler,     0, Gate.Interrupt);
-	idtEntries[30] = IdtEntry(&secFaultHandler,      0, Gate.Interrupt);
+	idt_entries[0]  = IdtEntry(&div_zero_handler,      0, 0, Gate.Interrupt);
+	idt_entries[1]  = IdtEntry(&debug_handler,         0, 0, Gate.Interrupt);
+	idt_entries[2]  = IdtEntry(&nmi_handler,           0, 0, Gate.Interrupt);
+	idt_entries[3]  = IdtEntry(&breakpoint_handler,    0, 0, Gate.Interrupt);
+	idt_entries[4]  = IdtEntry(&overflow_handler,      0, 0, Gate.Interrupt);
+	idt_entries[5]  = IdtEntry(&bound_range_handler,   0, 0, Gate.Interrupt);
+	idt_entries[6]  = IdtEntry(&invalid_op_handler,    0, 0, Gate.Interrupt);
+	idt_entries[7]  = IdtEntry(&no_device_handler,     0, 0, Gate.Interrupt);
+	idt_entries[8]  = IdtEntry(&double_fault_handler,  0, 0, Gate.Interrupt);
+	idt_entries[10] = IdtEntry(&invalid_tss_handler,   0, 0, Gate.Interrupt);
+	idt_entries[11] = IdtEntry(&seg_absent_handler,    0, 0, Gate.Interrupt);
+	idt_entries[12] = IdtEntry(&ss_fault_handler,      0, 0, Gate.Interrupt);
+	idt_entries[13] = IdtEntry(&gpf_handler,           0, 0, Gate.Interrupt);
+	idt_entries[14] = IdtEntry(&page_fault_handler,    0, 0, Gate.Interrupt);
+	idt_entries[16] = IdtEntry(&fpu_fault_handler,     0, 0, Gate.Interrupt);
+	idt_entries[17] = IdtEntry(&align_check_handler,   0, 0, Gate.Interrupt);
+	idt_entries[18] = IdtEntry(&machine_check_handler, 0, 0, Gate.Interrupt);
+	idt_entries[19] = IdtEntry(&simd_fault_handler,    0, 0, Gate.Interrupt);
+	idt_entries[20] = IdtEntry(&virt_fault_handler,    0, 0, Gate.Interrupt);
+	idt_entries[30] = IdtEntry(&sec_fault_handler,     0, 0, Gate.Interrupt);
 
 	// Legacy devices
-	idtEntries[33] = IdtEntry(&keyboardHandler,      0, Gate.Interrupt);
+	idt_entries[33] = IdtEntry(&kbd_handler, 0, 0, Gate.Interrupt);
 	
-	asm { lidt [idtPointer]; }
-	log(1, "IDT initialized with %d handlers", idtEntries.length);
+	asm { lidt [idt_ptr]; }
+	log(1, "IDT initialized with %d handlers", idt_entries.length);
 }
 
 // Assembly stubs
-private extern extern (C) void divZeroHandler();
-private extern extern (C) void debugHandler();
-private extern extern (C) void nmiHandler();
-private extern extern (C) void breakpointHandler();
-private extern extern (C) void overflowHandler();
-private extern extern (C) void boundRangeHandler();
-private extern extern (C) void invOpcodeHandler();
-private extern extern (C) void noDeviceHandler();
-private extern extern (C) void doubleFaultHandler();
-private extern extern (C) void invTssHandler();
-private extern extern (C) void segNotPresentHandler();
-private extern extern (C) void ssFaultHandler();
-private extern extern (C) void gpfHandler();
-private extern extern (C) void pageFaultHandler();
-private extern extern (C) void fpuFaultHandler();
-private extern extern (C) void alignCheckHandler();
-private extern extern (C) void machineCheckHandler();
-private extern extern (C) void simdFaultHandler();
-private extern extern (C) void virtFaultHandler();
-private extern extern (C) void secFaultHandler();
+private extern extern (C) void div_zero_handler();
+private extern extern (C) void debug_handler();
+private extern extern (C) void nmi_handler();
+private extern extern (C) void breakpoint_handler();
+private extern extern (C) void overflow_handler();
+private extern extern (C) void bound_range_handler();
+private extern extern (C) void invalid_op_handler();
+private extern extern (C) void no_device_handler();
+private extern extern (C) void double_fault_handler();
+private extern extern (C) void invalid_tss_handler();
+private extern extern (C) void seg_absent_handler();
+private extern extern (C) void ss_fault_handler();
+private extern extern (C) void gpf_handler();
+private extern extern (C) void page_fault_handler();
+private extern extern (C) void fpu_fault_handler();
+private extern extern (C) void align_check_handler();
+private extern extern (C) void machine_check_handler();
+private extern extern (C) void simd_fault_handler();
+private extern extern (C) void virt_fault_handler();
+private extern extern (C) void sec_fault_handler();
 
 // Names
 private __gshared string[] exceptions = [
@@ -152,16 +154,16 @@ private __gshared string[] exceptions = [
 	"Device not dound",
 	"Double fault",
 	"Invalid",
-	"Invalid Tss",
+	"Invalid TSS",
 	"Segment not present",
-	"Stack segment dault",
+	"Stack segment fault",
 	"General protection",
 	"Pageing",
 	"Invalid",
 	"Floating point",
 	"Alignment check",
 	"Machine check",
-	"Simd",
+	"SIMD",
 	"Virtualization",
 	"Invalid",
 	"Invalid",
@@ -177,12 +179,15 @@ private __gshared string[] exceptions = [
 ];
 
 // Universal exception handler
-extern (C) void exceptionHandler(InterruptFrame* frame) {
-	writefln("%s exception occured - Error code: %d
-		RAX: %h\tRBX: %h\tRCX: %h\tRDX: %h
-		RIP: %h\tRSP: %h\tRDI: %h\tRSI: %h", exceptions[frame.ident], frame.error, 
-		frame.rax, frame.rbx, frame.rcx, frame.rdx, frame.rip, 
-		frame.rsp, frame.rdi, frame.rsi);
+extern (C) void exception_handler(InterruptFrame* frame) {
+	put_chr('[');
+	put_chr('!', colours[2]);
+	put_str("] ");
+
+	writefln("%s exception occured - Error code: %d \n\tRegisters:\n\t\tRAX: %h\n\t\tRBX: %h\n\t\tRCX: %h\n\t\tRDX: %h\n\t\tRIP: %h\n\t\tRSP: %h\n\t\tRDI: %h\n\t\tRSI: %h",
+	         exceptions[frame.ident], frame.error, 
+	         frame.rax, frame.rbx, frame.rcx, frame.rdx, frame.rip, 
+	         frame.rsp, frame.rdi, frame.rsi);
 
 	asm { hlt; }
 }

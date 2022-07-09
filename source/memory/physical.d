@@ -14,75 +14,71 @@ import io.console;
 import au.bitmap;
 
 import memory;
-import memory.map;
 
 // Cannot use PageSize - cyclical dependacies
 version (X86_64) private enum BlockSize = 0x1000;
 
-private __gshared BitMap bitMap;
+private __gshared BitMap bitmap;
 
-void initPmm(MemoryMapResponse* limineMap) {
+void init_pmm(MemoryMapResponse* map) {
 	writefln("\nPmm Init:");
 
-	auto info = RegionInfo(limineMap);
-
 	// 1. Calculate size needed for bitmap
-	usize highestByte = 0;
-	for (usize i = 0; i < info.count; i++) {
-		auto curRegion = info.regions[i];
+	usize top_byte = 0;
+	for (usize i = 0; i < map.count; i++) {
+		auto entry = map.entries[i];
 
-		if (curRegion.type != RegionType.Usable && curRegion.type != RegionType.BootloaderReclaimable)
+		if (entry.type != MemoryMapType.Usable && entry.type != MemoryMapType.BootloaderReclaimable)
 			continue;
 
-		/* Regions cannot simply have their length added
+		/* Entries cannot simply have their length added
 		 * as memory will always have holes, so this
 		 * method is used
 		 */
-		immutable usize top = curRegion.base + curRegion.length;
-		if (top > highestByte)
-			highestByte = top;
+		immutable usize top = entry.base + entry.length;
+		if (top > top_byte)
+			top_byte = top;
 
-		bitMap.size = divRoundUp(highestByte, BlockSize) * 8;
+		bitmap.size = div_round_up(top_byte, BlockSize) * 8;
 	}
 
-	// 2. Find region large enough to fit bitmap
-	for (usize i = 0; i < info.count; i++) {
-		auto curRegion = info.regions[i];
+	// 2. Find entry large enough to fit bitmap
+	for (usize i = 0; i < map.count; i++) {
+		auto entry = map.entries[i];
 
-		// Get a Usable region big enough to fit the bitmap
-		if (curRegion.type != RegionType.Usable || curRegion.length < bitMap.size * 8)
+		// Find a free entry big enough to fit the bitmap
+		if (entry.type != MemoryMapType.Usable || entry.length < bitmap.size * 8)
 			continue;
 		
-		bitMap.map = cast(ubyte*) (curRegion.base + PhysOffset);
+		bitmap.map = cast(ubyte*) (entry.base + PhysOffset);
 
 		// Reserve entire bitmap - Safer than setting entire bitmap as free
-		bitMap.map[0..bitMap.size / 8] = 0xFF;
+		bitmap.map[0..bitmap.size / 8] = 0xFF;
 
-		// Update region info
-		info.regions[i].base   += bitMap.size;
-		info.regions[i].length -= bitMap.size;
+		// Update memory map
+		map.entries[i].base   += bitmap.size;
+		map.entries[i].length -= bitmap.size;
 		
-		log(1, "Bitmap created :: Blocks accounted: %d Size: %h", bitMap.size, bitMap.size * 8);
+		log(1, "Bitmap created :: Blocks accounted: %d Size: %h", bitmap.size, bitmap.size * 8);
 
-		break; // Only need 1 region
+		break;
 	}
 
-	// 3. Correctly populate the Bitmap with usable regions
-	for (usize i = 0; i < info.count; i++) {
-	auto curRegion = info.regions[i];
+	// 3. Correctly populate the bitmap with usable entries
+	for (usize i = 0; i < map.count; i++) {
+	auto entry = map.entries[i];
 
 
-		if(curRegion.type != RegionType.Usable)
-			continue;
+		if(entry.type != MemoryMapType.Usable) continue;
 
-		for (usize j = 0; j < curRegion.length; j += BlockSize) 
-			bitMap.unsetBit((curRegion.base + j) / BlockSize);
+		for (usize j = 0; j < entry.length; j += BlockSize) 
+			bitmap.unset_bit((entry.base + j) / BlockSize);
 	}
 
-	// 4. Set `bitMap.nextFree` to the next available block
-	for (usize i = 0; i < bitMap.size; i++) {
-		if (!bitMap.testBit(i)) {
-			bitMap.nextFree = i;
+	// 4. Set `bitmap.next_free` to the next available block
+	for (usize i = 0; i < bitmap.size; i++) {
+		if (!bitmap.test_bit(i)) {
+			bitmap.next_free = i;
 			break;
 		}
 	}
@@ -97,7 +93,7 @@ enum PmmError {
 	BlockAlreadyFreed,
 	BlockOutOfRange,
 }
-alias PmmResult = Result!(PhysAddress, PmmError);
+alias PmmResult = Result!(void*, PmmError);
 
 /// Returns `count` blocks of memory (zeroed out if chosen)
 /// Params:
@@ -105,57 +101,57 @@ alias PmmResult = Result!(PhysAddress, PmmError);
 /// Returns: 
 /// 	Physical address to the start of the blocks
 /// 	or an error
-PmmResult newBlock(usize count = 1, bool zero = true) {													
-	usize regionStart = bitMap.nextFree;
+PmmResult new_block(usize count = 1, bool zero = true) {													
+	usize start = bitmap.next_free;
 	while (1) {
-		bool  newRegionNeeded;												
+		bool  new_needed;												
 
-		for (usize i = regionStart; i < regionStart + count; i++) {
-			if (i >= bitMap.size) 
+		for (usize i = start; i < start + count; i++) {
+			if (i >= bitmap.size) 
 				return PmmResult(PmmError.NotEnoughMemory);
 
-			if (!bitMap.testBit(i))
-				continue;
+			if (!bitmap.test_bit(i)) continue;
 
-			// Necessary to find a new region
-			regionStart = i;
-			newRegionNeeded = true;
+			// Necessary to find a new entry
+			start = i;
+			new_needed = true;
 			break;
 		}
 		
-		// Check the result - is a new region needed
-		if (newRegionNeeded) {
-			for (; regionStart < bitMap.size; regionStart++) {
-				if (!bitMap.testBit(regionStart))
+		// Check the result - is a new entry needed
+		if (new_needed) {
+			// TODO: replace with foreach
+			for (; start < bitmap.size; start++) {
+				if (!bitmap.test_bit(start))
 					break;
 
-				if (regionStart == bitMap.size) {
+				if (start == bitmap.size) {
 					return PmmResult(PmmError.NotEnoughMemory);
 				}
 			}
 		} else {
-			// Mark region as reserved
-			foreach (i; regionStart..regionStart + count) {
-				bitMap.setBit(i);
+			// Mark entry as reserved
+			foreach (i; start..start + count) {
+				bitmap.set_bit(i);
 			}
 
 			// Zero if asked to
 			if (zero) {
-				ubyte* region = cast(ubyte*) (regionStart * BlockSize + PhysOffset);
-				region[0..(count * BlockSize)] = 0;
+				ubyte* entry = cast(ubyte*) (start * BlockSize + PhysOffset);
+				entry[0..(count * BlockSize)] = 0;
 			}
 
-			// Set `bitMap.nextFree` to the next free region
+			// Set `bitmap.next_free` to the next free entry
 			usize i;
-			for (i = regionStart + count; i < bitMap.size; i++) {
-				if (!bitMap.testBit(i)) {
-					bitMap.nextFree = i;
-					return PmmResult(cast(PhysAddress) (regionStart * BlockSize));
+			for (i = start + count; i < bitmap.size; i++) {
+				if (!bitmap.test_bit(i)) {
+					bitmap.next_free = i;
+					return PmmResult(cast(void*) (start * BlockSize));
 				}
 			}
-			if (i == bitMap.size) {
-				bitMap.full = true;
-				return PmmResult(cast(PhysAddress) (regionStart * BlockSize));
+			if (i == bitmap.size) {
+				bitmap.full = true;
+				return PmmResult(cast(void*) (start * BlockSize));
 			}
 		}
 	}
@@ -163,29 +159,29 @@ PmmResult newBlock(usize count = 1, bool zero = true) {
 
 /// Frees `count` blocks of memory
 /// Params:
-/// 	blockStart = Physical address of the blocks
-/// 	count      = Number of blocks to free
+/// 	start = Physical address of the blocks
+/// 	count = Number of blocks to free
 /// Returns: 
 /// 	Physical address to the start of the blocks
 /// 	or an error
-PmmResult delBlock(PhysAddress blockStart, usize count) {
+PmmResult del_block(void* b_start, usize count = 1) {
 	// Safety checks
-	if (cast(usize) blockStart % BlockSize != 0)
+	if (cast(usize) b_start % BlockSize != 0)
 		return PmmResult(PmmError.AddressNotAligned);
-	if (cast(usize) blockStart / BlockSize + count > bitMap.size)
+	if (cast(usize) b_start / BlockSize + count > bitmap.size)
 		return PmmResult(PmmError.BlockOutOfRange);
 
-	usize start = (cast(usize) blockStart) / BlockSize;
+	usize start = (cast(usize) b_start) / BlockSize;
 
 	for (usize i = start; i < start + count; i++)
-		if (!bitMap.testBit(i))
+		if (!bitmap.test_bit(i))
 			return PmmResult(PmmError.BlockAlreadyFreed);
 
 	for (usize i = start; i < start + count; i++)
-		bitMap.unsetBit(i);
+		bitmap.unset_bit(i);
 
-	if (bitMap.nextFree > start)
-		bitMap.nextFree = start;
+	if (bitmap.next_free > start)
+		bitmap.next_free = start;
 
-	return PmmResult(blockStart);
+	return PmmResult(b_start);
 }

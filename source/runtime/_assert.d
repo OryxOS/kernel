@@ -5,12 +5,16 @@ import io.console;
 
 // called on assert()
 extern (C) void __assert(const char* exp, const char* file, uint line) {
-	putChr('[');
-	putChr('!', theme[2]);
-	putStr("] ");
+	put_chr('[');
+	put_chr('!', colours[2]);
+	put_str("] ");
 
-	writef("[%s:%d] %s", fromCString(file), line, fromCString(exp));
-	
+	writefln("Non-recoverable error has occured at [%s:%d]: \"%s\"", 
+	         from_c_string(file),
+			 line,
+			 from_c_string(exp)
+	);
+
 	// Hang the kernel
 	version(X86_64) {
 		asm {

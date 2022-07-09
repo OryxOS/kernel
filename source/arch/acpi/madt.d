@@ -1,6 +1,6 @@
 module arch.acpi.madt;
 
-import memory.heap;
+import lib.collections;
 import au.types;
 import io.console;
 
@@ -12,14 +12,14 @@ import memory;
  * about all the interrupts controllers in the system
  */
 
-private static immutable char[4] madtSignature = ['A', 'P', 'I', 'C'];
+private static immutable char[4] MadtSignature = ['A', 'P', 'I', 'C'];
 
 private struct Madt {
 	align (1):
 	SdtHeader header;
-	uint      lapicAddr;
-	uint      flags;
-	void*     entries;
+	uint lapic_addr;
+	uint flags;
+	void* entries;
 }
 
 private enum EntryType: ubyte {
@@ -35,35 +35,35 @@ private enum EntryType: ubyte {
 private struct EntryHeader {
 	align (1):
 	EntryType type;
-	ubyte     length;
+	ubyte length;
 }
 
 // Info about a LAPIC-Processor combo
 struct LapicInfo {
 	align (1):
 	EntryHeader header;
-	ubyte  procId;
-	ubyte  apicId;
-	uint   flags;
+	ubyte processor_id;
+	ubyte apicId;
+	uint flags;
 }
 
 // Info about an IO APIC
 struct IoApicInfo {
 	align (1):
 	EntryHeader header;
-	ubyte  ident;
-	ubyte  reserved;
-	uint   address;
-	uint   gsiBase;
+	ubyte ident;
+	ubyte reserved;
+	uint address;
+	uint gsi_base;
 }
 
 // Info about an IO APIC Interrupt Source Override
 struct IoApicIsoInfo {
 	align (1):
 	EntryHeader header;
-	ubyte  busSource;
-	ubyte  irqSource;
-	uint   gsi;
+	ubyte bus_source;
+	ubyte irq_source;
+	uint gsi;
 	ushort flags;
 }
 
@@ -71,36 +71,36 @@ struct IoApicIsoInfo {
 struct IoApicNmiSourceInfo {
 	align (1):
 	EntryHeader header;
-	ubyte  source;
-	ubyte  reserved;
+	ubyte source;
+	ubyte reserved;
 	ushort flags;
-	ubyte  gsi;
+	ubyte gsi;
 }
 
 // Info about a LAPIC Non-Maskable Interrupt
 struct LapicNmiInfo {
 	align (1):
 	EntryHeader header;
-	ubyte  procId;
+	ubyte processor_id;
 	ushort flags;
-	ubyte  ident;
+	ubyte id;
 }
 
 // Contains the 64 bit address of the lapic if available
 private struct LapicAddrOverride {
 	align (1):
 	EntryHeader header;
-	uint   reserved;
-	ulong  address;
+	uint reserved;
+	ulong address;
 }
 
 struct X2LapicInfo {
 	align (1):
 	EntryHeader header;
-	uint   reserved;
-	ushort apicIdent;
-	uint   flags;
-	uint   procIdent;
+	uint reserved;
+	ushort apic_id;
+	uint flags;
+	uint processor_id;
 }
 
 
@@ -108,29 +108,29 @@ struct X2LapicInfo {
 //         Instance         //
 //////////////////////////////
 
-__gshared LinkedList!(LapicInfo*)           lapicInfo;
-__gshared LinkedList!(LapicNmiInfo*)        lapicNmiInfo;
-__gshared LinkedList!(IoApicInfo*)          ioApicInfo;
-__gshared LinkedList!(IoApicIsoInfo*)       ioApicIsoInfo;
-__gshared LinkedList!(IoApicNmiSourceInfo*) ioApicNmiSourceInfo;
+__gshared LinkedList!(LapicInfo*)           lapic_list;
+__gshared LinkedList!(LapicNmiInfo*)        lapic_nmi_list;
+__gshared LinkedList!(IoApicInfo*)          io_apic_list;
+__gshared LinkedList!(IoApicIsoInfo*)       io_apic_iso_list;
+__gshared LinkedList!(IoApicNmiSourceInfo*) io_apic_nmi_src_list;
 
-__gshared usize lapicAddr;
+__gshared usize lapic_addr;
 
-void initMadt() {
-	// Get the MADT
-	auto madt = cast(Madt*) getTable(madtSignature);
-	if (madt == null)
-		panic("No MADT found. Init cannot continue");
+void init_madt() {
+	// Locate the MADT table
+	auto madt = cast(Madt*) get_table(MadtSignature);
+
+	assert(madt != null, "No MADT found. Init cannot continue");
 	
 	log(1, "Parsing MADT");
 
-	bool lapicOverriden = false;
+	bool lapic_overriden = false;
 	
-	usize lapicCount;
-	usize lapicNmiCount;
-	usize ioApicCount;
-	usize ioApicIsoCount;
-	usize ioApicNmiSourceCount;
+	usize lapics;
+	usize lapic_nmis;
+	usize io_apics;
+	usize io_apic_isos;
+	usize io_apic_nmi_sources;
 
 	// Parse and sort all MADT entries
 	ubyte* entries;
@@ -138,34 +138,34 @@ void initMadt() {
 	for (entries = cast(ubyte*) &madt.entries; cast(usize) entries < end; entries += *(entries + 1)) {
 		switch (*entries) {
 		case EntryType.ProccesorLapic:
-			lapicInfo.append(cast(LapicInfo*) entries);
-			lapicCount++;
+			lapic_list.append(cast(LapicInfo*) entries);
+			lapics++;
 			break;
 
 		case EntryType.LapicNmi:
-			lapicNmiInfo.append(cast(LapicNmiInfo*) entries);
-			lapicNmiCount++;
+			lapic_nmi_list.append(cast(LapicNmiInfo*) entries);
+			lapic_nmis++;
 			break;
 
 		case EntryType.IoApic:
-			ioApicInfo.append(cast(IoApicInfo*) entries);
-			ioApicCount++;
+			io_apic_list.append(cast(IoApicInfo*) entries);
+			io_apics++;
 			break;
 
 		case EntryType.IoApicIso:
-			ioApicIsoInfo.append(cast(IoApicIsoInfo*) entries);
-			ioApicIsoCount++;
+			io_apic_iso_list.append(cast(IoApicIsoInfo*) entries);
+			io_apic_isos++;
 			break;
 
 		case EntryType.IoApicNmiSource:
-			ioApicNmiSourceInfo.append(cast(IoApicNmiSourceInfo*) entries);
-			ioApicNmiSourceCount++;
+			io_apic_nmi_src_list.append(cast(IoApicNmiSourceInfo*) entries);
+			io_apic_nmi_sources++;
 			break;
 
 		case EntryType.LapicAddrOverride:
 			auto over = cast(LapicAddrOverride*) entries;
-			lapicAddr = over.address;
-			lapicOverriden = true;
+			lapic_addr = over.address;
+			lapic_overriden = true;
 			break;
 
 		default:
@@ -173,10 +173,10 @@ void initMadt() {
 		}
 	}
 
-	if (!lapicOverriden)
-		lapicAddr = cast(usize) madt.lapicAddr;
+	if (!lapic_overriden)
+		lapic_addr = cast(usize) madt.lapic_addr;
 
-	lapicAddr += PhysOffset;
+	lapic_addr += PhysOffset;
 
 	log(1, "MADT Parsed:
 		LAPIC-Processor entries:\t%d
@@ -184,9 +184,9 @@ void initMadt() {
 		IO APIC entries:\t\t\t%d
 		IO APIC ISOs:\t\t\t\t\t%d
 		IO APIC NMI entries:\t\t%d",
-		lapicCount, lapicNmiCount,
-		ioApicCount,ioApicIsoCount,
-		ioApicNmiSourceCount);
+		lapics, lapic_nmis,
+		io_apics,io_apic_isos,
+		io_apic_nmi_sources);
 
-	log(1, "LAPIC Address: %h", lapicAddr);
+	log(1, "LAPIC Address: %h", lapic_addr);
 }

@@ -1,17 +1,18 @@
 module arch.amd64.apic;
 
-import core.volatile;
-
-import au.types;
-import io.console;
-
-import memory;
-import arch.acpi.madt;
-
 /* OryxOS APIC management
  * This code contains functions for managing LAPICs
  * and IO APICs
  */
+
+import core.volatile;
+
+import au.types;
+
+import io.console;
+
+import memory;
+import arch.acpi.madt;
 
 private enum EoiRegister  = 0xB0;
 private enum SpurRegister = 0xF0;
@@ -20,57 +21,56 @@ private enum IdResgister  = 0x20;
 private enum SpurVector   = 0xFF;
 
 // Reads data from a LAPIC register
-private uint readLapic(usize reg) {
-	return volatileLoad(cast(uint*) (lapicAddr + reg));
+private uint read_lapic(usize reg) {
+	return volatileLoad(cast(uint*) (lapic_addr + reg));
 }
 
 // Writes data to a LAPIC register
-private void writeLapic(usize reg, uint val) {
-	volatileStore(cast(uint*) (lapicAddr + reg), val);
+private void write_lapic(usize reg, uint val) {
+	volatileStore(cast(uint*) (lapic_addr + reg), val);
 }
 
 // Reads data from an IO APIC register
-private uint readIoApic(usize ioApicId, uint reg) {
-	auto base = cast(uint*) (ioApicInfo[ioApicId].address + PhysOffset);
+private uint read_io_apic(usize ioApicId, uint reg) {
+	auto base = cast(uint*) (io_apic_list[ioApicId].address + PhysOffset);
 
 	volatileStore(base, reg);      // Select register
 	return volatileLoad(base + 4); // Read data
 }
 
 // Writes data to an IO APIC register
-private void writeIoApic(usize ioApicId, uint reg, uint data) {
-	auto base = cast(uint*) (ioApicInfo[ioApicId].address + PhysOffset);
+private void write_io_apic(usize ioApicId, uint reg, uint data) {
+	auto base = cast(uint*) (io_apic_list[ioApicId].address + PhysOffset);
 
 	volatileStore(base, reg);      // Select register
 	volatileStore(base + 4, data); // Store data
 }
 
 // Enable the APIC and set thee spurious interrupt register
-private void enableLapic() {
-	writeLapic(SpurRegister, (readLapic(SpurRegister) | 0x100 | SpurVector));
+private void enable_lapic() {
+	write_lapic(SpurRegister, (read_lapic(SpurRegister) | 0x100 | SpurVector));
 }
 
 // Returns the maximum number of redirections an IO APIC can hold
-private uint maxRedirCount(usize ioApicId) {
-	return (readIoApic(ioApicId, 1) & 0xFF0000) >> 16;
+private uint max_redirs(usize io_apic_id) {
+	return (read_io_apic(io_apic_id, 1) & 0xFF0000) >> 16;
 }
 
 // Determines which IO APIC handles a given gsi. Returns -1 upon failure
-private isize getIoApicFromGsi(uint gsi) {
-	foreach (i; 0..ioApicInfo.getLength()) {
+private isize io_apic_from_gsi(uint gsi) {
+	foreach (i; 0..io_apic_list.get_length()) {
 		// Check if GSI is in range of IO APIC
-		if (ioApicInfo[i].gsiBase <= gsi && ioApicInfo[i].gsiBase + maxRedirCount(i) > gsi)
+		if (io_apic_list[i].gsi_base <= gsi && io_apic_list[i].gsi_base + max_redirs(i) > gsi)
 			return i;
 	}
 
 	return -1;
 }
 
-private void mapGsiToVec(ubyte vec, uint gsi, ushort flags) {
-	usize ioApicId = getIoApicFromGsi(gsi);
+private void map_gsi_to_vec(ubyte vec, uint gsi, ushort flags) {
+	usize io_apic_id = io_apic_from_gsi(gsi);
 
-	if (ioApicId == -1)
-		panic("TODO: APIC error handling");
+	assert(io_apic_id != -1, "Failed to map GSI to interrupt vector");
 
 	ulong redirect = vec;
 
@@ -85,37 +85,37 @@ private void mapGsiToVec(ubyte vec, uint gsi, ushort flags) {
     }
 
 	// Get the LAPIC ID (Will change with SMP)
-	redirect |= cast(ulong) readLapic(IdResgister) << 56;
+	redirect |= cast(ulong) read_lapic(IdResgister) << 56;
 
-	uint register = (gsi - ioApicInfo[ioApicId].gsiBase) * 2 + 16;
+	uint register = (gsi - io_apic_list[io_apic_id].gsi_base) * 2 + 16;
 
 	// Load register in 2 parts
-	writeIoApic(ioApicId, register + 0, cast(uint) redirect);
-	writeIoApic(ioApicId, register + 1, cast(uint) (redirect >> 32));
+	write_io_apic(io_apic_id, register + 0, cast(uint) redirect);
+	write_io_apic(io_apic_id, register + 1, cast(uint) (redirect >> 32));
 
 }
 
-void enableLegacyIrq(ubyte irq) {
-	alias isos = ioApicIsoInfo;
+void enable_legacy_irq(ubyte irq) {
+	alias isos = io_apic_iso_list;
 
 	// Check If irq has been overriden by an ISO
-	foreach (i; 0..isos.getLength()) {
-		if (isos[i].irqSource == irq) {
-			mapGsiToVec(cast(ubyte) (isos[i].irqSource + 0x20), isos[i].gsi, isos[i].flags);
+	foreach (i; 0..isos.get_length()) {
+		if (isos[i].irq_source == irq) {
+			map_gsi_to_vec(cast(ubyte) (isos[i].irq_source + 0x20), isos[i].gsi, isos[i].flags);
 			return;
 		}
 	}
 
 	// Interrupt not overriden
-	mapGsiToVec(cast(ubyte) (irq + 0x20), irq, 0);
+	map_gsi_to_vec(cast(ubyte) (irq + 0x20), irq, 0);
 }
 
-void endInterrupt() {
-	writeLapic(EoiRegister, 0);
+void end_interrupt() {
+	write_lapic(EoiRegister, 0);
 }
 
-void initApic() {
-	enableLapic();
-	enableLegacyIrq(1);
+void init_apic() {
+	enable_lapic();
+	enable_legacy_irq(1);
 	log(1, "APIC enabled");
 }

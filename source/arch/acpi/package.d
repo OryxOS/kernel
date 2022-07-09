@@ -13,35 +13,36 @@ import memory;
 
 private struct RsdtPointer {
     align(1):
-    char[8]  signature;
-    ubyte    checksum;
-    char[6]  oemID;
-    ubyte    revision;
-    uint     rsdtAddr;
+    char[8] signature;
+    ubyte checksum;
+    char[6] oem_id;
+    ubyte revision;
+    uint rsdt_addr;
+
 	// ACPI revision 2.0:
-    uint     length;
-    ulong    xsdtAddr;
-    ubyte    extChecksum;
+    uint length;
+    ulong xsdt_addr;
+    ubyte checksum_ext;
     ubyte[3] reserved;
 }
 
 private struct Rsdt {
     align(1):
     SdtHeader header;
-    void*     sdtPtr;
+    void* sdt_ptr;
 }
 
 struct SdtHeader {
     align(1):
     char[4] signature;
-    uint    length;
-    ubyte   revision;
-    ubyte   checksum;
-    char[6] oemID;
-    char[8] oemTableID;
-    uint    oemRev;
-    uint    creatorID;
-    uint    creatorRev; 
+    uint length;
+    ubyte revision;
+    ubyte checksum;
+    char[6] oem_id;
+    char[8] oem_tbl_id;
+    uint oemRev;
+    uint creator_id;
+    uint creator_rev; 
 }
 
 private __gshared bool  rev2;
@@ -51,40 +52,38 @@ private __gshared Rsdt* rsdt;
 //         Instance         //
 //////////////////////////////
 
-void initAcpi(XSDTPointerResponse* xsdtPointer) {
-    auto rsdp = cast(RsdtPointer*) xsdtPointer.address;
+void init_acpi(XsdtPointerResponse* xsdt_ptr) {
+    auto rsdp = cast(RsdtPointer*) xsdt_ptr.address;
 
-    if (rsdp.revision >= 2 && rsdp.xsdtAddr) {
-        rev2 = true;
-        rsdt = cast(Rsdt*) (cast(void*) rsdp.xsdtAddr + PhysOffset);
-        log(1, "XSDT Found. ACPI Revision: %d", rsdp.revision);
-    } else {
-        rev2 = false;
-        rsdt = cast(Rsdt*) (cast(void*) rsdp.rsdtAddr);
-        log(1, "RSDT Found. ACPI Revision: %d", rsdp.revision);
-    }
+    // Check if we are working with ACPI revision 1 or 2
+    rev2 = rsdp.revision >= 2 && rsdp.xsdt_addr;
+
+    rsdt = rev2 ? cast(Rsdt*) (cast(void*) rsdp.xsdt_addr + PhysOffset)
+                : cast(Rsdt*) (cast(void*) rsdp.rsdt_addr);
+
+    log(1, "ACPI root table found. ACPI Revision: %d", rsdp.revision);
 }
 
 /// Attempts to locate a ACPI table
 /// Params:
 /// 	sig = 4 char signature of the desired table
-void* getTable(char[4] signature) {
+/// Returns:
+///     null = table does not exist
+void* get_table(char[4] signature) {
     const usize limit = (rsdt.header.length - rsdt.header.sizeof) / (rev2 ? 8 : 4);
 
+    // Loop through and find the table
     SdtHeader* ptr;
     foreach (i; 0..limit) {
-        if (rev2) {
-            auto p = cast(ulong*) &rsdt.sdtPtr;
-            ptr = cast(SdtHeader*) (p[i] + PhysOffset);
-        } else {
-            auto p = cast(uint*) &rsdt.sdtPtr;
-            ptr = cast(SdtHeader*) (p[i] + PhysOffset);
-        }
-
-        if (ptr.signature == signature) {
+        // Revision 2 pointers are 64 bit
+        ptr = rev2 ? cast(SdtHeader*) ((cast(ulong*) &rsdt.sdt_ptr)[i] + PhysOffset)
+                   : cast(SdtHeader*) ((cast(uint*) &rsdt.sdt_ptr)[i] + PhysOffset);
+        
+        // Table found
+        if (ptr.signature == signature)
             return cast(void*) ptr;
-        }
     }
 
+    // Table not found
     return null;
 }

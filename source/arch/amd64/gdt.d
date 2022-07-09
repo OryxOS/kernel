@@ -7,24 +7,46 @@ module arch.amd64.gdt;
  */
 
 import au.types;
+
 import io.console;
 
 private struct GdtEntry {
 	align (1):
 	ushort limit;
-	ushort lowBase;
-	ubyte  midBase;
-	ubyte  lowFlags;
-	ubyte  highFlags;
-	ubyte  highBase;
+	ushort low_base;
+	ubyte mid_base;
+	ubyte low_flags;
+	ubyte high_flags;
+	ubyte high_base;
 
-	this(ubyte lowFlags, ubyte highFlags) {
-		this.limit     = 0;
-		this.lowBase   = 0;
-		this.midBase   = 0;
-		this.lowFlags  = lowFlags;
-		this.highFlags = highFlags;
-		this.highBase  = 0;
+	this(ubyte low_flags, ubyte high_flags) {
+		this.limit      = 0;
+		this.low_base   = 0;
+		this.mid_base   = 0;
+		this.low_flags  = low_flags;
+		this.high_flags = high_flags;
+		this.high_base  = 0;
+	}
+}
+
+private struct TssEntry {
+	align (1):
+	ushort limit;
+	ushort low_base;
+	ubyte mid_base;
+	ubyte low_flags;
+	ubyte high_flags;
+	ubyte high_base;
+	uint upper_base;
+	uint reserved;
+
+	this(ubyte low_flags, ubyte high_flags) {
+		this.limit = 104;
+
+		this.low_flags  = low_flags;
+		this.high_flags = high_flags;
+
+		// Address set later
 	}
 }
 
@@ -34,32 +56,10 @@ private struct GdtPointer {
 	void* address;
 }
 
-// Structure that holds info about a TSS
-private struct TssEntry {
-	align (1):
-	ushort limit;
-	ushort lowBase;
-	ubyte  midBase;
-	ubyte  lowFlags;
-	ubyte  highFlags;
-	ubyte  highBase;
-	uint   upperBase;
-	uint   reserved;
-
-	this(ubyte lowFlags, ubyte highFlags) {
-		this.limit = 104; // Size of a TSS
-
-		this.lowFlags  = lowFlags;
-		this.highFlags = highFlags;
-
-		// Address set later
-	}
-}
-
 private struct Gdt {
 	align (1):
 	GdtEntry[5] entries;
-	TssEntry    tss;
+	TssEntry tss;
 }
 
 //////////////////////////////
@@ -69,12 +69,14 @@ private struct Gdt {
 // Selectors
 enum KernelCodeSegment = 0x08;    
 enum KernelDataSegment = 0x10;
+enum UserCodeSegment   = 0x18;
+enum UserDataSegment   = 0x20;
 enum TssSegment        = 0x28;
 
 private __gshared Gdt gdt;
-private __gshared GdtPointer  gdtPointer;
+private __gshared GdtPointer  gdt_ptr;
 
-void initGdt() {
+void init_gdt() {
 	gdt.entries[0] = GdtEntry(0b00000000, 0b00000000); // Null
 	gdt.entries[1] = GdtEntry(0b10011010, 0b00100000); // Kernel Code
 	gdt.entries[2] = GdtEntry(0b10010010, 0b00000000); // Kernel Data
@@ -84,39 +86,41 @@ void initGdt() {
 	gdt.tss = TssEntry(0b10001001, 0); // TSS
 
 	// Set pointer
-	gdtPointer = GdtPointer(gdt.sizeof - 1, cast(void*) &gdt);
+	gdt_ptr = GdtPointer(gdt.sizeof - 1, cast(void*) &gdt);
 
 	// Load the GDT
 	asm {
-		lgdt [gdtPointer];
+		lgdt [gdt_ptr];
 
 		// Long jump to set cs and ss.
-		mov RBX, RSP;
-		push KernelDataSegment;
-		push RBX;
-		pushfq;
-		push KernelCodeSegment;
-		lea RAX, L1; // Putting L1 directly dereferences L1. (According to streaks)
-		push RAX;
-		iretq;
+		mov RBX, RSP           ;
+		push KernelDataSegment ;
+		push RBX               ;
+		pushfq                 ;
+		push KernelCodeSegment ;
+		// Putting L1 directly dereferences L1.
+		lea RAX, L1            ;
+		push RAX               ;
+		iretq                  ;
 
 	L1:;
-		mov AX, KernelDataSegment;
-		mov DS, AX;
-		mov ES, AX;
-		mov FS, AX;
-		mov GS, AX;
+		mov AX, KernelDataSegment ;
+		mov DS, AX                ;
+		mov ES, AX                ;
+		mov FS, AX                ;
+		mov GS, AX                ;
+		mov SS, AX                ;
 	}
 
 	log(1, "GDT initialized with %d descriptors + 1 TSS descriptor", gdt.entries.length);
 }
 
-void loadTss(usize addr) {
+void load_tss(usize addr) {
 	// Address
-	gdt.tss.lowBase   = cast(ushort) addr;
-	gdt.tss.midBase   = cast(ubyte) (addr >> 16);
-	gdt.tss.highBase  = cast(ubyte) (addr >> 24);
-	gdt.tss.upperBase = cast(uint) (addr >> 32);
+	gdt.tss.low_base   = cast(ushort) addr;
+	gdt.tss.mid_base   = cast(ubyte) (addr >> 16);
+	gdt.tss.high_base  = cast(ubyte) (addr >> 24);
+	gdt.tss.upper_base = cast(uint) (addr >> 32);
 
 	// Load TSS using `ltr`
 	asm {

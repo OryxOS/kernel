@@ -45,9 +45,9 @@ struct FrameBufferInfo {
 
 private __gshared FrameBuffer buffer;
 
-void initFrameBuffer(FrameBufferResponse* fbInfo) {
+void init_fb(FrameBufferResponse* fb_info) {
 	// Try access the FrameBuffer information
- 	LimineFrameBufferInfo* fb = fbInfo.framebuffers[0];
+ 	LimineFrameBufferInfo* fb = fb_info.fb_ptrs[0];
 
 	// Very unlikely so we don't properly handle these
 	assert(fb != null);
@@ -57,11 +57,11 @@ void initFrameBuffer(FrameBufferResponse* fbInfo) {
 	buffer = FrameBuffer(fb);
 }
 
-void plotPixel(pixel p, ulong x, ulong y) {
+void plot_pixel(pixel p, ulong x, ulong y) {
 	buffer.address[(buffer.pitch * y) + x] = p;
 }
 
-void plotRect(pixel p, ulong x, ulong y, ulong width, ulong height) {
+void plot_rect(pixel p, ulong x, ulong y, ulong width, ulong height) {
 	for(ulong i = 0; i < height; i++) {
 		ulong where = buffer.pitch * y + buffer.pitch * i + x;
 
@@ -69,12 +69,12 @@ void plotRect(pixel p, ulong x, ulong y, ulong width, ulong height) {
 	}
 }
 
-void plotScreen(pixel p) {
+void clear_screen(pixel p) {
 	buffer.address[0..(buffer.pitch * buffer.height)] = p;
 }
 
-void plotChr(pixel fore, pixel back, char c, ulong x, ulong y) {
-	ubyte[16] glyph = charToGlyph(c);
+void plot_chr(pixel fore, pixel back, char c, ulong x, ulong y) {
+	ubyte[16] glyph = char_to_glyph(c);
 
 	/* Go through each row of the glyph,
 	 * for each row, >> and & to get the value of each pixel.
@@ -84,18 +84,18 @@ void plotChr(pixel fore, pixel back, char c, ulong x, ulong y) {
 	for (ulong i = 0; i < 16; i++) {
 		for (ulong j = 0; j < 8; j++) {
 			if ((glyph[i] >> j & 1) == 1)
-				plotPixel(fore, x + 7 - j, i + y);
+				plot_pixel(fore, x + 7 - j, i + y);
 			else
-				plotPixel(back, x + 7 - j, i + y);
+				plot_pixel(back, x + 7 - j, i + y);
 		}
 	}
 }
 
-void scrollScreen(ulong amount, ulong offsetFromBottom = 0) {
-	buffer.address[0..((buffer.height - amount - offsetFromBottom) * buffer.pitch)] 
-		= buffer.address[amount * buffer.pitch..(buffer.height - offsetFromBottom) * buffer.pitch];
+void scroll_screen(ulong amount, ulong bottom_offset = 0) {
+	buffer.address[0..((buffer.height - amount - bottom_offset) * buffer.pitch)] 
+		= buffer.address[amount * buffer.pitch..(buffer.height - bottom_offset) * buffer.pitch];
 }
 
-FrameBufferInfo getFrameBufferInfo() {
+FrameBufferInfo get_fb_info() {
 	return FrameBufferInfo(buffer.width, buffer.height);
 }

@@ -1,14 +1,13 @@
 module arch.amd64.cpu;
 
+// General function relating to Amd64 CPUs
+
 import au.types;
+
 import io.console;
 
 import memory;
-import arch.amd64.memory;
 import memory.physical;
-
-// General function relating to Amd64 CPUs
-
 
 /* Amd64 IO Port management
  * Uses C calling convention. casts may be needed
@@ -17,7 +16,7 @@ import memory.physical;
 
 // Ubyte
 
-extern (C) ubyte readByte(ushort port) {
+extern (C) ubyte read_byte(ushort port) {
    asm {
 		naked;
 		xor EAX, EAX ;
@@ -27,19 +26,19 @@ extern (C) ubyte readByte(ushort port) {
 	}
 }
 
-extern (C) void writeByte(ushort port, ubyte data) {
+extern (C) void write_byte(ushort port, ubyte data) {
 	asm {
 		naked;
-		mov DX, DI   ;
-		mov AX, SI   ;
-		out DX, AL   ;
+		mov DX, DI ;
+		mov AX, SI ;
+		out DX, AL ;
 		ret;
 	}
 }
 
 // Ushort
 
-extern (C) ubyte readWord(ushort port) {
+extern (C) ubyte read_word(ushort port) {
    asm {
 		naked;
 		xor EAX, EAX ;
@@ -49,19 +48,19 @@ extern (C) ubyte readWord(ushort port) {
 	}
 }
 
-extern (C) void writeWord(ushort port, ubyte data) {
+extern (C) void write_word(ushort port, ubyte data) {
 	asm {
 		naked;
-		mov DX, DI   ;
-		mov AX, SI   ;
-		out DX, AL   ;
+		mov DX, DI ;
+		mov AX, SI ;
+		out DX, AL ;
 		ret;
 	}
 }
 
 // Uint
 
-extern (C) uint readDouble(ushort port) {
+extern (C) uint read_double(ushort port) {
 	asm {
 		naked;
 		xor EAX, EAX ;
@@ -71,7 +70,7 @@ extern (C) uint readDouble(ushort port) {
 	}
 }
 
-extern (C) void writeDouble(ushort port, uint data) {
+extern (C) void write_double(ushort port, uint data) {
 	asm {
 		naked;
 		mov DX,  DI  ;
@@ -82,7 +81,7 @@ extern (C) void writeDouble(ushort port, uint data) {
 }
 
 // Enables or disables interrupts
-void enableInterrupts(bool enable) {
+void enable_ints(bool enable) {
 	if (enable)
 		asm { sti; }
 	else

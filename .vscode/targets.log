@@ -1,0 +1,703 @@
+make all --print-data-base --no-builtin-variables --no-builtin-rules --question
+# GNU Make 4.3
+# Built for x86_64-redhat-linux-gnu
+# Copyright (C) 1988-2020 Free Software Foundation, Inc.
+# License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+# This is free software: you are free to change and redistribute it.
+# There is NO WARRANTY, to the extent permitted by law.
+
+# Make data base, printed on Thu Jul  7 20:34:03 2022
+
+# Variables
+
+# makefile (from 'Makefile', line 28)
+OBJ := source/runtime/_assert.o source/runtime/memory.o source/io/framebuffer/package.o source/io/framebuffer/font.o source/io/console.o source/arch/amd64/package.o source/arch/amd64/idt.o source/arch/amd64/gdt.o source/arch/amd64/pic.o source/arch/amd64/drivers/legacy/keyboard.o source/arch/amd64/tss.o source/arch/amd64/apic.o source/arch/amd64/memory.o source/arch/amd64/cpu.o source/arch/acpi/package.o source/arch/acpi/madt.o source/memory/package.o source/memory/allocator.o source/memory/physical.o source/lib/limine.o source/lib/collections.o source/main.o source/scheduler/package.o source/scheduler/thread.o source/scheduler/queue.o source/scheduler/program.o source/arch/amd64/userspace.o source/arch/amd64/syscall.o source/arch/amd64/handlers.o ../libraries/au/result.o ../libraries/au/math.o ../libraries/au/elf.o ../libraries/au/string.o ../libraries/au/types.o ../libraries/au/bitmap.o
+# makefile (from 'Makefile', line 3)
+KERNEL := kernel.elf
+# environment
+ 
+GDK_BACKEND = x11
+# makefile (from 'Makefile', line 14)
+AS = nasm
+# makefile (from 'Makefile', line 7)
+LIBDIR := ../libraries
+# environment
+LC_ALL = C
+# environment
+NO_AT_BRIDGE = 1
+# environment
+GJS_DEBUG_OUTPUT = stderr
+# environment
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-b7fd280e-efce-40ae-bd4a-096271cf57d3.sock
+# environment
+VSCODE_CWD = /home/ethan
+# makefile (from 'Makefile', line 10)
+LIBS := ../libraries/au
+# environment
+GDM_LANG = en_ZA.UTF-8
+# default
+MAKE_COMMAND := make
+# environment
+define BASH_FUNC_which%%
+() {  ( alias;
+ eval ${which_declare} ) | /usr/bin/which --tty-only --read-alias --read-functions --show-tilde --show-dot $@
+}
+endef
+# automatic
+@D = $(patsubst %/,%,$(dir $@))
+# environment
+VSCODE_HANDLES_UNCAUGHT_ERRORS = true
+# default
+.VARIABLES := 
+# environment
+PWD = /home/ethan/Source/OryxOS/kernel
+# automatic
+%D = $(patsubst %/,%,$(dir $%))
+# environment
+HOSTNAME = fedora
+# environment
+MAIL = /var/spool/mail/ethan
+# environment
+XDG_DATA_DIRS = /home/ethan/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/
+# automatic
+^D = $(patsubst %/,%,$(dir $^))
+# environment
+VSCODE_LOG_STACK = false
+# automatic
+%F = $(notdir $%)
+# environment
+VSCODE_CODE_CACHE_PATH = /home/ethan/.config/Code/CachedData/30d9c6cd9483b2cc586687151bcbcd635f373630
+# environment
+LANG = C
+# environment
+XAUTHORITY = /run/user/1000/.mutter-Xwaylandauth.50N8O1
+# default
+.LOADED := 
+# default
+.INCLUDE_DIRS = /usr/include /usr/local/include /usr/include
+# makefile (from 'Makefile', line 25)
+LIBDSOURCE := ../libraries/au/result.d ../libraries/au/math.d ../libraries/au/elf.d ../libraries/au/string.d ../libraries/au/types.d ../libraries/au/bitmap.d
+# makefile
+MAKEFLAGS = pqrR
+# makefile (from 'Makefile', line 5)
+SOURCEDIR := source
+# makefile
+CURDIR := /home/ethan/Source/OryxOS/kernel
+# environment
+VSCODE_PIPE_LOGGING = true
+# environment
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
+# environment
+LESSOPEN = ||/usr/bin/lesspipe.sh %s
+# automatic
+*D = $(patsubst %/,%,$(dir $*))
+# environment
+MFLAGS = -pqrR
+# environment
+SSH_AUTH_SOCK = /run/user/1000/keyring/ssh
+# default
+.SHELLFLAGS := -c
+# environment
+WAYLAND_DISPLAY = wayland-0
+# environment
+HISTSIZE = 1000
+# automatic
++D = $(patsubst %/,%,$(dir $+))
+# environment
+XDG_SESSION_DESKTOP = gnome
+# makefile (from 'Makefile', line 1)
+MAKEFILE_LIST := Makefile
+# makefile (from 'Makefile', line 22)
+ASFLAGS := -felf64
+# automatic
+@F = $(notdir $@)
+# environment
+VSCODE_VERBOSE_LOGGING = true
+# environment
+VSCODE_PID = 18399
+# environment
+XDG_SESSION_TYPE = wayland
+# automatic
+?D = $(patsubst %/,%,$(dir $?))
+# environment
+SESSION_MANAGER = local/unix:@/tmp/.ICE-unix/1575,unix/unix:/tmp/.ICE-unix/1575
+# automatic
+*F = $(notdir $*)
+# environment
+CHROME_DESKTOP = code-url-handler.desktop
+# environment
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
+# makefile (from 'Makefile', line 27)
+DSOURCE := source/runtime/_assert.d source/runtime/memory.d source/io/framebuffer/package.d source/io/framebuffer/font.d source/io/console.d source/arch/amd64/package.d source/arch/amd64/idt.d source/arch/amd64/gdt.d source/arch/amd64/pic.d source/arch/amd64/drivers/legacy/keyboard.d source/arch/amd64/tss.d source/arch/amd64/apic.d source/arch/amd64/memory.d source/arch/amd64/cpu.d source/arch/acpi/package.d source/arch/acpi/madt.d source/memory/package.d source/memory/allocator.d source/memory/physical.d source/lib/limine.d source/lib/collections.d source/main.d source/scheduler/package.d source/scheduler/thread.d source/scheduler/queue.d source/scheduler/program.d
+# automatic
+<D = $(patsubst %/,%,$(dir $<))
+# environment
+VSCODE_NLS_CONFIG = {"locale":"en-gb","availableLanguages":{},"_languagePackSupport":true}
+# default
+MAKE_HOST := x86_64-redhat-linux-gnu
+# makefile
+SHELL = /bin/sh
+# default
+MAKECMDGOALS := all
+# environment
+XMODIFIERS = @im=ibus
+# environment
+GJS_DEBUG_TOPICS = JS ERROR;JS LOG
+# environment
+SHLVL = 0
+# environment
+MAKELEVEL := 0
+# default
+MAKE = $(MAKE_COMMAND)
+# environment
+PATH = /home/ethan/.local/bin:/home/ethan/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin
+# default
+MAKEFILES := 
+# automatic
+^F = $(notdir $^)
+# environment
+INVOCATION_ID = 382aff800b184ac1b920d8b46c605709
+# environment
+VSCODE_LOG_NATIVE = false
+# environment
+USERNAME = ethan
+# environment
+GNOME_SETUP_DISPLAY = :1
+# automatic
+?F = $(notdir $?)
+# makefile (from 'Makefile', line 13)
+DC = ldc2
+# environment
+XDG_CURRENT_DESKTOP = GNOME
+# automatic
++F = $(notdir $+)
+# environment
+DESKTOP_SESSION = gnome
+# environment
+ORIGINAL_XDG_CURRENT_DESKTOP = GNOME
+# 'override' directive
+GNUMAKEFLAGS := 
+# environment
+LOGNAME = ethan
+# environment
+GIO_LAUNCHED_DESKTOP_FILE = /usr/share/applications/code.desktop
+# makefile
+.DEFAULT_GOAL := all
+# environment
+SYSTEMD_EXEC_PID = 1626
+# environment
+HISTCONTROL = ignoredups
+# environment
+EDITOR = /usr/bin/nano
+# environment
+DISPLAY = :0
+# environment
+USER = ethan
+# default
+MAKE_VERSION := 4.3
+# 'override' directive
+.SHELLSTATUS := 0
+# makefile (from 'Makefile', line 21)
+LDFLAGS := --oformat elf_amd64 --nostdlib
+# environment
+MANAGERPID = 1466
+# environment
+which_declare = declare -f
+# environment
+DEBUGINFOD_URLS = https://debuginfod.fedoraproject.org/ 
+# environment
+GIO_LAUNCHED_DESKTOP_FILE_PID = 18399
+# makefile (from 'Makefile', line 26)
+ASMSOURCE := source/arch/amd64/userspace.asm source/arch/amd64/syscall.asm source/arch/amd64/handlers.asm
+# environment
+_ = /usr/bin/make
+# environment
+XDG_RUNTIME_DIR = /run/user/1000
+# makefile (from 'Makefile', line 18)
+DFLAGS := -mtriple=amd64-unknown-elf -relocation-model=static -code-model=kernel -mattr=-sse,-sse2,-sse3,-ssse3 -disable-red-zone -betterC -op -O
+# environment
+JOURNAL_STREAM = 8:27355
+# environment
+XDG_SESSION_CLASS = user
+# environment
+VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
+# environment
+HOME = /home/ethan
+# environment
+QT_IM_MODULE = ibus
+# environment
+ELECTRON_RUN_AS_NODE = 1
+# environment
+ 
+VSCODE_IPC_HOOK = /run/user/1000/vscode-e7b63416-1.68.1-main.sock
+# default
+.RECIPEPREFIX := 
+# automatic
+<F = $(notdir $<)
+# default
+SUFFIXES := 
+# makefile (from 'Makefile', line 15)
+LD = ld.lld
+# default
+.FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink guile load
+# makefile (from 'Makefile', line 6)
+BUILDDIR := build
+# environment
+XDG_MENU_PREFIX = gnome-
+# environment
+GDMSESSION = gnome
+# variable set hash-table stats:
+# Load=115/1024=11%, Rehash=0, Collisions=3/172=2%
+
+# Pattern-specific Variable Values
+
+# No pattern-specific variable values.
+
+# Directories
+
+# source/arch/amd64/drivers/legacy (device 66309, inode 1704059): 3 files, no impossibilities so far.
+# source/io (device 66309, inode 1704081): 2 files, no impossibilities so far.
+# source/runtime (device 66309, inode 1704091): 5 files, no impossibilities so far.
+# . (device 66309, inode 1703995): 14 files, no impossibilities.
+# source/io/framebuffer (device 66309, inode 1704083): 2 files, no impossibilities so far.
+# source/arch/amd64 (device 66309, inode 1704055): 20 files, no impossibilities so far.
+
+# 46 files, no impossibilities in 6 directories.
+
+# Implicit Rules
+
+%.o: %.d
+#  recipe to execute (from 'Makefile', line 36):
+	@$(DC) $(DFLAGS) -I=$(SOURCEDIR) -I=$(LIBDIR) -c $< -of=$@
+
+%.o: %.asm
+#  recipe to execute (from 'Makefile', line 39):
+	@$(AS) $(ASFLAGS) -I$(SOURCEDIR) $< -o $@
+
+# 2 implicit rules, 0 (0.0%) terminal.
+# Files
+
+# Not a target:
+source/memory/physical.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+source/io/framebuffer/package.o: source/io/framebuffer/package.d
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'source/io/framebuffer/package'
+#  Last modified 2022-07-07 19:22:15.261082348
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'Makefile', line 36):
+	@$(DC) $(DFLAGS) -I=$(SOURCEDIR) -I=$(LIBDIR) -c $< -of=$@
+
+# Not a target:
+../libraries/au/math.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+source/arch/amd64/syscall.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+source/io/console.d:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-06 14:17:44.440844992
+#  File has been updated.
+#  Successfully updated.
+
+source/io/framebuffer/font.o: source/io/framebuffer/font.d
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'source/io/framebuffer/font'
+#  Last modified 2022-07-07 19:22:15.300083146
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'Makefile', line 36):
+	@$(DC) $(DFLAGS) -I=$(SOURCEDIR) -I=$(LIBDIR) -c $< -of=$@
+
+# Not a target:
+source/arch/amd64/pic.d:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-04 20:47:20.838647236
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+source/memory/package.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+ 
+
+# Not a target:
+source/io/framebuffer/package.d:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-05 17:49:09.110304876
+#  File has been updated.
+#  Successfully updated.
+
+kernel.elf: source/runtime/_assert.o source/runtime/memory.o source/io/framebuffer/package.o source/io/framebuffer/font.o source/io/console.o source/arch/amd64/package.o source/arch/amd64/idt.o source/arch/amd64/gdt.o source/arch/amd64/pic.o source/arch/amd64/drivers/legacy/keyboard.o source/arch/amd64/tss.o source/arch/amd64/apic.o source/arch/amd64/memory.o source/arch/amd64/cpu.o source/arch/acpi/package.o source/arch/acpi/madt.o source/memory/package.o source/memory/allocator.o source/memory/physical.o source/lib/limine.o source/lib/collections.o source/main.o source/scheduler/package.o source/scheduler/thread.o source/scheduler/queue.o source/scheduler/program.o source/arch/amd64/userspace.o source/arch/amd64/syscall.o source/arch/amd64/handlers.o ../libraries/au/result.o ../libraries/au/math.o ../libraries/au/elf.o ../libraries/au/string.o ../libraries/au/types.o ../libraries/au/bitmap.o
+#  Implicit rule search has not been done.
+#  Last modified 2022-07-07 20:29:10.289903879
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/7=0%
+#  recipe to execute (from 'Makefile', line 33):
+	@$(LD) $(LDFLAGS) $(OBJ) -T $(BUILDDIR)/link.ld -o $@
+
+# Not a target:
+source/arch/amd64/idt.d:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-07 17:39:21.443787296
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+source/arch/amd64/cpu.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+Makefile:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-07 10:47:22.312223442
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+source/arch/acpi/madt.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+source/io/framebuffer/font.d:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-06 07:06:10.798419542
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+source/scheduler/queue.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+source/arch/amd64/handlers.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+source/arch/amd64/drivers/legacy/keyboard.o: source/arch/amd64/drivers/legacy/keyboard.d
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'source/arch/amd64/drivers/legacy/keyboard'
+#  Last modified 2022-07-07 19:22:15.708091496
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'Makefile', line 36):
+	@$(DC) $(DFLAGS) -I=$(SOURCEDIR) -I=$(LIBDIR) -c $< -of=$@
+
+clean:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 42):
+	rm -rf $(OBJ) $(KERNEL)
+
+# Not a target:
+source/arch/amd64/gdt.d:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-06 13:17:57.692804941
+#  File has been updated.
+#  Successfully updated.
+
+source/runtime/memory.o: source/runtime/memory.d
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'source/runtime/memory'
+#  Last modified 2022-07-07 19:22:15.190080894
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'Makefile', line 36):
+ 
+	@$(DC) $(DFLAGS) -I=$(SOURCEDIR) -I=$(LIBDIR) -c $< -of=$@
+
+# Not a target:
+source/scheduler/package.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+source/lib/limine.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+source/runtime/memory.d:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-06 14:11:54.095612937
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+../libraries/au/bitmap.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+../libraries/au/result.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+source/runtime/_assert.d:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-07 17:39:30.587974439
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+../libraries/au/elf.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+source/arch/amd64/memory.d:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-07 20:30:09.141108301
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+.DEFAULT:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+source/arch/amd64/apic.o: source/arch/amd64/apic.d
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'source/arch/amd64/apic'
+#  Last modified 2022-07-07 19:22:15.857094545
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'Makefile', line 36):
+	@$(DC) $(DFLAGS) -I=$(SOURCEDIR) -I=$(LIBDIR) -c $< -of=$@
+
+all: kernel.elf
+#  Command line target.
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/7=0%
+
+# Not a target:
+source/memory/allocator.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+source/lib/collections.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+source/arch/amd64/package.d:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-06 08:25:50.179837943
+#  File has been updated.
+#  Successfully updated.
+
+source/runtime/_assert.o: source/runtime/_assert.d
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'source/runtime/_assert'
+#  Last modified 2022-07-07 19:22:15.149080055
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'Makefile', line 36):
+	@$(DC) $(DFLAGS) -I=$(SOURCEDIR) -I=$(LIBDIR) -c $< -of=$@
+
+source/arch/amd64/gdt.o: source/arch/amd64/gdt.d
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'source/arch/amd64/gdt'
+#  Last modified 2022-07-07 19:22:15.604089368
+ 
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'Makefile', line 36):
+	@$(DC) $(DFLAGS) -I=$(SOURCEDIR) -I=$(LIBDIR) -c $< -of=$@
+
+source/arch/amd64/tss.o: source/arch/amd64/tss.d
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'source/arch/amd64/tss'
+#  Last modified 2022-07-07 19:22:15.778092929
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'Makefile', line 36):
+	@$(DC) $(DFLAGS) -I=$(SOURCEDIR) -I=$(LIBDIR) -c $< -of=$@
+
+# Not a target:
+source/scheduler/thread.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+source/arch/amd64/package.o: source/arch/amd64/package.d
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'source/arch/amd64/package'
+#  Last modified 2022-07-07 19:22:15.433085868
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'Makefile', line 36):
+	@$(DC) $(DFLAGS) -I=$(SOURCEDIR) -I=$(LIBDIR) -c $< -of=$@
+
+source/arch/amd64/pic.o: source/arch/amd64/pic.d
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'source/arch/amd64/pic'
+#  Last modified 2022-07-07 19:22:15.65309037
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'Makefile', line 36):
+	@$(DC) $(DFLAGS) -I=$(SOURCEDIR) -I=$(LIBDIR) -c $< -of=$@
+
+# Not a target:
+source/arch/amd64/tss.d:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-06 14:45:04.095691805
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+source/arch/amd64/apic.d:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-05 19:58:07.272247165
+#  File has been updated.
+#  Successfully updated.
+
+source/arch/amd64/memory.o: source/arch/amd64/memory.d
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'source/arch/amd64/memory'
+#  Last modified 2022-07-07 20:29:10.268903449
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# automatic
+# @ := source/arch/amd64/memory.o
+# automatic
+# * := source/arch/amd64/memory
+# automatic
+# < := source/arch/amd64/memory.d
+# automatic
+# + := source/arch/amd64/memory.d
+# automatic
+# % := 
+# automatic
+# ^ := source/arch/amd64/memory.d
+# automatic
+# ? := source/arch/amd64/memory.d
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=1/17=6%
+#  recipe to execute (from 'Makefile', line 36):
+	@$(DC) $(DFLAGS) -I=$(SOURCEDIR) -I=$(LIBDIR) -c $< -of=$@
+
+source/arch/amd64/idt.o: source/arch/amd64/idt.d
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'source/arch/amd64/idt'
+#  Last modified 2022-07-07 19:22:15.549088242
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'Makefile', line 36):
+	@$(DC) $(DFLAGS) -I=$(SOURCEDIR) -I=$(LIBDIR) -c $< -of=$@
+
+# Not a target:
+source/arch/acpi/package.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+source/io/console.o: source/io/console.d
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'source/io/console'
+ 
+#  Last modified 2022-07-07 19:22:15.386084906
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'Makefile', line 36):
+	@$(DC) $(DFLAGS) -I=$(SOURCEDIR) -I=$(LIBDIR) -c $< -of=$@
+
+# Not a target:
+source/main.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+source/arch/amd64/drivers/legacy/keyboard.d:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-07 17:41:38.981602087
+#  File has been updated.
+#  Successfully updated.
+
+.PHONY: clean
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+source/arch/amd64/userspace.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+../libraries/au/string.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+source/scheduler/program.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+../libraries/au/types.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# files hash-table stats:
+# Load=55/1024=5%, Rehash=0, Collisions=5/144=3%
+# VPATH Search Paths
+
+# No 'vpath' search paths.
+
+# No general ('VPATH' variable) search path.
+
+# strcache buffers: 1 (0) / strings = 116 / storage = 2090 B / avg = 18 B
+# current buf: size = 8162 B / used = 2090 B / count = 116 / avg = 18 B
+
+# strcache performance: lookups = 148 / hit rate = 21%
+# hash-table stats:
+# Load=116/8192=1%, Rehash=0, Collisions=1/148=1%
+# Finished Make data base on Thu Jul  7 20:34:03 2022
+
+ 

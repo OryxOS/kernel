@@ -1,117 +1,138 @@
 module scheduler;
 
-import lib.elf;
-import lib.limine;
-import au.math; 
+import au.elf;
+import au.math;
 import au.types;
 import au.string;
+
+import lib.limine;
+import lib.collections;
+
 import io.console;
 
 import memory;
-import memory.heap;
 import memory.physical;
+
+import scheduler.queue;
+import scheduler.thread;
+import scheduler.process;
 
 version (X86_64) import arch.amd64.memory;
 
-extern extern (C) void jumpUserSpace(VirtAddress start, VirtAddress stack);
-extern extern (C) void returnUserSpace(VirtAddress start, VirtAddress stack);
-
-struct Process {
-	AddressSpace addressSpace;
-	VirtAddress  stack;
-	VirtAddress  execPoint;
-
-
-	// Creates a new userspace context from an ELF file
-	this(Elf64Header* header) {
-		this.addressSpace = AddressSpace(newBlock()
-		                                 .unwrapResult("Not enough space for process's PML Tables"));
-
-		usize stackBottom = cast(usize) newBlock().unwrapResult("Not enough space for stack");
-
-		this.stack = cast(VirtAddress) stackBottom + PageSize;
-		this.execPoint = cast(VirtAddress) header.entry;
-
-		// Map kernel and higher half
-		auto procTables = cast(ulong[512]*) this.addressSpace.pml4;
-		auto kernTables = cast(ulong[512]*) kernelSpace.pml4;
-
-		(*procTables)[256] = (*kernTables)[256]; // Higher half
-		(*procTables)[511] = (*kernTables)[511]; // Kernel
-
-		// Map process's stack
-		this.addressSpace.mapPage(cast(VirtAddress) stackBottom, cast(PhysAddress) stackBottom,
-								  EntryFlags.Present | EntryFlags. Writeable | EntryFlags.UserAccessable);
-
-		
-		// Load and map all program headers
-		auto progHeaders = cast(usize) header + header.progHeaderOffset;
-		foreach (i; 0..header.progHeaderCount) {
-			auto hdr = cast(ElfProgramHeader*) (progHeaders + i * ElfProgramHeader.sizeof);
-			
-			if (hdr.type == ElfProgramHeader.Type.Load) {
-				// Map the section into the process' address space
-				usize physStart = alignDown(cast(usize) header + hdr.offset - PhysOffset, PageSize);
-				usize virtStart = alignDown(hdr.virtAddr, PageSize);
-				usize pageCount = divRoundUp(hdr.memSize, PageSize);
-
-				for (usize j = 0; j < pageCount; j++) {
-					this.addressSpace.mapPage(cast(VirtAddress) (virtStart + j * PageSize), cast(PhysAddress) (physStart + j * 4096),
-								  EntryFlags.Present | EntryFlags.Writeable | EntryFlags.UserAccessable);
-				}
-			}
-		}
-	}
-
-	// Only used when doing a fresh jump to userspace
-	void start() {
-		this.addressSpace.setActive();
-		jumpUserSpace(this.execPoint, this.stack);
-	}
-
-	// Used in yield syscall
-	void switchTo() {
-		this.addressSpace.setActive();
-		returnUserSpace(this.execPoint, this.stack);
-	}
-}
+// Location: arch/amd64/userspace.asm
+private extern extern (C) void init_userspace(void* start, void* stack);
 
 //////////////////////////////
 //         Instance         //
 //////////////////////////////
 
-// Actual process structures
-private __gshared LinkedList!(Process) processes = LinkedList!(Process)();
-private __gshared ulong activePID;
+private static immutable ubyte[3] PrioritySelections = [3, 2, 1];
 
-void initScheduler(ModuleResponse* limineModules) {
+private __gshared LinkedList!(Process) processes;
+private __gshared Queue[3] queues; // High, standard and low priority queues
+private __gshared usize index;     // Index of the last queue threads were selected from
 
-	LimineFile* yesModule = limineModules.getModule("/applications/yes.elf");
-	LimineFile* noModule = limineModules.getModule("/applications/no.elf");
+void init_shed(ModuleResponse* mods) {
+	writefln("\nInitialising scheduler:");
 
-	if (yesModule == null || noModule == null)
-		panic("No yes or no found!");
+	// Setup queues;
+    queues[0].selections = PrioritySelections[0];
+	queues[1].selections = PrioritySelections[1];
+	queues[2].selections = PrioritySelections[2];
 
-	processes.append(Process(cast(Elf64Header*) yesModule.address));
-	processes.append(Process(cast(Elf64Header*) noModule.address));
+	log(1, "Registered %d thread queues", queues.length);
 
-	writefln("Yes entrypoint: %h", processes[0].execPoint);
-	writefln("No entrypoint: %h", processes[1].execPoint);
+	// Load all application modules
+	log(1, "Copying %d applications into new memory", mods.count);
+	for (usize i = 0; i < mods.count; i++) {
+		/* Unfortunately limine doesn't guarentee alignment or overlap prevention on
+		 * modules, which can be an issue when applications are freed so we have to
+		 * move all modules to new memory;
+		 */
 
-	processes[0].start();
+		// Determine the size of the module file in pages
+		auto p_size = div_round_up( mods.modules[i].size, PageSize);
+		auto blocks = new_block(p_size);
+		
+		// Copy to new memory
+		void* new_addr = blocks.unwrap_result("Could not allocate memory for app modules") + PhysOffset;
+		new_addr[0..mods.modules[i].size] = mods.modules[i].address[0..mods.modules[i].size];
 
-	activePID = 0;
+		processes.append(Process(cast(Elf64Header*) new_addr));
+
+		/* FIXME: For some reason `&this` doesn't return the address of an instance of a struct
+		 * so it is necessary to set the parent of each thread outside of the Process 
+		 * constructor
+		 */
+		processes[i].threads[0].parent = &processes[i];
+
+		queues[0].add_thread(processes[i].threads[0]);
+	}
+
+	// Start process: 0:0
+	processes[0].p_map.set_active();
+	queues[0].selections--;
+	index = 0;
+
+	log(1, "Scheduler initialised");
+
+	init_userspace(queues[0].threads[0].ins_ptr, queues[0].threads[0].stack);
 }
 
-// TODO: priorities
-void switchNext(VirtAddress execPoint, VirtAddress stack) {
-	processes[activePID].execPoint = execPoint;
-	processes[activePID].stack = stack;
+private void start_next_thread() {
+	// Update index
+	if (queues[index].selections == 0) {
+		queues[index].selections = PrioritySelections[index];
 
-	if (activePID == processes.getLength() - 1)
-		activePID = 0;
-	else
-		activePID++;
+		// Find next non-empty queue
+		while(index <= queues.length - 1) {
+			if (index == queues.length - 1)
+				index = 0;
+			else
+				index++;
+
+			if (queues[index].threads.get_length() > 0)
+				break;
+		}
+	}
+
+	queues[index].start_next();	
+}
+
+//////////////////////////////
+//         Syscalls         //
+//////////////////////////////
+
+/// Switch execution from one thread to another
+extern (C) void sys_yield(void* ins_ptr, void* stack) {
+	queues[index].save_process(ins_ptr, stack);
+
+	start_next_thread();
+}
+
+/// Closes a process
+extern (C) void sys_exit() {
+	// Switch to kernel's pagemap as the process's is going to be deleted
+	kernel_pm.set_active();
+
+	auto parent = queues[index].threads[queues[index].index].parent;
+
+	parent.p_map.del_all_tables();
 	
-	processes[activePID].switchTo();
+	// Remove all threads belonging to the process
+	foreach (t; parent.threads) {
+		// Delete thread's stack and remove from queues
+		del_block(t.stack - PageSize, 1);
+
+		queues[index].remove_thread(t);
+	}
+
+	// Remove process from the processes list
+	foreach (i; 0..processes.get_length - 1) {
+		if (processes[i].id == parent.id) {
+			processes.remove(i);
+		}
+	}
+
+	start_next_thread();
 }

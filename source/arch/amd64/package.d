@@ -1,38 +1,40 @@
 module arch.amd64;
 
 import lib.limine;
+
 import au.types;
+
 import io.console;
 
-import arch.amd64.gdt       : initGdt;
-import arch.amd64.idt       : initIdt;
-import arch.amd64.tss       : initTss;
-import arch.amd64.pic       : disablePic;
-import arch.amd64.apic      : initApic;
-import arch.amd64.memory    : initVmm;
+import arch.amd64.gdt    : init_gdt;
+import arch.amd64.idt    : init_idt;
+import arch.amd64.tss    : init_tss;
+import arch.amd64.pic    : disablePic;
+import arch.amd64.apic   : init_apic;
+import arch.amd64.memory : init_vmm;
 import arch.amd64.cpu;
 
-import arch.acpi            : initAcpi;
-import arch.acpi.madt       : initMadt;
+import arch.acpi         : init_acpi;
+import arch.acpi.madt    : init_madt;
 
-extern extern (C) void initSyscalls();
+extern extern (C) void init_syscalls();
 
-void initArch(MemoryMapResponse* limineMap, XSDTPointerResponse* xsdtPointer, KernelAddressResponse* kernelAddress) {
+void init_arch(MemoryMapResponse* map, XsdtPointerResponse* xsdt_ptr, KernelAddressResponse* k_addr) {
 	writefln("\nAmd64 Init:");
 
-	initGdt();
-	initIdt();
-	initTss();
+	// Basic arch structures
+	init_gdt();
+	init_idt();
+	init_tss();
+	init_vmm(map, k_addr);
 
-	initVmm(limineMap, kernelAddress);
-
-	initAcpi(xsdtPointer);
-
-	initMadt();
-
+	// Interrupts
+	init_acpi(xsdt_ptr);
+	init_madt();
 	disablePic();
-	initApic();
-	enableInterrupts(true);
+	init_apic();
+	enable_ints(true);
 	
-	initSyscalls();
+	// Syscall and sysret instructions
+	init_syscalls();
 }

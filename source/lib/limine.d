@@ -2,15 +2,14 @@ module lib.limine;
 
 import au.types;
 import au.string;
-import io.console;
 
-import memory.map;
+import io.console;
 
 // Request IDs
 enum FrameBufferRequestID = [0xc7b1dd30df4c8b88, 0x0a82e883a194f07b, 0x9d5827dcd881dd75, 0xa3148604f6fab11b];
 enum BootloaderInfoID     = [0xc7b1dd30df4c8b88, 0x0a82e883a194f07b, 0xf55038d8e2a1202f, 0x279426fcf5f59740];
 enum MemoryMapID          = [0xc7b1dd30df4c8b88, 0x0a82e883a194f07b, 0x67cf3d9d378a806f, 0xe304acdfc50c3c62];
-enum XSDTPointerID        = [0xc7b1dd30df4c8b88, 0x0a82e883a194f07b, 0xc5e77b6b397e7b43, 0x27637845accdcf3c];
+enum XsdtPointerID        = [0xc7b1dd30df4c8b88, 0x0a82e883a194f07b, 0xc5e77b6b397e7b43, 0x27637845accdcf3c];
 enum StackSizeID          = [0xc7b1dd30df4c8b88, 0x0a82e883a194f07b, 0x224ef0460a8e8926, 0xe1cb0fc25f46ea3d];
 enum HigherHalfID         = [0xc7b1dd30df4c8b88, 0x0a82e883a194f07b, 0x48dcf1cb8ad2b852, 0x63984e959a98244b];
 enum KernelAddressID      = [0xc7b1dd30df4c8b88, 0x0a82e883a194f07b, 0x71ba76863cc55f63, 0xb2644a48c516a487];
@@ -48,8 +47,8 @@ struct FrameBufferRequest {
 struct FrameBufferResponse {
 	align (1):
 	ulong revision;
-	ulong frameBufferCount;
-	LimineFrameBufferInfo** framebuffers;
+	ulong fb_count;
+	LimineFrameBufferInfo** fb_ptrs;
 }
 
 struct LimineFrameBufferInfo {
@@ -62,18 +61,18 @@ struct LimineFrameBufferInfo {
 	ulong pitch;
 	ushort bpp;
 
-	ubyte memoryModel;
-	ubyte rMaskSize;
-	ubyte rMaskShift;
-	ubyte gMaskSize;
-	ubyte gMaskShift;
-	ubyte bMaskSize;
-	ubyte bMaskShift;
+	ubyte mem_model;
+	ubyte r_mask_size;
+	ubyte r_mask_shift;
+	ubyte g_masksize;
+	ubyte g_mask_shift;
+	ubyte b_mask_size;
+	ubyte b_mask_shift;
 
 	ubyte[7] unused;
 
-	ulong edidSize;
-	VirtAddress edid;
+	ulong edid_size;
+	void* edid;
 }
 
 //////////////////////////////
@@ -90,25 +89,44 @@ struct MemoryMapRequest {
 struct MemoryMapResponse {
 	align (1):
 	ulong revision;
-	ulong entryCount;
-	Region** entries;
+	ulong count;
+	MemoryMapEntry** entries;
+}
+
+enum MemoryMapType: ulong {
+	Usable                = 0,
+	Reserved              = 1,
+	AcpiReclaimable       = 2,
+	AcpiNvs               = 3,
+	Bad                   = 4,
+	BootloaderReclaimable = 5,
+	KernelOrModule        = 6,
+	FrameBuffer           = 7
+ }
+
+ // Do not modify, this matches the limine spec
+struct MemoryMapEntry {
+	align (1):
+	ulong base;
+	ulong length;
+	MemoryMapType type;
 }
 
 //////////////////////////////
 //           ACPI           //
 //////////////////////////////
 
-struct XSDTPointerRequest {
+struct XsdtPointerRequest {
 	align (1):
 	ulong[4] id;
 	ulong revision;
-	XSDTPointerResponse* response = null;
+	XsdtPointerResponse* response = null;
 }
 
-struct XSDTPointerResponse {
+struct XsdtPointerResponse {
 	align (1):
 	ulong revision;
-	VirtAddress address;
+	void* address;
 }
 
 //////////////////////////////
@@ -120,7 +138,7 @@ struct StackSizeRequest {
 	ulong[4] id;
 	ulong revision;
 	StackSizeResponse* response = null;
-	ulong desiredSize;
+	ulong desired_size;
 }
 
 struct StackSizeResponse {
@@ -173,7 +191,7 @@ enum LimineMediaType: uint {
 	TFTP    = 2,
 }
 
-struct LimineUUID {
+struct LimineUuid {
 	align(1):
 	uint a;
 	uint b;
@@ -184,19 +202,19 @@ struct LimineUUID {
 struct LimineFile {
 	align(1):
 	ulong revision;
-	VirtAddress address;
+	void* address;
 	ulong size;
 	char* path;
-	char* cmdLine;
-    LimineMediaType mediaType;
+	char* cmd_line;
+    LimineMediaType media_type;
     uint unused;
-    uint tftpIP;
-    uint tftpPort;
-    uint partIndex;
-    uint mbrDiskId;
-    LimineUUID gptDiskUUID;
-    LimineUUID gptPartUUID;
-    LimineUUID partUUID;
+    uint tftp_ip;
+    uint tftp_port;
+    uint part_index;
+    uint mbr_disk_id;
+    LimineUuid gpt_disk_uuid;
+    LimineUuid gpt_part_uuid;
+    LimineUuid part_uuid;
 }
 
 //////////////////////////////
@@ -216,9 +234,9 @@ struct ModuleResponse {
 	ulong count;
 	LimineFile** modules;
 
-	LimineFile* getModule(string path) {
+	LimineFile* get_module(string path) {
 		foreach (i; 0..this.count) {
-			if (fromCString(this.modules[i].path) == path)
+			if (from_c_string(this.modules[i].path) == path)
 				return this.modules[i];
 		}
 		return null;

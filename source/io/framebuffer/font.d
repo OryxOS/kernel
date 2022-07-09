@@ -347,7 +347,7 @@ private __gshared ubyte[] font = [
 ];
 
 // Will always be a ubyte[16]
-package ubyte[] charToGlyph(char c) {
+package ubyte[] char_to_glyph(char c) {
 	auto index = 16 * c;
 	auto end = 16 * c + 16;
 	return font[index..end];

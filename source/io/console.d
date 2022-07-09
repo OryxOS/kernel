@@ -3,125 +3,117 @@ module io.console;
 import au.types;
 
 import io.framebuffer;
-import io.framebuffer.fancy;
 
-static immutable pixel[4] darkTheme  = [0x161414, 0xD7D5D5, 0x00866B, 0x393939];
-static immutable pixel[4] lightTheme = [0xFDFAEF, 0x3A4D53, 0x00866B, 0xEDEDED];
+static immutable pixel[4] colours = [0xFDFAEF, 0x3A4D53, 0x00866B, 0xEDEDED];
 
 // Control Structure
 private struct Console {
-	bool showCursor;
-	ulong posX; 
-	ulong posY;
-	ulong maxX;
-	ulong maxY;
+	bool cursor;
+	ulong x; 
+	ulong y;
+	ulong x_limit;
+	ulong y_limit;
 
 	this(FrameBufferInfo fb) {
-		this.maxX = fb.width - fb.width % 8;
-		this.maxY = fb.height - fb.height % 16;
+		this.x_limit = fb.width - fb.width % 8;
+		this.y_limit = fb.height - fb.height % 16;
 	}
 }
 
 private __gshared Console console;
 
-__gshared pixel[4] theme;
-
-void initConsole() {
-	console = Console(getFrameBufferInfo());
-	theme   = lightTheme;
-
-	plotScreen(theme[0]);
-}
-
-void setTheme(bool dark) {
-	if (dark)
-		theme = darkTheme;
-	else
-		theme = lightTheme;
+void init_console() {
+	console = Console(get_fb_info());
+	clear_screen(colours[0]);
 }
 
 void moveCursor(uint x, uint y) {
-	assert(x <= console.maxX);
-	assert(y <= console.maxY);
+	assert(x <= console.x_limit);
+	assert(y <= console.y_limit);
 
-	console.posX = x;
-	console.posY = y;
+	console.x = x;
+	console.y = y;
 }
 
-void showCursor(bool show) {
-	console.showCursor = show;
+void show_cursor(bool show) {
+	console.cursor = show;
 }
 
-void clearConsole() {
-	console.posX = 0;
-	console.posY = 0;
-	plotScreen(theme[0]);
+void clear_console() {
+	console.x = 0;
+	console.y = 0;
+	clear_screen(colours[0]);
 }
 
-void putChr(const char c, pixel col = theme[1]) {
+void put_chr(const char c, pixel col = colours[1]) {
 	// End of line
-	if(console.posX >= console.maxX) {
-		console.posY += 16;
-		console.posX = 0;
+	if(console.x >= console.x_limit) {
+		console.y += 16;
+		console.x = 0;
 	}
 
 	// Handle newlines
 	switch(c) {
 	case '\n':
 		// Remove cursor from last line
-		if (console.showCursor)
-			plotRect(theme[0], console.posX + 1, console.posY + 1, 6, 14);
+		if (console.cursor)
+			plot_rect(colours[0], console.x + 1, console.y + 1, 6, 14);
 
-		console.posY += 16;
-		console.posX = 0;
+		console.y += 16;
+		console.x = 0;
 		break;
 
 	case '\t':
 		// Remove cursor 
-		if (console.showCursor)
-			plotRect(theme[0], console.posX + 1, console.posY + 1, 6, 14);
+		if (console.cursor)
+			plot_rect(colours[0], console.x + 1, console.y + 1, 6, 14);
 
-		if (console.posX % 32 == 0) {
-			console.posX += 32;			
+		if (console.x % 32 == 0) {
+			console.x += 32;			
 		} else {
-			console.posX += console.posX % 32;
+			console.x += console.x % 32;
 		}
 		break;
 
 	case '\b':
 		// Remove cursor 
-		if (console.showCursor)
-			plotRect(theme[0], console.posX + 1, console.posY + 1, 6, 14);
+		if (console.cursor)
+			plot_rect(colours[0], console.x + 1, console.y + 1, 6, 14);
 
 		// Remove character
-		if (console.posX != 0) {
-			plotRect(theme[0], console.posX - 8, console.posY, 8, 16);
-			console.posX -= 8;
+		if (console.x != 0) {
+			plot_rect(colours[0], console.x - 8, console.y, 8, 16);
+			console.x -= 8;
 		}
 
 		break;
 
 	default:
-		plotChr(col, theme[0], c, console.posX, console.posY);
-		console.posX += 8;
+		plot_chr(col, colours[0], c, console.x, console.y);
+		console.x += 8;
 		break;
 	}
 
 	// Scroll
-	if(console.posY == console.maxY) {
-		scrollScreen(16, getFrameBufferInfo().height % 16);          // Move new data up
-		plotRect(theme[0], 0, console.maxY - 16, console.maxX, 16);  // Clear line
-		console.posY = console.maxY - 16;                            // Reset cursor
+	if(console.y == console.y_limit) {
+		// Scroll
+		scroll_screen(16, get_fb_info().height % 16);
+
+		// Clear bottom line
+		plot_rect(colours[0], 0, console.y_limit - 16, console.x_limit, 16);
+
+		// Reset cursor
+		console.y = console.y_limit - 16;
 	}
 
 	// Update cursor 
-	if (console.showCursor)
-		plotRect(theme[2], console.posX + 1, console.posY + 1, 6, 14);
+	if (console.cursor)
+		plot_rect(colours[2], console.x + 1, console.y + 1, 6, 14);
 }
 
-void putStr(const string s, pixel col = theme[1]) {
+void put_str(const string s, pixel col = colours[1]) {
 	foreach (c; s) {
-		putChr(c, col);
+		put_chr(c, col);
 	}
 }
 
@@ -132,114 +124,68 @@ void putStr(const string s, pixel col = theme[1]) {
 void log(T...)(uint indent, const string fmt, T args) {
 	// Indentation
 	foreach(_; 0..indent) {
-		putChr('\t');
+		put_chr('\t');
 	}
 
-	putChr('[');
-	putChr('+', theme[2]);
-	putStr("] ");
+	put_chr('[');
+	put_chr('+', colours[2]);
+	put_str("] ");
 
 	writefln(fmt, args);
-}
-
-void panic(string file = __FILE__, usize line = __LINE__, T...)(const string fmt, T args) {
-	showCursor(false);
-	plotScreen(theme[0]);
-
-	// !!!
-	auto start = getFrameBufferInfo().width / 2 - 72;
-	plotExclamation(theme[2], start, 8);
-	plotExclamation(theme[2], start + 56, 8);
-	plotExclamation(theme[2], start + 112, 8);
-
-	// "A fatal error has occured"
-	console.posX = console.maxX / 2 - (cast(uint)("A fatal error has occured".length / 2) * 8);
-	console.posY = 112;
-	putStr("A fatal error has occured", theme[2]);
-
-	// (Line)
-	console.posX = 0;
-	console.posY = 128;
-	foreach(_; 0..console.maxX / 8) {
-		putChr('-', theme[2]);
-	}
-
-	// Reset for printing
-	console.posX = 0;
-	console.posY = 176;
-
-	// Info message
-	writefln("\t\tA fatal error has occured and the system must be restarted
-		This error hass likely occured due to poor hardware support.
-		If you are using a nightly image of OryxOS, please report
-		this crash and try a stable image");
-
-	// Context
-	putStr("\n\n\n\t\t// For developers\n", theme[3]);
-	writefln("\t\tContext:
-		File: %s
-		Line: %d", file, line);
-	putStr("\n\t\t");
-	writefln(fmt, args);
-
-	// Hang the kernel
-	version(X86_64) {
-		asm {
-			cli;
-			hlt;
-		}
-	} else {
-		while(1) {}
-	}
 }
 
 void writefln(T...)(const string fmt, T args) {
 	writef(fmt, args);
-	putChr('\n');
+	put_chr('\n');
 }
 
 void writef(T...)(const string fmt, T args) {
-	uint strPos;
+	uint pos;
 
 	foreach (arg; args) {
 		// look for format specifier
-		for (uint i = strPos; i < fmt.length; i++) {
+		for (uint i = pos; i < fmt.length; i++) {
 			if (fmt[i] == '%') {
 				switch (fmt[i + 1]) {
-				case 's':              // String
-					putItem(arg, true);
+				// String
+				case 's':
+					put_arg(arg, true);
 					break;
 
+				// Char
 				case 'c':
-					putItem(arg, true);
+					put_arg(arg, true);
 					break;
 
-				case 'l':              // Bool
-					putItem(arg, true);			
+				// Bool
+				case 'l':
+					put_arg(arg, true);			
 					break;
 
-				case 'd':              // Decimal
-					putItem(arg, true);
+				// Decimal number
+				case 'd':
+					put_arg(arg, true);
 					break;
 
-				case 'h':              // Hexadecimal
-					putItem(arg, false);
+				// Integer nummber
+				case 'h':
+					put_arg(arg, false);
 					break;
 
 				default:
 					assert(0, "Format specifier expected");
 				}
-				strPos = i + 2;       // % + Format specifier
+				pos = i + 2; // % + Format specifier (2 chars)
 				break;
 			} else {
-				putChr(fmt[i]);
+				put_chr(fmt[i]);
 			}
 		}
 	}
 
 	// Print remainder of string after last format specifier
-	for (int i = strPos; i < fmt.length; i++) {
-		putChr(fmt[i]);
+	for (int i = pos; i < fmt.length; i++) {
+		put_chr(fmt[i]);
 	}
 }
 
@@ -248,88 +194,104 @@ void writef(T...)(const string fmt, T args) {
  */
 
 // Yes, the bool here is neccessary because of how templates work
-void putItem(string item, bool dec) {
-	putStr(item);
+void put_arg(string item, bool dec) {
+	put_str(item);
 }
 
-void putItem(char item, bool dec) {
-	putChr(item);
+void put_arg(char item, bool dec) {
+	put_chr(item);
 }
 
-void putItem(bool item, bool dec) {
+void put_arg(bool item, bool dec) {
 	if (item == true) {
-		putStr("true", theme[2]);
+		put_str("true", colours[2]);
 	} else {
-		putStr("false", theme[2]);
+		put_str("false", colours[2]);
 	}
 }
 
-void putItem(void* item, bool dec) {
-	dec ? printDecNum(cast(usize) item) : printHexNum(cast(usize) item);
+void put_arg(void* item, bool dec) {
+	dec ? print_dec(cast(usize) item) : print_hex(cast(usize) item);
 }
 
-void putItem(ulong item, bool dec) {
-	dec ? printDecNum(item) : printHexNum(item);
+void put_arg(ulong item, bool dec) {
+	dec ? print_dec(item) : print_hex(item);
 }
 
-void putItem(uint item, bool dec) {
-	dec ? printDecNum(cast(ulong) item) : printHexNum(cast(ulong) item);
+void put_arg(uint item, bool dec) {
+	dec ? print_dec(cast(ulong) item) : print_hex(cast(ulong) item);
 }
 
-void putItem(ushort item, bool dec) {
-	dec ? printDecNum(cast(ulong) item) : printHexNum(cast(ulong) item);
+void put_arg(ushort item, bool dec) {
+	dec ? print_dec(cast(ulong) item) : print_hex(cast(ulong) item);
 }
 
-void putItem(ubyte item, bool dec) {
-	dec ? printDecNum(cast(ulong) item) : printHexNum(cast(ulong) item);
+void put_arg(ubyte item, bool dec) {
+	dec ? print_dec(cast(ulong) item) : print_hex(cast(ulong) item);
 }
 
 //////////////////////////////
 //        Formatting        //
 //////////////////////////////
 
-private immutable TABLE_B16 = "0123456789ABCDEF";
-private immutable TABLE_B10 = "0123456789";
+private immutable TableB16 = "0123456789ABCDEF";
+private immutable TableB10 = "0123456789";
 
 // Integer to Hexadecimal conversion
-private void printHexNum(ulong item) {
+private void print_hex(ulong item) {
 	char[16] buf;
 
 	if (item == 0) {
-		putStr("0x0", theme[2]);
+		put_str("0x0", colours[2]);
 		return;
 	}
 
-	putStr("0x", theme[2]);
+	put_str("0x", colours[2]);
 	for (int i = 15; item; i--) {
-		buf[i] = TABLE_B16[item % 16];
+		buf[i] = TableB16[item % 16];
 		item /= 16;
 	}
 
 	foreach(c; buf) {
 		// Don't print unused whitespace
 		if (c != char.init) {
-			putChr(c, theme[2]);
+			put_chr(c, colours[2]);
 		}
 	}
 }
-private void printDecNum(ulong item) {
+private void print_dec(ulong item) {
 	char[32] buf;
 
 	if (item == 0) {
-		putStr("0", theme[2]);
+		put_str("0", colours[2]);
 		return;
 	}
 
 	for (int i = 31; item; i--) {
-		buf[i] = TABLE_B10[item % 10];
+		buf[i] = TableB10[item % 10];
 		item /= 10;
 	}
 
 	foreach(c; buf) {
 		// Don't print unused whitespace
 		if (c != char.init) {
-			putChr(c, theme[2]);
+			put_chr(c, colours[2]);
 		}
 	}
-} 
+}
+
+//////////////////////////////
+//         Syscalls         //
+//////////////////////////////
+
+extern (C) void sys_put_chr(char chr, uint col) {
+    put_chr(chr, col);
+}
+
+extern (C) void sys_clear_console() {
+	clear_console();
+}
+
+extern (C) void sys_show_cursor(bool show) {
+	show_cursor(show);
+}

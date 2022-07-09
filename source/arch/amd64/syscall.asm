@@ -1,5 +1,5 @@
-global initSyscalls
-global stackInfo
+global init_syscalls
+global StackInfo
 
 section .data
 
@@ -7,20 +7,33 @@ section .data
 ; stack and the current process's stack. Whenever a
 ; process is switched to, this structs values must be updated
 ; these can easily be accesses through `swapgs`
-stackInfo:
+StackInfo:
 	dq 0 ; Kernel Stack
 	dq 0 ; User stack
 
 align 16
-syscallTable:
-	extern syscallYeild
-	dq syscallYeild
-	extern syscallPutChr
-	dq syscallPutChr
+SyscallTable:
+	extern sys_yield
+	dq sys_yield
+
+	extern sys_exit
+	dq sys_exit
+
+	extern sys_put_chr
+	dq sys_put_chr
+
+	extern sys_clear_console
+	dq sys_clear_console
+
+	extern sys_show_cursor
+	dq sys_show_cursor;
+
+	extern sys_get_keystroke
+	dq sys_get_keystroke
 
 section .text
 
-initSyscalls:
+init_syscalls:
 	; Enable `syscall` and `sysret`
 	mov rcx, 0xC0000082 
 	wrmsr               
@@ -35,40 +48,44 @@ initSyscalls:
 
 	; Set the KernelGSBase MSR to point to the Stack Info struct
 	mov rcx, 0xC0000102;
-	mov rdx, stackInfo
+	mov rdx, StackInfo
 	shr rdx, 32
-	mov rax, stackInfo
+	mov rax, StackInfo
 	wrmsr
 
 	; Set the syscall handler		
 	mov rcx, 0xc0000082
-	mov rdx, syscallHandler
+	mov rdx, syscall_handler
 	shr rdx, 32
-	mov rax, syscallHandler
+	mov rax, syscall_handler
 	wrmsr
 	ret
 
 
-syscallHandler:
+syscall_handler:
 	swapgs
 	mov gs:8, rsp ; Save user stack
 	mov rsp, gs:0 ; Switch to kernel stack
 
+	; Save RFLAGS and return address
  	push rcx
+	push r11
 
 	; Check if syscall is `yield`
 	cmp R10, 0
-	je yieldSyscall
-	jne normalSyscall
+	je yield
+	jne normal
 
-	yieldSyscall:
+	yield:
 	mov rdi, rcx  ; Save process execution point
 	mov rsi, gs:8 ; Save process stack address
 
-	normalSyscall:
-    lea rbx, [rel syscallTable]
+	normal:
+    lea rbx, [rel SyscallTable]
     call [rbx + r10 * 8]
 
+	; Restore RFLAGS and return address
+	pop r11
 	pop rcx
 
 	mov gs:0, rsp   ; Save kernel stack
