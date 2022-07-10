@@ -180,7 +180,7 @@ private __gshared string[] exceptions = [
 
 // Universal exception handler
 extern (C) void exception_handler(InterruptFrame* frame) {
-	put_chr('[');
+	put_str("\n[");
 	put_chr('!', colours[2]);
 	put_str("] ");
 

@@ -43,7 +43,7 @@ init_syscalls:
 	wrmsr               
 	mov rcx, 0xC0000081 
 	rdmsr               
-	mov edx, 0x00180008 
+	mov edx, (0x8) | (0x18 << 16) ; KernelCodeSegmwnt | (Null2Segment << 16)
 	wrmsr               
 
 	; Set the KernelGSBase MSR to point to the Stack Info struct

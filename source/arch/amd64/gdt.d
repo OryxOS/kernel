@@ -58,7 +58,7 @@ private struct GdtPointer {
 
 private struct Gdt {
 	align (1):
-	GdtEntry[5] entries;
+	GdtEntry[6] entries;
 	TssEntry tss;
 }
 
@@ -69,9 +69,9 @@ private struct Gdt {
 // Selectors
 enum KernelCodeSegment = 0x08;    
 enum KernelDataSegment = 0x10;
-enum UserCodeSegment   = 0x18;
 enum UserDataSegment   = 0x20;
-enum TssSegment        = 0x28;
+enum UserCodeSegment   = 0x28;
+enum TssSegment        = 0x30;
 
 private __gshared Gdt gdt;
 private __gshared GdtPointer  gdt_ptr;
@@ -80,8 +80,9 @@ void init_gdt() {
 	gdt.entries[0] = GdtEntry(0b00000000, 0b00000000); // Null
 	gdt.entries[1] = GdtEntry(0b10011010, 0b00100000); // Kernel Code
 	gdt.entries[2] = GdtEntry(0b10010010, 0b00000000); // Kernel Data
-	gdt.entries[3] = GdtEntry(0b11111010, 0b00100000); // User Code
+	gdt.entries[3] = GdtEntry(0b00000000, 0b00000000); // Null (Comp mode code segment)
 	gdt.entries[4] = GdtEntry(0b11110010, 0b00000000); // User Data
+	gdt.entries[5] = GdtEntry(0b11111010, 0b00100000); // User Code
 
 	gdt.tss = TssEntry(0b10001001, 0); // TSS
 

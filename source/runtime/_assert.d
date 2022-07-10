@@ -1,4 +1,4 @@
-deprecated("Compiler intrinsics. Do not invoke") module lib.util.runtime._assert;
+deprecated("Compiler intrinsics. Do not invoke") module runtime._assert;
 
 import au.string;
 import io.console;

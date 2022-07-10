@@ -1,4 +1,4 @@
-deprecated("Compiler intrinsics. Do not invoke") module lib.runtime.memory;
+deprecated("Compiler intrinsics. Do not invoke") module runtime.memory;
 
 import au.types;
 

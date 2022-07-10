@@ -11,8 +11,9 @@
 *.a
 *.lib
 
+# Executables
+*.exe
+*.elf
+
 # Code coverage
 *.lst
-
-# Kernel releases
-*kernel
